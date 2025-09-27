@@ -1,0 +1,2 @@
+HOME = ..
+BUILD = $(HOME)/build

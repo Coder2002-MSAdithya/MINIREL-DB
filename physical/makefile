@@ -1,9 +1,10 @@
 ####################################################################
 # Makefile for PHYSICAL layer with build/physical output
 ####################################################################
+include ../variables.mk
 
-INCLUDE = ../include
-BUILD_DIR = ../build/physical
+INCLUDE = $(HOME)/include
+BUILD_DIR = $(BUILD)/physical
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)

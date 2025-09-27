@@ -1,9 +1,10 @@
 ####################################################################
 # Makefile for ALGEBRA layer with build/algebra output
 ####################################################################
+include ../variables.mk
 
-INCLUDE = ../include
-BUILD_DIR = ../build/algebra
+INCLUDE = $(HOME)/include
+BUILD_DIR = $(BUILD)/algebra
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)

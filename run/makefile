@@ -1,14 +1,13 @@
 ####################################################################
 # Top-level Makefile for MINIREL with build/ output
 ####################################################################
+include ../variables.mk
 
-HOME = ..
 INCLUDE  = $(HOME)/include
 ALGEBRA	 = $(HOME)/algebra
 SCHEMA	 = $(HOME)/schema
 PHYSICAL = $(HOME)/physical
 PARSER   = $(HOME)/frontend
-BUILD    = $(HOME)/build
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)
@@ -20,13 +19,14 @@ GLOB_OBJ = $(BUILD)/globals.o
 ALGEBRA_OBJ = $(BUILD)/algebra/ALGEBRA.o
 SCHEMA_OBJ = $(BUILD)/schema/SCHEMA.o
 PHYSICAL_OBJ = $(BUILD)/physical/PHYSICAL.o
-FES_OBJ = $(PARSER)/FES.o
+FES_OBJ = $(BUILD)/frontend/FES.o
+FES_OBJ2 = $(BUILD)/frontend/fes.o
 
-.PHONY: all clean algebra_build schema_build physical_build
+.PHONY: all clean algebra_build schema_build physical_build frontend_build
 
 all: minirel
 
-minirel: algebra_build schema_build physical_build $(FES_OBJ) $(OBJ) $(GLOB_OBJ) | $(BUILD)
+minirel: algebra_build schema_build physical_build frontend_build $(OBJ) $(GLOB_OBJ) | $(BUILD)
 	@echo generating $@
 	cc $(CFLAGS) $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ) -o $(BUILD)/minirel
 
@@ -50,6 +50,9 @@ schema_build:
 
 physical_build:
 	@$(MAKE) -C $(PHYSICAL)
+
+frontend_build:
+	@$(MAKE) -C $(PARSER)
 
 clean:
 	rm -f $(BUILD)/*.o $(BUILD)/minirel

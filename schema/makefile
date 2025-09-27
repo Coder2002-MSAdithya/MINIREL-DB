@@ -1,9 +1,10 @@
 ####################################################################
 # Makefile for SCHEMA layer with build/schema output
 ####################################################################
+include ../variables.mk
 
-INCLUDE = ../include
-BUILD_DIR = ../build/schema
+INCLUDE = $(HOME)/include
+BUILD_DIR = $(BUILD)/schema
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)
