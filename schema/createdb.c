@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-CreateDB (argc, argv)
+int CreateDB (argc, argv)
 int	argc;
 char	**argv;
 

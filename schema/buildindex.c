@@ -6,7 +6,7 @@
 
 
 
-BuildIndex (argc, argv)
+int BuildIndex (argc, argv)
 int	argc;
 char	**argv;
 

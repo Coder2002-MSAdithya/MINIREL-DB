@@ -4,7 +4,7 @@
 #include "../include/globals.h"
 #include <stdio.h>
 
-CloseDB (argc, argv)
+int CloseDB (argc, argv)
 int	argc;
 char	**argv;
 

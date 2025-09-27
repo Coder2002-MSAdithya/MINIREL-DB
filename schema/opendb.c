@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-OpenDB (argc, argv)
+int OpenDB (argc, argv)
 int	argc;
 char	**argv;
 

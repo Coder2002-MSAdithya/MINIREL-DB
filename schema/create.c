@@ -6,7 +6,7 @@
 
 
 
-Create (argc, argv)
+int Create (argc, argv)
 int	argc;
 char	**argv;
 

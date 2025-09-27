@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-DestroyDB (argc, argv)
+int DestroyDB (argc, argv)
 int	argc;
 char	**argv;
 

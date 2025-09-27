@@ -2,6 +2,7 @@
 		GLOBAL VARIABLE DECLARATIONS
 ****************************************************************/
 
-CacheEntry	catcache[MAXOPEN];	/* catalog cache */
-Buffer		buffer[MAXOPEN];        /* buffer pool */
+extern CacheEntry	    catcache[MAXOPEN]; 	    /* catalog cache */
+extern Buffer		    buffer[MAXOPEN];        /* buffer pool */
+
 

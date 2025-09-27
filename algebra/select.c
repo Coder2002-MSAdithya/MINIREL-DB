@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-Select (argc, argv)
+int Select (argc, argv)
 int	argc;
 char	**argv;
 

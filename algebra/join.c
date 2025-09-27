@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-Join (argc, argv)
+int Join (argc, argv)
 int	argc;
 char	**argv;
 

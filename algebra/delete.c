@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-Delete (argc, argv)
+int Delete (argc, argv)
 int	argc;
 char	**argv;
 

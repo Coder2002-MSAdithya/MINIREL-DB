@@ -8,7 +8,7 @@
 
 # where to look for the files
 
-HOME = <put your project directory path here> 
+HOME = /home/medha_01/WorkSpace/MiniRel
 
 INCLUDE  = $(HOME)/include
 
@@ -46,12 +46,16 @@ SCHEMA.o :
 PHYSICAL.o :
 	@cd $(PHYSICAL) ; make $@
 
+FES.o :
+	@cd $(PARSER) ; make $@
+
 
 
 proj :
 	@make ALGEBRA.o
 	@make SCHEMA.o
 	@make PHYSICAL.o
+	@make FES.o
 	@make minirel
 
 minirel : $(ALGEBRA)/ALGEBRA.o $(SCHEMA)/SCHEMA.o $(PHYSICAL)/PHYSICAL.o $(PARSER)/FES.o $(OBJ) 

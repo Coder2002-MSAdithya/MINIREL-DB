@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-Load (argc, argv)
+int Load (argc, argv)
 int	argc;
 char	**argv;
 

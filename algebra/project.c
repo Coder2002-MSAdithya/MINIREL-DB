@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-Project (argc, argv)
+int Project (argc, argv)
 int	argc;
 char	**argv;
 

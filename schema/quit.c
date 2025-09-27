@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-Quit (argc, argv)
+int Quit (argc, argv)
 int	argc;
 char	**argv;
 

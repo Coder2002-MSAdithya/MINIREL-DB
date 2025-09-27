@@ -6,7 +6,7 @@
 
 
 
-Sort (argc, argv)
+int Sort (argc, argv)
 int	argc;
 char	**argv;
 

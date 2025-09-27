@@ -22,19 +22,28 @@
 		TYPE DEFINITIONS 
 *************************************************************/
 
-/* Rid structure */
+/* Rid Structure */
 typedef struct recid {
 	short	pid;
 	short	slotnum;
 } Rid;
 
-
 /* Page Structure */
 typedef struct ps {
 	unsigned slotmap;
 	char contents [MAXRECORD];
-	} Page;
+} Page;
 
+/* defs.h */
+typedef struct cacheentry {
+    char relname[RELNAME];
+    short relcat_id;
+} CacheEntry;
+
+typedef struct buffer {
+    char data[PAGESIZE];
+    int pin_count;
+} Buffer;
 
 
 /*****************************************************************/

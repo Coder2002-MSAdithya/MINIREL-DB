@@ -6,7 +6,7 @@
 
 
 
-DropIndex (argc, argv)
+int DropIndex (argc, argv)
 int	argc;
 char	**argv;
 

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-Destroy (argc, argv)
+int Destroy (argc, argv)
 int	argc;
 char	**argv;
 

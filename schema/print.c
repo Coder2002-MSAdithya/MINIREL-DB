@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-Print (argc, argv)
+int Print (argc, argv)
 int	argc;
 char	**argv;
 
