@@ -1,54 +1,33 @@
 ####################################################################
-#	This is the Makefile for PHYSICAL LAYER.
-#
-#	If you want to add a file, add it to both the SRC and OBJ lists.
-#	Use a backslash for continuation into the next line.
-#
+# Makefile for PHYSICAL layer with build/physical output
 ####################################################################
 
-####################################################################
-# FLAGS for the C compiler
-####################################################################
-
-# where to look for the header files
 INCLUDE = ../include
+BUILD_DIR = ../build/physical
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)
-# -g to generate symbolic info. used by
-#    the debugger.
-# DFLAG can be used to turn specific debug
-# messages 'on' or 'off'.  Read up on 
-# "#ifdef" for more details
 
 SRCS = \
 	error.c createcats.c opencats.c closecats.c openrel.c closerel.c findrelnum.c \
 	readpage.c flushpage.c writerec.c findrec.c getnextrec.c insertrec.c deleterec.c
 
-OBJ = \
-	error.o createcats.o opencats.o closecats.o openrel.o closerel.o findrelnum.o \
-	readpage.o flushpage.o writerec.o findrec.o getnextrec.o insertrec.o deleterec.o
+OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-#############################################################
-# 	stuff to build the executables
-#############################################################
+.PHONY: all clean
 
-PHYSICAL.o : $(OBJ)
+all: $(BUILD_DIR)/PHYSICAL.o
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(BUILD_DIR)/%.o: %.c $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h | $(BUILD_DIR)
+	cc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/PHYSICAL.o: $(OBJ)
 	@echo generating $@
 	@ld -r $(OBJ) -o $@
 
-$(OBJ) : $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h
-
-###############################################################
-#  misc
-###############################################################
-
-tags:
-	ctags -t $(SRCS) $(INCLUDE)/defs.h $(INCLUDE)/error.h
-
-lint:	
-	lint $(SRCS) $(INCLUDE)/defs.h $(INCLUDE)/error.h > lint.out
-
-clean:  # remove all .o files and other garbage
-	rm *.o
+clean:
+	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/PHYSICAL.o
 

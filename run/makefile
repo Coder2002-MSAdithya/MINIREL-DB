@@ -1,10 +1,6 @@
 ####################################################################
-#
-#	This is the Makefile for creating MINIREL.
-#
+# Top-level Makefile for MINIREL with build/ output
 ####################################################################
-
-# where to look for the files
 
 HOME = ..
 INCLUDE  = $(HOME)/include
@@ -12,55 +8,52 @@ ALGEBRA	 = $(HOME)/algebra
 SCHEMA	 = $(HOME)/schema
 PHYSICAL = $(HOME)/physical
 PARSER   = $(HOME)/frontend
+BUILD    = $(HOME)/build
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)
 
-# Source and object files
 SRCS = main.c
-OBJ = main.o
-GLOB_OBJ = $(HOME)/globals.o
+OBJ = $(BUILD)/main.o
+GLOB_OBJ = $(BUILD)/globals.o
 
-ALGEBRA_OBJ = $(ALGEBRA)/ALGEBRA.o
-SCHEMA_OBJ = $(SCHEMA)/SCHEMA.o
-PHYSICAL_OBJ = $(PHYSICAL)/PHYSICAL.o
+ALGEBRA_OBJ = $(BUILD)/algebra/ALGEBRA.o
+SCHEMA_OBJ = $(BUILD)/schema/SCHEMA.o
+PHYSICAL_OBJ = $(BUILD)/physical/PHYSICAL.o
 FES_OBJ = $(PARSER)/FES.o
 
-#############################################################
-#  Targets
-#############################################################
+.PHONY: all clean algebra_build schema_build physical_build
 
-proj: minirel
+all: minirel
 
-minirel: $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ)
+minirel: algebra_build schema_build physical_build $(FES_OBJ) $(OBJ) $(GLOB_OBJ) | $(BUILD)
 	@echo generating $@
-	cc $(CFLAGS) $^ -o $@
+	cc $(CFLAGS) $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ) -o $(BUILD)/minirel
 
-# Compile globals.o from the root MINIREL folder
-$(GLOB_OBJ): $(HOME)/globals.c $(INCLUDE)/globals.h
+$(BUILD):
+	mkdir -p $(BUILD)
+
+# Compile globals.o into build/
+$(GLOB_OBJ): $(HOME)/globals.c $(INCLUDE)/globals.h | $(BUILD)
 	cc $(CFLAGS) -c $(HOME)/globals.c -o $@
 
-# Compile main.o from current directory
-$(OBJ): $(SRCS) $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h
+# Compile main.o into build/
+$(OBJ): $(SRCS) $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h | $(BUILD)
 	cc $(CFLAGS) -c $(SRCS) -o $@
 
-# Delegate building the following object files to their respective folders
-$(ALGEBRA_OBJ):
+# Call sub-makefiles to build their objects
+algebra_build:
 	@$(MAKE) -C $(ALGEBRA)
 
-$(SCHEMA_OBJ):
+schema_build:
 	@$(MAKE) -C $(SCHEMA)
 
-$(PHYSICAL_OBJ):
+physical_build:
 	@$(MAKE) -C $(PHYSICAL)
 
-$(FES_OBJ):
-	@$(MAKE) -C $(PARSER)
-
-# Clean up only current directory
 clean:
-	rm -f *.o minirel
-
-
-
+	rm -f $(BUILD)/*.o $(BUILD)/minirel
+	@$(MAKE) -C $(ALGEBRA) clean
+	@$(MAKE) -C $(SCHEMA) clean
+	@$(MAKE) -C $(PHYSICAL) clean
 
