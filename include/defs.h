@@ -1,6 +1,8 @@
     /* 
 	This is the basic definition file.
     */
+#ifndef TYPES_MINIREL
+#define TYPES_MINIREL
 /*************************************************************
 		CONSTANTS
 *************************************************************/
@@ -35,6 +37,7 @@ typedef struct ps {
 	char contents [MAXRECORD];
 	} Page;
 
-
-
+typedef int CacheEntry;
+typedef int Buffer;
 /*****************************************************************/
+#endif

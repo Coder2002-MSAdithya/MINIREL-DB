@@ -2,71 +2,64 @@
 #
 #	This is the Makefile for creating MINIREL.
 #
-#
 ####################################################################
-
 
 # where to look for the files
 
-HOME = <put your project directory path here> 
-
+HOME = ..
 INCLUDE  = $(HOME)/include
-
 ALGEBRA	 = $(HOME)/algebra
 SCHEMA	 = $(HOME)/schema
 PHYSICAL = $(HOME)/physical
-
 PARSER   = $(HOME)/frontend
-
-
 
 DFLAG =
 CFLAGS = -g $(DFLAG) -I$(INCLUDE)
-# -g to generate symbolic info. used by
-#    the debugger.
-# DFLAG can be used to turn specific debug
-# messages 'on' or 'off'.  Read up on 
-# "#ifdef" for more details
 
+# Source and object files
+SRCS = main.c
+OBJ = main.o
+GLOB_OBJ = $(HOME)/globals.o
+
+ALGEBRA_OBJ = $(ALGEBRA)/ALGEBRA.o
+SCHEMA_OBJ = $(SCHEMA)/SCHEMA.o
+PHYSICAL_OBJ = $(PHYSICAL)/PHYSICAL.o
+FES_OBJ = $(PARSER)/FES.o
 
 #############################################################
-# 	stuff to build the executables
+#  Targets
 #############################################################
 
-SRCS =  main.c
+proj: minirel
 
-OBJ = main.o 
-
-ALGEBRA.o :
-	@cd $(ALGEBRA) ; make $@
-	
-SCHEMA.o :
-	@cd $(SCHEMA) ; make $@
-
-PHYSICAL.o :
-	@cd $(PHYSICAL) ; make $@
-
-
-
-proj :
-	@make ALGEBRA.o
-	@make SCHEMA.o
-	@make PHYSICAL.o
-	@make minirel
-
-minirel : $(ALGEBRA)/ALGEBRA.o $(SCHEMA)/SCHEMA.o $(PHYSICAL)/PHYSICAL.o $(PARSER)/FES.o $(OBJ) 
+minirel: $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ)
 	@echo generating $@
-	@cc $(CFLAGS) $(ALGEBRA)/ALGEBRA.o $(SCHEMA)/SCHEMA.o $(PHYSICAL)/PHYSICAL.o $(PARSER)/FES.o $(OBJ) -o $@
+	cc $(CFLAGS) $^ -o $@
 
+# Compile globals.o from the root MINIREL folder
+$(GLOB_OBJ): $(HOME)/globals.c $(INCLUDE)/globals.h
+	cc $(CFLAGS) -c $(HOME)/globals.c -o $@
 
-$(OBJ) :  $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h
+# Compile main.o from current directory
+$(OBJ): $(SRCS) $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h
+	cc $(CFLAGS) -c $(SRCS) -o $@
 
-###############################################################
-#  misc
-###############################################################
+# Delegate building the following object files to their respective folders
+$(ALGEBRA_OBJ):
+	@$(MAKE) -C $(ALGEBRA)
 
-clean:  # remove all .o files and other garbage
-	rm *.o
+$(SCHEMA_OBJ):
+	@$(MAKE) -C $(SCHEMA)
+
+$(PHYSICAL_OBJ):
+	@$(MAKE) -C $(PHYSICAL)
+
+$(FES_OBJ):
+	@$(MAKE) -C $(PARSER)
+
+# Clean up only current directory
+clean:
+	rm -f *.o minirel
 
 
 

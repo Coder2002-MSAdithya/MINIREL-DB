@@ -4,6 +4,8 @@
    As you find error conditions to report, 
    make additions to this file. 
 ************************************************************/
-
+#ifndef ERRORS_MINIREL
+#define ERRORS_MINIREL
 #define RELNOEXIST  101   /* Relation does not exist */
 #define ATTRNOEXIST 102   /* Attribute does not exist */
+#endif
