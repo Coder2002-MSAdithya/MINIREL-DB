@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-extern parser();
-main ()
+extern void parser();
+void main ()
 {
- printf("Welcome to MINIREL database system\n\n");
- parser();
- printf("\n\nGoodbye from MINIREL\n");
+    printf("\n\nWelcome to MINIREL Database System\n\n");
+    parser();
+    printf("\nGoodbye from MINIREL\n");
 }

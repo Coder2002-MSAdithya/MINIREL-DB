@@ -1,5 +1,6 @@
+#include <stdio.h>
 
-CloseCats()
+void CloseCats ()
 {
- printf("closecats \n ");
+    printf("closecats \n");
 }

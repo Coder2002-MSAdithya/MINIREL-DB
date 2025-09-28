@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-ReadPage()
+void ReadPage ()
 {
- printf("ReadPage \n ");
+    printf("ReadPage \n");
 }

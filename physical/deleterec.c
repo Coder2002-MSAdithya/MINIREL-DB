@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-DeleteRec()
+void DeleteRec ()
 {
- printf("DeleteRec \n ");
+    printf("DeleteRec \n");
 }

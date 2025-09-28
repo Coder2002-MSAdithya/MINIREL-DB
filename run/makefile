@@ -59,4 +59,5 @@ clean:
 	@$(MAKE) -C $(ALGEBRA) clean
 	@$(MAKE) -C $(SCHEMA) clean
 	@$(MAKE) -C $(PHYSICAL) clean
+	@$(MAKE) -C $(PARSER) clean
 

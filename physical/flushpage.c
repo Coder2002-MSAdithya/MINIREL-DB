@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-FlushPage()
+void FlushPage ()
 {
- printf("FlushPage \n ");
+    printf("FlushPage \n");
 }

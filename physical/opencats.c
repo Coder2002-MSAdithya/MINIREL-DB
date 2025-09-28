@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-OpenCats()
+void OpenCats ()
 {
- printf("OpenCats \n ");
+    printf("OpenCats \n");
 }

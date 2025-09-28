@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-ErrorMsgs()
+void ErrorMsgs ()
 {
- printf("ErrorMsgs \n ");
+    printf("ErrorMsgs \n");
 }

@@ -2,4 +2,4 @@
 #include "include/defs.h"
 
 CacheEntry catcache[MAXOPEN];	/* catalog cache */
-Buffer buffer[MAXOPEN];
+Buffer buffer[MAXOPEN];         /* buffer pool */

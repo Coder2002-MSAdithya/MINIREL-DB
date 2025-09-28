@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-InsertRec()
+void InsertRec ()
 {
- printf("InsertRec \n ");
+    printf("InsertRec \n");
 }

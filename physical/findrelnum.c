@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-FindRelNum()
+void FindRelNum ()
 {
- printf("FindRelNum \n ");
+    printf("FindRelNum \n");
 }

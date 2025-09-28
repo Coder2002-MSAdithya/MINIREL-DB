@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-GetNextRec()
+void GetNextRec ()
 {
- printf("GetNextRec \n ");
+    printf("GetNextRec \n");
 }

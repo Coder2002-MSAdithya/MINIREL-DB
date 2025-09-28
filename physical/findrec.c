@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-FindRec()
+void FindRec ()
 {
- printf("FindRec \n ");
+    printf("FindRec \n");
 }

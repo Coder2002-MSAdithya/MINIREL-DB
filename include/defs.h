@@ -1,10 +1,12 @@
-    /* 
-	This is the basic definition file.
-    */
+/********************************************************** 
+			This is the basic definition file.
+***********************************************************/
+
 #ifndef TYPES_MINIREL
 #define TYPES_MINIREL
+
 /*************************************************************
-		CONSTANTS
+							CONSTANTS							
 *************************************************************/
 #define PAGESIZE	512	/* number of bytes in a page */
 #define	MAXRECORD	508	/* PAGESIZE minus number of bytes taken up
@@ -21,7 +23,7 @@
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
 
 /*************************************************************
-		TYPE DEFINITIONS 
+						TYPE DEFINITIONS 
 *************************************************************/
 
 /* Rid structure */
@@ -39,5 +41,7 @@ typedef struct ps {
 
 typedef int CacheEntry;
 typedef int Buffer;
-/*****************************************************************/
+
 #endif
+
+/*****************************************************************/

@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-OpenRel()
+void OpenRel ()
 {
- printf("OpenRel \n ");
+    printf("OpenRel \n");
 }

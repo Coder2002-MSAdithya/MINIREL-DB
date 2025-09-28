@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-WriteRec()
+void WriteRec ()
 {
- printf("WriteRec \n ");
+    printf("WriteRec \n");
 }

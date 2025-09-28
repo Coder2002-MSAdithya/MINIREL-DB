@@ -1,6 +1,6 @@
+#include <stdio.h>
 
-
-CreateCats()
+void CreateCats ()
 {
- printf("CreateCats \n ");
+    printf("CreateCats \n");
 }
