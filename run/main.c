@@ -5,5 +5,5 @@ void main ()
 {
     printf("\n\nWelcome to MINIREL Database System\n\n");
     parser();
-    printf("\nGoodbye from MINIREL\n");
+    printf("\nGoodbye from MINIREL\n\n\n");
 }
