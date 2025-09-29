@@ -36,7 +36,7 @@ typedef struct recid {
 /* Page Structure */
 typedef struct ps 
 {
-	unsigned slotmap;
+	unsigned long slotmap;
 	char contents [MAXRECORD];
 } Page;
 
