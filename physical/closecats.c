@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include "../include/defs.h"
 
-void CloseCats ()
+int CloseCats()
 {
-    printf("closecats \n");
+    printf("CloseCats\n");
+    return OK;
 }

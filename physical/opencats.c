@@ -3,7 +3,8 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 
-void OpenCats()
+int OpenCats()
 {
     printf("OpenCats\n");
+    return OK;
 }
