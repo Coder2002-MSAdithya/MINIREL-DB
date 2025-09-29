@@ -3,6 +3,7 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 #include "../include/createdb.h"
+#include "../include/createcats.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,10 +58,13 @@ int CreateDB(int argc, char **argv)
     chdir(ORIG_DIR);
 
     if(flag == OK)
-    printf("DB %s successfully created.\n", DB_PATH);
+    {
+        printf("DB %s successfully created.\n", DB_PATH);
+    }
     else
-    printf("Error in creating DB. Failed to create the catalog tables\n"
-    "Please remove the directory if NOT needed");
+    {
+        ErrorMsgs(CAT_CREATE_ERROR, print_flag);
+    }
 
     return flag;
 }
