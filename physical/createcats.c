@@ -16,6 +16,12 @@ int CreateRelCat()
 
 int CreateCats()
 {
-    printf("CreateCats \n");
-    return OK;
+    if(CreateRelCat() == OK && CreateAttrCat() == OK)
+    {
+        printf("CreateCats OK\n");
+        return OK;
+    }
+
+    printf("CreateCats NOTOK");
+    return NOTOK;
 }
