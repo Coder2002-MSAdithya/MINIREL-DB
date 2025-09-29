@@ -56,11 +56,11 @@ typedef struct attrcat_rec
     char relName[RELNAME];   		// relation name it belongs to
 } AttrCatRec;
 
-struct attrDesc 
+typedef struct attrDesc 
 {
     AttrCatRec attr;  				// attribute catalog record
-    struct AttrDesc *next;			// pointer to next attribute catalog record
-};
+    struct attrDesc *next;			// pointer to next attribute catalog record
+} AttrDesc;
 
 typedef struct cacheentry {
 	Rid relcatRid;          		// catalog record RID
@@ -72,7 +72,7 @@ typedef struct cacheentry {
     int numPgs;						// number of pages
     int relFile;            		// file descriptor
     int dirty;              		// 0 = clean, 1 = modified
-    struct AttrDesc *attrList; 		// linked list of attributes
+    AttrDesc *attrList; 		// linked list of attributes
 } CacheEntry;
 
 typedef struct buffer 
