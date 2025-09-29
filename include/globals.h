@@ -14,7 +14,6 @@ extern bool db_open;
 extern bool print_flag;
 #endif
 
-int DestroyDB (int argc, char **argv);
 int Create (int argc, char **argv);
 int Destroy (int argc, char **argv);
 int Load (int argc, char **argv);

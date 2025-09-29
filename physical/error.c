@@ -120,6 +120,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
                     printf("Error %d: The path you have provided for DB creation contains illegal characters.\n" 
                         "Only paths containing alphabets and digits other than / are allowed.\n", errorNum);
                     break;
+            
+            case DBDESTROYERROR:
+                    printf("Deletion of DB directory NOT successful..\n");
+                    break;
 
             case FILESYSTEM_ERROR:
                 printf("Error %d: File system error occurred.\n"
