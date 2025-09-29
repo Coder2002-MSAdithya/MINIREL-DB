@@ -71,6 +71,16 @@ int ErrorMsgs(int errorNum, bool printFlag)
                        "→ Remove duplicate attributes or rename them uniquely.\n",
                        errorNum);
                 break;
+            
+            case CAT_CREATE_ERROR:
+                printf("Error %d: The catalog files could NOT be created.\n"
+                "Please try again after closing any processes that are using this directory.\n", errorNum);
+                break;
+            
+            case CAT_OPEN_ERROR:
+                printf("Could NOT open catalogs for this database.\n"
+                "Maybe you have chosen an invalid directory.\n");
+                break;
 
             case DBNOTEXIST:
                 printf("Error %d: Database does not exist.\n"

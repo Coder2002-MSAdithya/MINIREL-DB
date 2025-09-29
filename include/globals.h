@@ -17,7 +17,6 @@ extern bool print_flag;
 int OpenDB (int argc, char **argv);
 int CloseDB (int argc, char **argv);
 int DestroyDB (int argc, char **argv);
-int CreateCats();
 int Create (int argc, char **argv);
 int Destroy (int argc, char **argv);
 int Load (int argc, char **argv);
