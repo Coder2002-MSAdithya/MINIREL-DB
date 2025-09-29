@@ -5,16 +5,19 @@
 #ifndef GLOBALS_MINIREL
 #define GLOBALS_MINIREL
 #include "defs.h"
+#include <stdbool.h>
 extern CacheEntry catcache[MAXOPEN];	/* catalog cache */
 extern Buffer buffer[MAXOPEN];	/* buffer pool */
 extern char ORIG_DIR[MAX_PATH_LENGTH];
 extern char DB_DIR[MAX_PATH_LENGTH];
+extern bool db_open;
+extern bool print_flag;
 #endif
 
 int OpenDB (int argc, char **argv);
 int CloseDB (int argc, char **argv);
-int CreateDB (int argc, char **argv);
 int DestroyDB (int argc, char **argv);
+int CreateCats();
 int Create (int argc, char **argv);
 int Destroy (int argc, char **argv);
 int Load (int argc, char **argv);
