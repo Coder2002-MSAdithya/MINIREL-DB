@@ -59,7 +59,8 @@ int CreateDB(int argc, char **argv)
     if(flag == OK)
     printf("DB %s successfully created.\n", DB_PATH);
     else
-    printf("Error in creating DB.\n");
+    printf("Error in creating DB. Failed to create the catalog tables\n"
+    "Please remove the directory if NOT needed");
 
     return flag;
 }
