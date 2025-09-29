@@ -1,19 +1,15 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
+#include "../include/closedb.h"
 #include <stdio.h>
 
 
 int Quit (int argc, char **argv)
 {
-    /* print command line arguments */
-    short k; /* iteration counter */
-    printf ("%s:\n", argv[0]);
-    for (k=1; k<argc; ++k)
+    if(db_open)
     {
-        printf ("\targv[%d] = %s\n", k, argv[k]);
+        char *argv2[] = {"closedb"};
+        CloseDB(1, argv2);
     }
-    
-    printf ("Quit \n");
-    return (OK); /* all's fine */
 }
