@@ -9,10 +9,13 @@
 							CONSTANTS							
 *************************************************************/
 #define PAGESIZE	512	/* number of bytes in a page */
-#define	MAXRECORD	508	/* PAGESIZE minus number of bytes taken up for slot map */
+#define SLOTMAP		8	/* size of slotmap in bytes */
+#define HEADER_SIZE	16	/* number of bytes in header */
+#define	MAXRECORD	(PAGESIZE - SLOTMAP)	/* PAGESIZE minus number of bytes taken up for slot map */
 #define RELNAME		20	/* max length of a relation name */
 #define MAXOPEN		20  /* max number of files that can be open at the same time */
 #define ATTRNAME	20  /* max length of an attribute name */
+#define MAX_PATH_LENGTH		1024 /*max length of a path passed as command line arg */
 
 #define	OK			0	/* return codes */
 #define NOTOK		-1
