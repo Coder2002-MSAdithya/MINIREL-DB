@@ -24,18 +24,18 @@
 						TYPE DEFINITIONS 
 *************************************************************/
 
+/* Rid Structure */
+typedef struct recid {
+	short	pid;
+	short	slotnum;
+} Rid;
+
 /* Page Structure */
 typedef struct ps 
 {
 	unsigned slotmap;
 	char contents [MAXRECORD];
 } Page;
-
-typedef struct rec_id 
-{
-    short pid;						// page number
-    short slotnum;					// record slot number within the page
-} RecId;
 
 typedef struct relcat_rec 
 {
@@ -63,7 +63,7 @@ struct attrDesc
 };
 
 typedef struct cacheentry {
-	RecId relcatRid;          		// catalog record RID
+	Rid relcatRid;          		// catalog record RID
     char relName[RELNAME];			// relation name
     int recLength;					// record length in bytes
     int recsPerPg;					// records per page
@@ -81,9 +81,10 @@ typedef struct buffer
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
     short pid;              		// which page is stored here
-	int relFile;					// file discriptor of a relation
+	int relFile;					// file descriptor of a relation
 } Buffer;
 
 #endif
 
 /*****************************************************************/
+
