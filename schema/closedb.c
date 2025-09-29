@@ -15,9 +15,7 @@
  *
  * @param argc
  * @param argv
- * @return OK or NOTOK
- *
- * @author nithin
+ * @return OK or errorCode according to the type of error
  *
  * GLOBAL VARIABLES MODIFIED
  *      g_DBOpenFlag
