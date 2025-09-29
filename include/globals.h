@@ -6,7 +6,9 @@
 #define GLOBALS_MINIREL
 #include "defs.h"
 extern CacheEntry catcache[MAXOPEN];	/* catalog cache */
-extern Buffer buffer[MAXOPEN];        /* buffer pool */
+extern Buffer buffer[MAXOPEN];	/* buffer pool */
+extern char ORIG_DIR[MAX_PATH_LENGTH];
+extern char DB_DIR[MAX_PATH_LENGTH];
 #endif
 
 int OpenDB (int argc, char **argv);
