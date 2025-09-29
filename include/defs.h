@@ -16,6 +16,7 @@
 #define MAXOPEN		20  /* max number of files that can be open at the same time */
 #define ATTRNAME	20  /* max length of an attribute name */
 #define MAX_PATH_LENGTH		1024 /*max length of a path passed as command line arg */
+#define CMD_LENGTH          2048 /* Length of a command string */
 
 #define	OK			0	/* return codes */
 #define NOTOK		-1
