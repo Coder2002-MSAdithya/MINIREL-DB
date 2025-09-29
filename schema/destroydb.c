@@ -49,7 +49,7 @@ int DestroyDB(int argc, char **argv)
         return ErrorMsgs(ARGC_INSUFFICIENT, print_flag);
     }
 
-    if(!strcmp(DB_DIR, argv[1]))
+    if(db_open && !strcmp(DB_DIR, argv[1]))
     {
         char *argv2[] = {"closedb"};
         CloseDB(1, argv2);
