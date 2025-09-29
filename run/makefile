@@ -15,6 +15,7 @@ CFLAGS = -g $(DFLAG) -I$(INCLUDE)
 SRCS = main.c
 OBJ = $(BUILD)/main.o
 GLOB_OBJ = $(BUILD)/globals.o
+HELPER_OBJ = $(BUILD)/helpers.o
 
 ALGEBRA_OBJ = $(BUILD)/algebra/ALGEBRA.o
 SCHEMA_OBJ = $(BUILD)/schema/SCHEMA.o
@@ -26,9 +27,9 @@ FES_OBJ2 = $(BUILD)/frontend/fes.o
 
 all: minirel
 
-minirel: algebra_build schema_build physical_build frontend_build $(OBJ) $(GLOB_OBJ) | $(BUILD)
+minirel: algebra_build schema_build physical_build frontend_build $(OBJ) $(GLOB_OBJ) $(HELPER_OBJ) | $(BUILD)
 	@echo generating $@
-	cc $(CFLAGS) $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ) -o $(BUILD)/minirel
+	cc $(CFLAGS) $(ALGEBRA_OBJ) $(SCHEMA_OBJ) $(PHYSICAL_OBJ) $(FES_OBJ) $(OBJ) $(GLOB_OBJ) $(HELPER_OBJ) -o $(BUILD)/minirel
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -36,6 +37,10 @@ $(BUILD):
 # Compile globals.o into build/
 $(GLOB_OBJ): $(HOME)/globals.c $(INCLUDE)/globals.h | $(BUILD)
 	cc $(CFLAGS) -c $(HOME)/globals.c -o $@
+
+# Compile helpers.o into build/
+$(HELPER_OBJ): $(HOME)/helpers.c $(INCLUDE)/helpers.h | $(BUILD)
+	cc $(CFLAGS) -c $(HOME)/helpers.c -o $@
 
 # Compile main.o into build/
 $(OBJ): $(SRCS) $(INCLUDE)/globals.h $(INCLUDE)/defs.h $(INCLUDE)/error.h | $(BUILD)
