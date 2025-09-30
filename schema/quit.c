@@ -26,7 +26,7 @@
  *      Uses CloseDB from schema layer.
  */
 
-int Quit (int argc, char **argv)
+int Quit(int argc, char **argv)
 {
     if(db_open)
     {
