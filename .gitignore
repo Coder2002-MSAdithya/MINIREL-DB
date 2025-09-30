@@ -6,3 +6,4 @@ git_token
 minirel
 build
 git_token_sym
+run/*/

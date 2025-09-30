@@ -19,6 +19,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DUP_ATTR    204   /* Duplicate attributes in table name */
 #define CAT_CREATE_ERROR   301 /* Error in creating catalog tables */
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
+#define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
 #define DBNOTEXIST  501   /* DB does NOT exist */
 #define DBEXISTS    502   /* DB already exists */
 #define DB_LENGTH_EXCEEDED 503 /* DB name too long */
