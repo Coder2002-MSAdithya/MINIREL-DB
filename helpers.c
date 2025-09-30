@@ -9,6 +9,11 @@
 #include "include/defs.h"
 #include "include/helpers.h"
 
+int ceil_div(int a, int b)
+{
+    return (a+b-1)/b;
+}
+
 bool isValidPath(const char *path)
 {
     // Empty path is invalid

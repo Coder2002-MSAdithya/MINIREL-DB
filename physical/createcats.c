@@ -5,6 +5,7 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
+#include "../include/helpers.h"
 
 int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int recordSize, char magicChar)
 {
@@ -63,51 +64,35 @@ int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int record
 
 int CreateRelCat()
 {
-    FILE *rfp;
-    char page[PAGESIZE];
-    unsigned long slotmap;
-    RelCatRec relcat_rc;
-    RelCatRec relcat_ac;
-
-    const int relcat_recLength = (int)sizeof(RelCatRec);
-    const int attrcat_recLength = (int)sizeof(AttrCatRec);
-
-    const int relcat_recsPerPg = (PAGESIZE - HEADER_SIZE) / relcat_recLength;
-    const int attrcat_recsPerPg = (PAGESIZE - HEADER_SIZE) / attrcat_recLength;
-
-    const int relcat_numAttrs = 6;
-    const int attrcat_numAttrs = 5;
-
-    const int attrCat_numRecs = relcat_numAttrs + attrcat_numAttrs;
-
-    //Initialized relcat record for relcat
-    relcat_rc = (RelCatRec) {RELCAT, relcat_recLength, relcat_recsPerPg, relcat_numAttrs, 2, 1};
-
-    //Initialized relcat record for attrcat
-    relcat_ac = (RelCatRec) {ATTRCAT, attrcat_recLength, attrcat_recsPerPg, attrcat_numAttrs, attrCat_numRecs, 1};
-
     // Create array of RelCatRecs to insert them one by one into page
-    RelCatRec relcat_recs[] = {relcat_rc, relcat_ac};
+    RelCatRec relcat_recs[] = {Relcat_rc, Relcat_ac};
 
-    //Slotmap has two records filled now
-    slotmap = 0xC000000000000000;
-
-    //Put the magic number at the start of each page
-    strcpy(page, "$MINIREL");
-    *((long *)(page + MAGIC_SIZE)) = slotmap;
-    *((RelCatRec *)(page + HEADER_SIZE)) = relcat_rc;
-    *((RelCatRec *)(page + HEADER_SIZE + sizeof(RelCatRec))) = relcat_ac;
-
-    rfp = fopen(RELCAT, "wb");
-    fwrite(page, 1, PAGESIZE, rfp);
-    fclose(rfp);
+    // Write the records in an array to the catalog file in pages
+    writeCatRecsToFile(RELCAT, relcat_recs, NUM_CATS, sizeof(RelCatRec), '$');
 
     return OK;
 }
 
 int CreateAttrCat()
 {
-    printf("CreateAttrCat\n");
+    // Create array of AttrCatRecs to insert them one by one into page
+    AttrCatRec attrcat_recs[] = {
+        Attrcat_rrelName,
+        Attrcat_recLength,
+        Attrcat_recsPerPg,
+        AttrCat_numAttrs,
+        AttrCat_numRecs,
+        AttrCat_numPgs,
+        AttrCat_offset,
+        AttrCat_length,
+        AttrCat_type,
+        AttrCat_attrName,
+        AttrCat_arelName
+    };
+
+    // Write the records in an array to the catalog file in pages
+    writeCatRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '$');
+
     return OK;
 }
 
@@ -116,10 +101,8 @@ int CreateCats()
 {
     if(CreateRelCat() == OK && CreateAttrCat() == OK)
     {
-        printf("CreateCats OK\n");
         return OK;
     }
 
-    printf("CreateCats NOTOK");
     return NOTOK;
 }

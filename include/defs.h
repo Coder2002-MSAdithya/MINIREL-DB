@@ -26,6 +26,11 @@
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
 #define GEN_MAGIC   "MINIREL"  /* Common part of MAGIC BYTES of all relation files */
 
+#define RELCAT_NUMATTRS  6
+#define ATTRCAT_NUMATTRS 5
+
+#define NUM_CATS         2
+
 /*************************************************************
 						TYPE DEFINITIONS 
 *************************************************************/
