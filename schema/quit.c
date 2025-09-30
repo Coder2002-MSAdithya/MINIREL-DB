@@ -7,7 +7,7 @@
 /*
  * Function:  Quit()
  * ------------------------
- * terminates the program after closing database, if open
+ * Terminates the program after closing database, if open
  *
  * argv[0] = “quit”
  * argv[argc] = NIL
