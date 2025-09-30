@@ -10,6 +10,7 @@
 *************************************************************/
 #define PAGESIZE	512	/* number of bytes in a page */
 #define SLOTMAP		8	/* size of slotmap in bytes */
+#define MAGIC_SIZE  8   /* size of magic number for page */
 #define HEADER_SIZE	16	/* number of bytes in header */
 #define	MAXRECORD	(PAGESIZE - SLOTMAP)	/* PAGESIZE minus number of bytes taken up for slot map */
 #define RELNAME		20	/* max length of a relation name */
@@ -23,6 +24,12 @@
 
 #define RELCAT		"relcat"   /* name of the relation catalog file */
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
+#define GEN_MAGIC   "MINIREL"  /* Common part of MAGIC BYTES of all relation files */
+
+#define RELCAT_NUMATTRS  6
+#define ATTRCAT_NUMATTRS 5
+
+#define NUM_CATS         2
 
 /*************************************************************
 						TYPE DEFINITIONS 
