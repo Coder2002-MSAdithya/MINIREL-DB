@@ -17,10 +17,10 @@ int saveOrigDir()
 }
 
 void main()
-{
+{   
     printf("\n\nWelcome to MINIREL Database System\n\n");
     if(saveOrigDir() == OK)
-    {
+    {   
         parser();
     }
     printf("\nGoodbye from MINIREL\n\n\n");

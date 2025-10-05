@@ -1,8 +1,39 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "../include/defs.h"
+#include "../include/globals.h"
+#include "../include/error.h"
 
-int CloseCats()
+/* Close all system catalogs */
+int CloseCats() 
 {
-    printf("CloseCats\n");
-    return OK;
+    int ret = OK;
+
+    // Loop through the catalog cache and flush if dirty
+    for (int i = 0; i < MAXOPEN; i++) 
+    {
+        if (catcache[i].relFile > 0) 
+        {  // file is open
+            if (catcache[i].dirty) 
+            {
+                FlushPage(i);  
+            }
+
+            // Close the file descriptor
+            if (close(catcache[i].relFile) != 0) 
+            {
+                perror("CloseCats: failed to close file");
+                ret = NOTOK;
+            }
+
+            // Reset cache entry
+            catcache[i].relFile = -1;
+            catcache[i].dirty = 0;
+            catcache[i].attrList = NULL;
+        }
+    }
+
+    db_open = false;  // mark database as closed
+
+    return ret;
 }

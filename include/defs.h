@@ -12,7 +12,7 @@
 #define SLOTMAP		8	/* size of slotmap in bytes */
 #define MAGIC_SIZE  8   /* size of magic number for page */
 #define HEADER_SIZE	16	/* number of bytes in header */
-#define	MAXRECORD	(PAGESIZE - SLOTMAP)	/* PAGESIZE minus number of bytes taken up for slot map */
+#define	MAXRECORD	(PAGESIZE - HEADER_SIZE)	/* PAGESIZE minus number of bytes taken up for header */
 #define RELNAME		20	/* max length of a relation name */
 #define MAXOPEN		20  /* max number of files that can be open at the same time */
 #define ATTRNAME	20  /* max length of an attribute name */
@@ -75,15 +75,11 @@ typedef struct attrDesc
 
 typedef struct cacheentry {
 	Rid relcatRid;          		// catalog record RID
-    char relName[RELNAME];			// relation name
-    int recLength;					// record length in bytes
-    int recsPerPg;					// records per page
-    int numAttrs;					// number of attributes
-    int numRecs;					// number of records
-    int numPgs;						// number of pages
+    RelCatRec relcat_rec;           // relation catalogue record
     int relFile;            		// file descriptor
     int dirty;              		// 0 = clean, 1 = modified
-    AttrDesc *attrList; 		// linked list of attributes
+    int valid;                      // 0 = invalid, 1 = valid
+    AttrDesc *attrList; 		    // linked list of attributes
 } CacheEntry;
 
 typedef struct buffer 

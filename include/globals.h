@@ -48,3 +48,6 @@ int Delete (int argc, char **argv);
 int Project (int argc, char **argv);
 int Select (int argc, char **argv);
 int Join (int argc, char **argv);
+
+
+void FlushPage();

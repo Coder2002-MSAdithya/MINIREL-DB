@@ -3,7 +3,13 @@
 #include <stdio.h>
 #include <stddef.h>
 #include "fes.h"
+#include "../include/createdb.h"
+#include "../include/destroydb.h"
+#include "../include/opendb.h"
+#include "../include/closedb.h"
 #include "../include/globals.h"
+
+
 
 typedef struct
 { 
