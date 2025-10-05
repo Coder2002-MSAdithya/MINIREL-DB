@@ -45,6 +45,7 @@ typedef struct recid {
 typedef struct ps 
 {
 	unsigned long slotmap;
+    char magicString[MAGIC_SIZE];
 	char contents [MAXRECORD];
 } Page;
 
@@ -84,7 +85,7 @@ typedef struct cacheentry {
 
 typedef struct buffer 
 {
-	int relId;						// relation id
+	int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
     short pid;              		// which page is stored here

@@ -1,98 +1,105 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
 
-/* helper to read all records of a catalog file into memory */
-int readCatalogFile(const char *filename, int recordSize, void *recordArray, int maxRecords) 
+int OpenCats()
 {
-    FILE *fp = fopen(filename, "rb");
-    if (!fp) 
+    // Open catalog files
+    int rel_fd = open(RELCAT, O_RDWR);
+    int attr_fd = open(ATTRCAT, O_RDWR);
+
+    if (rel_fd < 0 || attr_fd < 0)
     {
         return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
     }
 
-    int readCount = 0;
-    char page[PAGESIZE];
+    // Load relcat entry into cache[0]
+    catcache[0].relcat_rec = Relcat_rc;
+    catcache[0].relFile = rel_fd;
+    catcache[0].dirty = 0;
+    catcache[0].valid = 1;
 
-    while (fread(page, 1, PAGESIZE, fp) == PAGESIZE) 
+    // Build attr list for relcat
+    AttrDesc *rhead = NULL, *rtail = NULL;
+    AttrCatRec *rel_attrs[] = {
+        &Attrcat_rrelName,
+        &Attrcat_recLength,
+        &Attrcat_recsPerPg,
+        &AttrCat_numAttrs,
+        &AttrCat_numRecs,
+        &AttrCat_numPgs
+    };
+
+    for (int i = 0; i < RELCAT_NUMATTRS; i++) 
     {
-        // --- check magic ---
-        if (strncmp(page+1, GEN_MAGIC, strlen(GEN_MAGIC)) != 0) 
+        AttrDesc *node = malloc(sizeof(AttrDesc));
+        node->attr = *rel_attrs[i];
+        node->next = NULL;
+        if (!rhead)
         {
-            fclose(fp);
-            return ErrorMsgs(UNKNOWN_ERROR, print_flag);
+            rhead = node;
         }
-
-        // slotmap right after magic
-        unsigned long *slotmapPtr = (unsigned long *)(page + MAGIC_SIZE);
-        char *dataStart = page + HEADER_SIZE;
-
-        // scan slots
-        for (int slot = 0; slot < (PAGESIZE - HEADER_SIZE) / recordSize; slot++) 
+        else 
         {
-            if ((*slotmapPtr >> slot) & 1UL) 
-            {
-                if (readCount >= maxRecords) 
-                {
-                    fclose(fp);
-                    return ErrorMsgs(UNKNOWN_ERROR, print_flag);
-                }
-                memcpy((char *)recordArray + readCount * recordSize, dataStart + slot * recordSize, recordSize);
-                readCount++;
-            }
+            rtail->next = node;
+            rtail = node;
         }
     }
+    
+    catcache[0].attrList = rhead;
 
-    fclose(fp);
-    return readCount; // number of records read
-}
+    // Load attrcat entry into cache[1]
+    catcache[1].relcat_rec = Relcat_ac;
+    catcache[1].relFile = attr_fd;
+    catcache[1].dirty = 0;
+    catcache[1].valid = 1;
 
-int OpenCats() 
-{
-    // Read relcat
-    RelCatRec relcatRecords[NUM_CATS];
-    int relCount = readCatalogFile(RELCAT, sizeof(RelCatRec), relcatRecords, NUM_CATS);
-    if (relCount <= 0) return NOTOK;
+    // Build attr list for attrcat
+    AttrDesc *ahead = NULL, *atail = NULL;
+    AttrCatRec *attr_attrs[] = {
+        &AttrCat_offset,
+        &AttrCat_length,
+        &AttrCat_type,
+        &AttrCat_attrName,
+        &AttrCat_arelName
+    };
 
-    // Read attrcat
-    AttrCatRec attrcatRecords[attrCat_numRecs];
-    int attrCount = readCatalogFile(ATTRCAT, sizeof(AttrCatRec), attrcatRecords, attrCat_numRecs);
-    if (attrCount <= 0) return NOTOK;
-
-    // Populate cache
-    for (int i = 0; i < relCount; i++) 
+    for (int i = 0; i < ATTRCAT_NUMATTRS; i++) 
     {
-        catcache[i].relcat_rec = relcatRecords[i];
-        catcache[i].dirty = 0;
-        catcache[i].relFile = -1;  // not opened yet
-        catcache[i].attrList = NULL;
-
-        // Link attribute list
-        AttrDesc *prev = NULL;
-        for (int j = 0; j < attrCount; j++) 
+        AttrDesc *node = malloc(sizeof(AttrDesc));
+        node->attr = *attr_attrs[i];
+        node->next = NULL;
+        if (!ahead) 
         {
-            if (strcmp(attrcatRecords[j].relName, relcatRecords[i].relName) == 0) 
-            {
-                AttrDesc *node = (AttrDesc *)malloc(sizeof(AttrDesc));
-                node->attr = attrcatRecords[j];
-                node->next = NULL;
-                if (prev == NULL) 
-                {
-                    catcache[i].attrList = node;
-                } 
-                else 
-                {
-                    prev->next = node;
-                }
-                prev = node;
-            }
+            ahead = node;
+        }
+        else 
+        {
+            atail->next = node;
+            atail = node;
         }
     }
+    
+    catcache[1].attrList = ahead;
 
+    // Initialize buffer pool
+    for (int i = 0; i < MAXOPEN; i++) 
+    {
+        buffer[i].relNum = -1;
+        buffer[i].dirty = 0;
+        buffer[i].pid = -1;
+        buffer[i].relFile = -1;
+        memset(buffer[i].page, 0, sizeof(buffer[i].page));
+    }
+
+    // Mark DB as open
     db_open = true;
+
     return OK;
 }

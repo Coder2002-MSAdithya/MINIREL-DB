@@ -20,6 +20,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define CAT_CREATE_ERROR   301 /* Error in creating catalog tables */
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
+#define CAT_CLOSE_ERROR 304 /* Error in closing catalog files */
 #define DBNOTEXIST  501   /* DB does NOT exist */
 #define DBEXISTS    502   /* DB already exists */
 #define DB_LENGTH_EXCEEDED 503 /* DB name too long */

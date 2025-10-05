@@ -91,7 +91,7 @@ int CreateAttrCat()
     };
 
     // Write the records in an array to the catalog file in pages
-    writeCatRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '$');
+    writeCatRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '!');
 
     return OK;
 }

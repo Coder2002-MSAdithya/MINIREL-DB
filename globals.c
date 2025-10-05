@@ -29,7 +29,7 @@ RelCatRec Relcat_ac = {ATTRCAT, attrcat_recLength, attrcat_recsPerPg, ATTRCAT_NU
 AttrCatRec Attrcat_rrelName = {offsetof(RelCatRec, relName), RELNAME, 's', "relName", RELCAT};
 
 //attrcat record for recLength column of relcat
-AttrCatRec Attrcat_recLength = {offsetof(RelCatRec, recLength), RELNAME, 'i', "recLength", RELCAT};
+AttrCatRec Attrcat_recLength = {offsetof(RelCatRec, recLength), sizeof(int), 'i', "recLength", RELCAT};
 
 //attrcat record for recsPerPg column of relcat
 AttrCatRec Attrcat_recsPerPg = {offsetof(RelCatRec, recsPerPg), sizeof(int), 'i', "recsPerPg", RELCAT};
@@ -53,7 +53,7 @@ AttrCatRec AttrCat_length = {offsetof(AttrCatRec, length), sizeof(int), 'i', "le
 AttrCatRec AttrCat_type = {offsetof(AttrCatRec, type), sizeof(char), 's', "type", ATTRCAT};
 
 //attrcat record for attrName column of attrCat
-AttrCatRec AttrCat_attrName = {offsetof(AttrCatRec, attrName), RELNAME, 's', "attrName", ATTRCAT};
+AttrCatRec AttrCat_attrName = {offsetof(AttrCatRec, attrName), ATTRNAME, 's', "attrName", ATTRCAT};
 
 //attrcat record for relName column of attrCat
 AttrCatRec AttrCat_arelName = {offsetof(AttrCatRec, relName), RELNAME, 's', "relName", ATTRCAT};
