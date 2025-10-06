@@ -1,8 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include "../include/defs.h"
-#include "../include/globals.h"
 #include "../include/error.h"
+#include "../include/globals.h"
+#include "../include/helpers.h"
+
 
 /* Close all system catalogs */
 int CloseCats() 
@@ -29,6 +34,14 @@ int CloseCats()
             catcache[i].dirty = 0;
             catcache[i].valid = 0;
             catcache[i].attrList = NULL;
+            catcache[i].relcat_rec.relName[0] = '\0';
+            catcache[i].relcat_rec.recLength = 0;
+            catcache[i].relcat_rec.recsPerPg = 0;
+            catcache[i].relcat_rec.numAttrs = 0;
+            catcache[i].relcat_rec.numRecs = 0;
+            catcache[i].relcat_rec.numPgs = 0;
+            catcache[i].relcatRid.pid = -1;
+            catcache[i].relcatRid.slotnum = 0;
         }
     }
 

@@ -13,6 +13,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define RELNOEXIST  101   /* Relation does not exist */
 #define RELEXIST    102   /* Relation already exists */
 #define REL_LENGTH_EXCEEDED 103 /* Relation name too long */
+#define REL_OPEN_ERROR 104 /* Relation not open */
 #define ATTRNOEXIST 201   /* Attribute does not exist */
 #define ATTREXIST   202   /* Attribute already exists */
 #define ATTR_NAME_EXCEEDED 203 /* Attribute name too long */
@@ -31,4 +32,5 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DBDESTROYERROR  508 /* DB directory could not be deleted */
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define UNKNOWN_ERROR   901 /* Some unknown error */
+#define TOO_MANY_OPEN 902 /* Catcache if full of open relations */
 #endif

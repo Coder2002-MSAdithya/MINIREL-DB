@@ -51,3 +51,4 @@ int Join (int argc, char **argv);
 
 
 void FlushPage();
+int FindRelNum(const char *relName);

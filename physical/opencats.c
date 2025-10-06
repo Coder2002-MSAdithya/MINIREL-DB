@@ -24,6 +24,8 @@ int OpenCats()
     catcache[0].relFile = rel_fd;
     catcache[0].dirty = 0;
     catcache[0].valid = 1;
+    catcache[0].relcatRid.pid = 0;
+    catcache[0].relcatRid.slotnum = 0;
 
     // Build attr list for relcat
     AttrDesc *rhead = NULL, *rtail = NULL;
@@ -59,6 +61,8 @@ int OpenCats()
     catcache[1].relFile = attr_fd;
     catcache[1].dirty = 0;
     catcache[1].valid = 1;
+    catcache[1].relcatRid.pid = 0;
+    catcache[1].relcatRid.slotnum = 1;
 
     // Build attr list for attrcat
     AttrDesc *ahead = NULL, *atail = NULL;
