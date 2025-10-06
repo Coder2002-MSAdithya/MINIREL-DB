@@ -46,6 +46,7 @@ int OpenCats()
         if (!rhead)
         {
             rhead = node;
+            rtail = node;
         }
         else 
         {
@@ -82,6 +83,7 @@ int OpenCats()
         if (!ahead) 
         {
             ahead = node;
+            atail = node;
         }
         else 
         {
