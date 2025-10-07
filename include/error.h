@@ -14,6 +14,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define RELEXIST    102   /* Relation already exists */
 #define REL_LENGTH_EXCEEDED 103 /* Relation name too long */
 #define REL_OPEN_ERROR 104 /* Relation not open */
+#define INVALID_RELNUM 105 /* Relation number is invalid */
 #define ATTRNOEXIST 201   /* Attribute does not exist */
 #define ATTREXIST   202   /* Attribute already exists */
 #define ATTR_NAME_EXCEEDED 203 /* Attribute name too long */
@@ -33,4 +34,5 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define UNKNOWN_ERROR   901 /* Some unknown error */
 #define TOO_MANY_OPEN 902 /* Catcache if full of open relations */
+#define PAGE_MAGIC_ERROR 903 /* Page does not belong to MINIREL */
 #endif

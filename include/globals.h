@@ -50,5 +50,5 @@ int Select (int argc, char **argv);
 int Join (int argc, char **argv);
 
 
-void FlushPage();
+int FlushPage(int relNum);
 int FindRelNum(const char *relName);
