@@ -10,11 +10,15 @@
 int ErrorMsgs(int errorNum, bool printFlag);
 #define ARGC_INSUFFICIENT 601 /* Insufficient number of arguments passed */
 #define METADATA_SECURITY 602 /* Metadata table modification error */
+#define BUFFER_FULL 603 /* Buffer is full */
+#define INVALID_FORMAT 604 /* Attribute has invalid format */
+#define STR_LEN_INVALID 605 /* String length limit for attribute is more than 50 */
 #define RELNOEXIST  101   /* Relation does not exist */
 #define RELEXIST    102   /* Relation already exists */
 #define REL_LENGTH_EXCEEDED 103 /* Relation name too long */
 #define REL_OPEN_ERROR 104 /* Relation not open */
-#define INVALID_RELNUM 105 /* Relation number is invalid */
+#define REL_CLOSE_ERROR 105 /* Relation not closed */
+#define INVALID_RELNUM 106 /* Relation number is invalid */
 #define ATTRNOEXIST 201   /* Attribute does not exist */
 #define ATTREXIST   202   /* Attribute already exists */
 #define ATTR_NAME_EXCEEDED 203 /* Attribute name too long */
@@ -23,6 +27,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
 #define CAT_CLOSE_ERROR 304 /* Error in closing catalog files */
+#define CAT_DELETE_ERROR 305 /* Catalogue file can't be deleted */
 #define DBNOTEXIST  501   /* DB does NOT exist */
 #define DBEXISTS    502   /* DB already exists */
 #define DB_LENGTH_EXCEEDED 503 /* DB name too long */
@@ -33,6 +38,5 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DBDESTROYERROR  508 /* DB directory could not be deleted */
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define UNKNOWN_ERROR   901 /* Some unknown error */
-#define TOO_MANY_OPEN 902 /* Catcache if full of open relations */
-#define PAGE_MAGIC_ERROR 903 /* Page does not belong to MINIREL */
+#define PAGE_MAGIC_ERROR 902 /* Page does not belong to MINIREL */
 #endif

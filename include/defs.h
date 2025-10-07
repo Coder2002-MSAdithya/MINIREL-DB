@@ -8,16 +8,16 @@
 /*************************************************************
 							CONSTANTS							
 *************************************************************/
-#define PAGESIZE	512	/* number of bytes in a page */
-#define SLOTMAP		8	/* size of slotmap in bytes */
-#define MAGIC_SIZE  8   /* size of magic number for page */
-#define HEADER_SIZE	16	/* number of bytes in header */
-#define	MAXRECORD	(PAGESIZE - HEADER_SIZE)	/* PAGESIZE minus number of bytes taken up for header */
-#define RELNAME		20	/* max length of a relation name */
-#define MAXOPEN		20  /* max number of files that can be open at the same time */
-#define ATTRNAME	20  /* max length of an attribute name */
-#define MAX_PATH_LENGTH		1024 /*max length of a path passed as command line arg */
-#define CMD_LENGTH          2048 /* Length of a command string */
+#define PAGESIZE	        512	    /* number of bytes in a page */
+#define SLOTMAP		        8	    /* size of slotmap in bytes */
+#define MAGIC_SIZE          8       /* size of magic number for page */
+#define HEADER_SIZE	        16	    /* number of bytes in header */
+#define	MAXRECORD	        (PAGESIZE - HEADER_SIZE)	/* PAGESIZE minus number of bytes taken up for header */
+#define RELNAME		        20	    /* max length of a relation name */
+#define MAXOPEN		        20      /* max number of files that can be open at the same time */
+#define ATTRNAME	        20      /* max length of an attribute name */
+#define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
+#define CMD_LENGTH          2048    /* Length of a command string */
 
 #define	OK			0	/* return codes */
 #define NOTOK		-1
@@ -63,7 +63,7 @@ typedef struct attrcat_rec
 {
     int offset;                 	// offset of attribute within record
     int length;                 	// length of attribute
-    char type;                    	// 'i', 'f', 's'
+    char type;                      // 'i', 'f', 's'
     char attrName[ATTRNAME]; 		// attribute name
     char relName[RELNAME];   		// relation name it belongs to
 } AttrCatRec;

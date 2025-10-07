@@ -76,7 +76,7 @@ int OpenDB(int argc, char **argv)
     //OpenCats also initializes various global data structures
     if(OpenCats() == OK)
     {
-        printf("Database %s has been opened successully for use.\n", DB_DIR);
+        printf("Database %s has been opened successufully for use.\n", DB_DIR);
     }
     else
     {

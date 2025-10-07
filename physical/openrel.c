@@ -29,7 +29,7 @@ int OpenRel(const char *relName)
         }
     }
     if (freeSlot == -1)
-        return ErrorMsgs(TOO_MANY_OPEN, print_flag);
+        return ErrorMsgs(BUFFER_FULL, print_flag);
 
     // Step 3: Read relcat to find the relation’s metadata
     FILE *fp = fopen(RELCAT, "rb");
