@@ -54,16 +54,8 @@ int ReadPage(int relNum, short pid)
         return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
     }
 
-    // Check magic string (optional)
-    Page *pg = (Page *)buf->page;
-    if (strncmp(pg->magicString + 1, GEN_MAGIC, strlen(GEN_MAGIC)) != 0)
-    {
-        return ErrorMsgs(PAGE_MAGIC_ERROR, print_flag);
-    }
-
     // Update buffer metadata
     buf->pid = pid;
-    buf->relFile = entry->relFile;
     buf->dirty = 0;
 
     if (print_flag)

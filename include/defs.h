@@ -41,6 +41,8 @@
 /*************************************************************
 						TYPE DEFINITIONS 
 *************************************************************/
+typedef unsigned short int pid_t;
+typedef unsigned short int slotnum_t;
 
 /* Rid Structure */
 typedef struct recid {
@@ -94,8 +96,7 @@ typedef struct buffer
 	int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
-    short pid;              		// which page is stored here
-	int relFile;					// file descriptor of a relation
+    short pid;              		// which page is stored here					// file descriptor of a relation
 } Buffer;
 
 #endif

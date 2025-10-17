@@ -106,7 +106,7 @@ int OpenCats()
         memset(buffer[i].page, 0, sizeof(buffer[i].page));
     }
 
-    // Mark DB as open
+    // Mark DB as open (OpenDB already does this)
     db_open = true;
 
     return OK;
