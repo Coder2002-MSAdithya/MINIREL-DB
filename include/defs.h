@@ -8,16 +8,20 @@
 /*************************************************************
 							CONSTANTS							
 *************************************************************/
-#define PAGESIZE	512	/* number of bytes in a page */
-#define SLOTMAP		8	/* size of slotmap in bytes */
-#define MAGIC_SIZE  8   /* size of magic number for page */
-#define HEADER_SIZE	16	/* number of bytes in header */
-#define	MAXRECORD	(PAGESIZE - SLOTMAP)	/* PAGESIZE minus number of bytes taken up for slot map */
-#define RELNAME		20	/* max length of a relation name */
-#define MAXOPEN		20  /* max number of files that can be open at the same time */
-#define ATTRNAME	20  /* max length of an attribute name */
-#define MAX_PATH_LENGTH		1024 /*max length of a path passed as command line arg */
-#define CMD_LENGTH          2048 /* Length of a command string */
+#define PAGESIZE	        512	    /* number of bytes in a page */
+#define SLOTMAP		        8	    /* size of slotmap in bytes */
+#define MAGIC_SIZE          8       /* size of magic number for page */
+#define HEADER_SIZE	        16	    /* number of bytes in header */
+#define	MAXRECORD	        (PAGESIZE - HEADER_SIZE)	/* PAGESIZE minus number of bytes taken up for header */
+#define RELNAME		        20	    /* max length of a relation name */
+#define MAXOPEN		        20      /* max number of files that can be open at the same time */
+#define ATTRNAME	        20      /* max length of an attribute name */
+#define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
+#define CMD_LENGTH          2048    /* Length of a command string */
+
+#define DIRTY_MASK          1 /*LSB of status field of cache entry represents dirty*/
+#define VALID_MASK          2 /*2nd least significant bit of status field represents valid bit*/
+#define PINNED_MASK         4 /*3rd least significant bit represents whether it's a catalog relation*/
 
 #define	OK			0	/* return codes */
 #define NOTOK		-1
@@ -25,6 +29,9 @@
 #define RELCAT		"relcat"   /* name of the relation catalog file */
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
 #define GEN_MAGIC   "MINIREL"  /* Common part of MAGIC BYTES of all relation files */
+
+#define RELCAT_CACHE    0
+#define ATTRCAT_CACHE   1
 
 #define RELCAT_NUMATTRS  6
 #define ATTRCAT_NUMATTRS 5
@@ -34,6 +41,8 @@
 /*************************************************************
 						TYPE DEFINITIONS 
 *************************************************************/
+typedef unsigned short int pid_t;
+typedef unsigned short int slotnum_t;
 
 /* Rid Structure */
 typedef struct recid {
@@ -45,6 +54,7 @@ typedef struct recid {
 typedef struct ps 
 {
 	unsigned long slotmap;
+    char magicString[MAGIC_SIZE];
 	char contents [MAXRECORD];
 } Page;
 
@@ -62,7 +72,7 @@ typedef struct attrcat_rec
 {
     int offset;                 	// offset of attribute within record
     int length;                 	// length of attribute
-    char type;                    	// 'i', 'f', 's'
+    char type;                      // 'i', 'f', 's'
     char attrName[ATTRNAME]; 		// attribute name
     char relName[RELNAME];   		// relation name it belongs to
 } AttrCatRec;
@@ -75,24 +85,18 @@ typedef struct attrDesc
 
 typedef struct cacheentry {
 	Rid relcatRid;          		// catalog record RID
-    char relName[RELNAME];			// relation name
-    int recLength;					// record length in bytes
-    int recsPerPg;					// records per page
-    int numAttrs;					// number of attributes
-    int numRecs;					// number of records
-    int numPgs;						// number of pages
+    RelCatRec relcat_rec;           // relation catalogue record
     int relFile;            		// file descriptor
-    int dirty;              		// 0 = clean, 1 = modified
-    AttrDesc *attrList; 		// linked list of attributes
+    int status;                     // LSB is for dirty and 2nd LSB for valid/invalid
+    AttrDesc *attrList; 		    // linked list of attributes
 } CacheEntry;
 
 typedef struct buffer 
 {
-	int relId;						// relation id
+	int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
-    short pid;              		// which page is stored here
-	int relFile;					// file descriptor of a relation
+    short pid;              		// which page is stored here					// file descriptor of a relation
 } Buffer;
 
 #endif
