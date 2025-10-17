@@ -8,8 +8,9 @@ CacheEntry catcache[MAXOPEN];	/* catalog cache */
 Buffer buffer[MAXOPEN];         /* buffer pool */
 char ORIG_DIR[MAX_PATH_LENGTH]; /*original invoked directory */
 char DB_DIR[MAX_PATH_LENGTH];  /* database working directory */
-bool db_open = false;
-bool print_flag = true;
+bool db_open = false;   /* database open */
+bool print_flag = true; /* flag to print error messages*/
+bool debug_flag = true; /* for debugging purposes */
 
 const int relcat_recLength = (int)sizeof(RelCatRec);
 const int attrcat_recLength = (int)sizeof(AttrCatRec);

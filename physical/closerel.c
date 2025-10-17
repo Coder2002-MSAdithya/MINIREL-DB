@@ -28,7 +28,7 @@ int CloseRel(int relNum)
     }
 
     // Step 2: If catalog info dirty, update relcat on disk
-    if (entry->dirty)
+    if ((entry->status) & DIRTY_MASK)
     {
         FILE *fp = fopen(RELCAT, "r+b");
         if (!fp)
@@ -46,7 +46,7 @@ int CloseRel(int relNum)
             }
         }
         fclose(fp);
-        entry->dirty = 0;
+        entry->status &= ~DIRTY_MASK;
     }
 
     // Step 3: Close file

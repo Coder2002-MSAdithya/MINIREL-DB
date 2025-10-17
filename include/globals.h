@@ -12,6 +12,7 @@ extern char ORIG_DIR[MAX_PATH_LENGTH];
 extern char DB_DIR[MAX_PATH_LENGTH];
 extern bool db_open;
 extern bool print_flag;
+extern bool debug_flag;
 
 extern const int relcat_recLength;
 extern const int attrcat_recLength;

@@ -13,6 +13,7 @@ int OpenRel(const char *relName)
 {
     // Step 1: Check if already open
     int relNum = FindRelNum(relName);
+    
     if (relNum != NOTOK)
     {
         return relNum;  // Already open
@@ -40,15 +41,16 @@ int OpenRel(const char *relName)
 
     RelCatRec rcrec;
     int found = 0;
-    while (fread(&rcrec, sizeof(RelCatRec), 1, fp) == 1)
+
+    while(fread(&rcrec, sizeof(RelCatRec), 1, fp) == 1)
     {
-        if (strcmp(rcrec.relName, relName) == 0)
+        if(strcmp(rcrec.relName, relName) == 0)
         {
             found = 1;
+            fclose(fp);
             break;
         }
     }
-    fclose(fp);
 
     if (!found)
     {
@@ -57,7 +59,7 @@ int OpenRel(const char *relName)
 
     // Step 4: Fill cache entry
     catcache[freeSlot].relcat_rec = rcrec;
-    catcache[freeSlot].dirty = 0;
+    catcache[freeSlot].status &= ~DIRTY_MASK;
 
     // Step 5: Open relation file
     catcache[freeSlot].relFile = open(relName, O_RDWR);

@@ -19,12 +19,19 @@
 #define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
 #define CMD_LENGTH          2048    /* Length of a command string */
 
+#define DIRTY_MASK          1 /*LSB of status field of cache entry represents dirty*/
+#define VALID_MASK          2 /*2nd least significant bit of status field represents valid bit*/
+#define PINNED_MASK         4 /*3rd least significant bit represents whether it's a catalog relation*/
+
 #define	OK			0	/* return codes */
 #define NOTOK		-1
 
 #define RELCAT		"relcat"   /* name of the relation catalog file */
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
 #define GEN_MAGIC   "MINIREL"  /* Common part of MAGIC BYTES of all relation files */
+
+#define RELCAT_CACHE    0
+#define ATTRCAT_CACHE   1
 
 #define RELCAT_NUMATTRS  6
 #define ATTRCAT_NUMATTRS 5
@@ -78,8 +85,7 @@ typedef struct cacheentry {
 	Rid relcatRid;          		// catalog record RID
     RelCatRec relcat_rec;           // relation catalogue record
     int relFile;            		// file descriptor
-    int dirty;              		// 0 = clean, 1 = modified
-    int valid;                      // 0 = invalid, 1 = valid
+    int status;                     // LSB is for dirty and 2nd LSB for valid/invalid
     AttrDesc *attrList; 		    // linked list of attributes
 } CacheEntry;
 

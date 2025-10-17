@@ -8,27 +8,58 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 
+int ReadPage(int relNum, int pid);
+
+AttrDesc* BuildAttrList(AttrCatRec **attrArray, int numAttrs)
+{
+    AttrDesc *head=NULL, *tail=NULL;
+    for(int i=0;i<numAttrs;i++)
+    {
+        AttrDesc *node=malloc(sizeof(AttrDesc));
+        node->attr=*attrArray[i];
+        node->next=NULL;
+
+        if(!head)
+        {
+            head=node;
+            tail=node;
+        }
+        else
+        {
+            tail->next=node;
+            tail=node;
+        }
+    }
+    return head;
+}
+
 int OpenCats()
 {
     // Open catalog files
     int rel_fd = open(RELCAT, O_RDWR);
     int attr_fd = open(ATTRCAT, O_RDWR);
 
-    if (rel_fd < 0 || attr_fd < 0)
+    // Page variable
+    char page[PAGESIZE];
+
+    // To place the current catalog values of relcat and attrcat
+    RelCatRec Relcat_rc, Relcat_ac;
+
+    // Read the first page of relcat into page buffer
+    read(rel_fd, page, PAGESIZE);
+
+    // The first record of relcat relation stores relcat's info
+    memcpy(&Relcat_rc, page+HEADER_SIZE, sizeof(RelCatRec));
+
+    // The second record of the relcat relation holds attrcat's info
+    memcpy(&Relcat_ac, page+HEADER_SIZE+sizeof(RelCatRec), sizeof(RelCatRec));
+
+    if (rel_fd == NOTOK || attr_fd == NOTOK)
     {
         return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
     }
 
-    // Load relcat entry into cache[0]
-    catcache[0].relcat_rec = Relcat_rc;
-    catcache[0].relFile = rel_fd;
-    catcache[0].dirty = 0;
-    catcache[0].valid = 1;
-    catcache[0].relcatRid.pid = 0;
-    catcache[0].relcatRid.slotnum = 0;
-
-    // Build attr list for relcat
-    AttrDesc *rhead = NULL, *rtail = NULL;
+    // Attributes of relcat relation
     AttrCatRec *rel_attrs[] = {
         &Attrcat_rrelName,
         &Attrcat_recLength,
@@ -38,35 +69,7 @@ int OpenCats()
         &AttrCat_numPgs
     };
 
-    for (int i = 0; i < RELCAT_NUMATTRS; i++) 
-    {
-        AttrDesc *node = malloc(sizeof(AttrDesc));
-        node->attr = *rel_attrs[i];
-        node->next = NULL;
-        if (!rhead)
-        {
-            rhead = node;
-            rtail = node;
-        }
-        else 
-        {
-            rtail->next = node;
-            rtail = node;
-        }
-    }
-    
-    catcache[0].attrList = rhead;
-
-    // Load attrcat entry into cache[1]
-    catcache[1].relcat_rec = Relcat_ac;
-    catcache[1].relFile = attr_fd;
-    catcache[1].dirty = 0;
-    catcache[1].valid = 1;
-    catcache[1].relcatRid.pid = 0;
-    catcache[1].relcatRid.slotnum = 1;
-
-    // Build attr list for attrcat
-    AttrDesc *ahead = NULL, *atail = NULL;
+    // Attributes of attrcat relation
     AttrCatRec *attr_attrs[] = {
         &AttrCat_offset,
         &AttrCat_length,
@@ -75,24 +78,23 @@ int OpenCats()
         &AttrCat_arelName
     };
 
-    for (int i = 0; i < ATTRCAT_NUMATTRS; i++) 
-    {
-        AttrDesc *node = malloc(sizeof(AttrDesc));
-        node->attr = *attr_attrs[i];
-        node->next = NULL;
-        if (!ahead) 
-        {
-            ahead = node;
-            atail = node;
-        }
-        else 
-        {
-            atail->next = node;
-            atail = node;
-        }
-    }
-    
-    catcache[1].attrList = ahead;
+    // Load relcat entry into cache[0]
+    catcache[0].relcat_rec = Relcat_rc;
+    catcache[0].relFile = rel_fd;
+    catcache[0].status = (PINNED_MASK | VALID_MASK); // last three bits are 1 (for metadata), 1 (for valid) and 0 (for clean)
+    /* Record for attrcat is in slot 0 of the page 0 (O based indexing of pages and slots)*/
+    catcache[0].relcatRid.pid = 0;
+    catcache[0].relcatRid.slotnum = 0;
+    catcache[0].attrList = BuildAttrList(rel_attrs, RELCAT_NUMATTRS);
+
+    // Load attrcat entry into cache[1]
+    catcache[1].relcat_rec = Relcat_ac;
+    catcache[1].relFile = attr_fd;
+    catcache[1].status = (PINNED_MASK | VALID_MASK); // last three bits are 1 (for metadata), 1 (for valid) and 0 (for clean)
+    /* Record for attrcat is in slot 1 of the page 0 (O based indexing of pages and slots)*/
+    catcache[1].relcatRid.pid = 0;
+    catcache[1].relcatRid.slotnum = 1;
+    catcache[1].attrList = BuildAttrList(attr_attrs, ATTRCAT_NUMATTRS);
 
     // Initialize buffer pool
     for (int i = 0; i < MAXOPEN; i++) 

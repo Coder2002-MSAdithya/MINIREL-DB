@@ -43,7 +43,7 @@ int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int record
         //Fill records into this page
         int slot = 0;
         
-        while(slot < recsPerPg && written < numRecs)
+        while(slot < recsPerPg && slot < SLOTMAP && written < numRecs)
         {
             memcpy(dataStart+slot*recordSize, (char *)recs+written*recordSize, recordSize);
 

@@ -11,12 +11,13 @@
 
 int FindRelNum(const char *relName)
 {
-    for (int i = 0; i < MAXOPEN; i++)
+    for(int i = 0; i < MAXOPEN; i++)
     {
-        if (strcmp(catcache[i].relcat_rec.relName, relName) == 0)
+        if((catcache[i].status & VALID_MASK) && strcmp(catcache[i].relcat_rec.relName, relName) == 0)
         {
             return i;  // Found, return relation number (index)
         }
     }
+    
     return NOTOK; // Not found
 }
