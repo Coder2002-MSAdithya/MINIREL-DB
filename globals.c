@@ -17,7 +17,7 @@ const int relcat_recLength = (int)sizeof(RelCatRec);
 const int attrcat_recLength = (int)sizeof(AttrCatRec);
 const int relcat_recsPerPg = (PAGESIZE - HEADER_SIZE) / relcat_recLength;
 const int attrcat_recsPerPg = (PAGESIZE - HEADER_SIZE) / attrcat_recLength;
-const int attrCat_numRecs = RELCAT_NUMATTRS + ATTRCAT_NUMATTRS + NT_ATTRCAT;
+const int attrCat_numRecs = RELCAT_NUMATTRS + ATTRCAT_NUMATTRS;
 const int relCat_numPgs = ((NUM_CATS + NT_RELCAT + relcat_recsPerPg - 1) / relcat_recsPerPg);
 const int attrCat_numPgs = ((attrCat_numRecs + attrcat_recsPerPg - 1) / attrcat_recsPerPg);
 

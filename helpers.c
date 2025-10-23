@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include "include/defs.h"
 #include "include/helpers.h"
+#include "include/globals.h"
+#include "include/error.h"
 #define BYTES_PER_LINE 16
 
 int ceil_div(int a, int b)
@@ -196,4 +198,60 @@ void print_page_hex(const char *buf)
         }
         putchar('\n');
     }
+}
+
+int writeRecsToFile(const char *filename, void *recs, int numRecs, int recordSize, char magicChar)
+{
+    FILE *fp = fopen(filename, "wb");
+
+    if(!fp)
+    {
+        db_err_code = CAT_CREATE_ERROR;
+        return NOTOK;
+    }
+
+    char page[PAGESIZE];
+    int recsPerPg = (PAGESIZE-HEADER_SIZE)/recordSize;
+
+    int written = 0;
+
+    while(written < numRecs)
+    {
+        // Prepare the magic word to write
+        char MAGIC_STR[MAGIC_SIZE+1] = {magicChar};
+        strcpy(MAGIC_STR+1, GEN_MAGIC);
+
+        //Reset page after it is over
+        memset(page, 0, PAGESIZE);
+
+        // Write Magic string
+        strcpy(page, MAGIC_STR);
+
+        //Pointer to slotmap
+        unsigned long *slotmapPtr = (unsigned long *)(page + MAGIC_SIZE);
+        *slotmapPtr = 0;
+
+        //Page data start
+        char *dataStart = page + HEADER_SIZE;
+
+        //Fill records into this page
+        int slot = 0;
+        
+        while(slot < recsPerPg && slot < (SLOTMAP << 3) && written < numRecs)
+        {
+            memcpy(dataStart+slot*recordSize, (char *)recs+written*recordSize, recordSize);
+
+            //Mark slot map filled (LSB first)
+            *slotmapPtr |= (1UL << slot);
+
+            slot++;
+            written++;
+        }
+
+        //Write the page
+        fwrite(page, 1, PAGESIZE, fp);
+    }
+
+    fclose(fp);
+    return OK;
 }
