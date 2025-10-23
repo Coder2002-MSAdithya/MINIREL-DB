@@ -18,6 +18,7 @@
 #define ATTRNAME	        20      /* max length of an attribute name */
 #define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
 #define CMD_LENGTH          2048    /* Length of a command string */
+#define MAX_N               50      /* Max length of a string field */
 
 #define DIRTY_MASK          1 /*LSB of status field of cache entry represents dirty*/
 #define VALID_MASK          2 /*2nd least significant bit of status field represents valid bit*/
@@ -102,6 +103,21 @@ typedef struct buffer
     int dirty;            			// 1 if modified
     short pid;              		// which page is stored here					// file descriptor of a relation
 } Buffer;
+
+typedef struct Student
+{
+    char name[40];
+    int id;
+    float stipend;
+} Student;
+
+typedef struct Professor
+{
+    char name[30];
+    int id;
+    float salary;
+    char designation[30];
+} Professor;
 
 #endif
 
