@@ -16,37 +16,32 @@ int CloseRel(int relNum)
 
     CacheEntry *entry = &catcache[relNum];
 
-    if (entry->relcat_rec.relName[0] == '\0')
+    if (!(entry->status & VALID_MASK))
         return NOTOK; // Not open
 
     // Step 1: Flush dirty page if any
-    if (buffer[relNum].dirty)
+    if(buffer[relNum].dirty)
     {
-        lseek(entry->relFile, buffer[relNum].pid * PAGESIZE, SEEK_SET);
-        write(entry->relFile, buffer[relNum].page, PAGESIZE);
-        buffer[relNum].dirty = 0;
+        FlushPage(relNum);
     }
 
     // Step 2: If catalog info dirty, update relcat on disk
     if ((entry->status) & DIRTY_MASK)
     {
         FILE *fp = fopen(RELCAT, "r+b");
-        if (!fp)
-            return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
 
-        // Find record by relName
-        RelCatRec temp;
-        while (fread(&temp, sizeof(RelCatRec), 1, fp) == 1)
+        if(!fp)
         {
-            if (strcmp(temp.relName, entry->relcat_rec.relName) == 0)
-            {
-                fseek(fp, -sizeof(RelCatRec), SEEK_CUR);
-                fwrite(&entry->relcat_rec, sizeof(RelCatRec), 1, fp);
-                break;
-            }
+            db_err_code = REL_CLOSE_ERROR;
+            return NOTOK;
         }
+
+        short pid = catcache[relNum].relcatRid.pid;
+        short slotnum = catcache[relNum].relcatRid.slotnum;
+
+        fseek(fp, pid * PAGESIZE + HEADER_SIZE + slotnum * sizeof(RelCatRec), SEEK_SET);
+        fwrite(&(entry->relcat_rec), sizeof(RelCatRec), 1, fp);
         fclose(fp);
-        entry->status &= ~DIRTY_MASK;
     }
 
     // Step 3: Close file

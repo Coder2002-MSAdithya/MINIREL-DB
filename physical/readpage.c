@@ -69,7 +69,7 @@ int ReadPage(int relNum, short pid)
     buf->pid = pid;
     buf->dirty = 0;
 
-    if (false)
+    if (true)
     {
         printf("[DEBUG] Read page %d of relation '%s' into buffer slot %d\n", pid, entry->relcat_rec.relName, relNum);
     }

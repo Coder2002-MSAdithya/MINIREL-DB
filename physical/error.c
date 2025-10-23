@@ -35,6 +35,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
                        "→ Check the relation name for typos or create the relation before use.\n",
                        errorNum);
                 break;
+            
+            case REL_OPEN_ERROR:
+                printf("Error %d: Relation file could not be opened ...\n", errorNum);
+                break;
 
             case RELEXIST:
                 printf("Error %d: Relation already exists.\n"

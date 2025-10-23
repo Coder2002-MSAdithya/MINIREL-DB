@@ -80,14 +80,13 @@ int OpenRel(const char *relName)
                 {
                     found = true;
                     catcache[freeSlot].relcat_rec = rc;
-                    catcache[freeSlot].relFile = open(rc.relName, O_RDWR);
+                    catcache[freeSlot].relFile = open(relName, O_RDWR);
                     catcache[freeSlot].status = VALID_MASK;
                     catcache[freeSlot].relcatRid.pid = pidx;
                     catcache[freeSlot].relcatRid.slotnum = slot;
-                    catcache[freeSlot].attrList = NULL; // will be built later
+                    catcache[freeSlot].attrList = NULL;
+                    if(found) break;
                 }
-
-                if(found) break;
             }
         }
 
@@ -98,12 +97,12 @@ int OpenRel(const char *relName)
     np = catcache[ATTRCAT_CACHE].relcat_rec.numPgs;
     AttrCatRec ac;
 
+    //Prepare to create Linked list of attribute descriptors
+    AttrDesc *ptr = NULL;
+    AttrDesc **head = &(catcache[freeSlot].attrList);
+
     for(short pidx = 0; pidx < np; pidx++)
     {
-        //Prepare to create Linked list of attribute descriptors
-        AttrDesc *ptr = NULL;
-        AttrDesc **head = &(catcache[freeSlot].attrList);
-
         if(ReadPage(ATTRCAT_CACHE, pidx) != OK)
         {
             db_err_code = REL_OPEN_ERROR;

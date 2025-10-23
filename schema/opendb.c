@@ -5,6 +5,7 @@
 #include "../include/opencats.h"
 #include "../include/readpage.h"
 #include "../include/openrel.h"
+#include "../include/closerel.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -79,13 +80,7 @@ int OpenDB(int argc, char **argv)
     //OpenCats also initializes various global data structures
     if(OpenCats() == OK)
     {
-        printf("Database %s has been opened successufully for use.\n", DB_DIR);
-        int r1 = OpenRel("Students");
-        printf("Relation numbers is %d for Students\n", r1);
-        for(AttrDesc *p=catcache[r1].attrList;p;p=p->next)
-        {
-            printf("%s table has column %s\n", catcache[r1].relcat_rec.relName, p->attr.attrName);
-        }
+        printf("Database %s has been opened successfully for use.\n", DB_DIR);
     }
     else
     {
