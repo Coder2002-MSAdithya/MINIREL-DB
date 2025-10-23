@@ -91,6 +91,7 @@ typedef struct cacheentry {
     RelCatRec relcat_rec;           // relation catalogue record
     int relFile;            		// file descriptor
     int status;                     // LSB is for dirty and 2nd LSB for valid/invalid
+    int timestamp;                  //  4 byte UNIX timestamp to implement LRU policy
     AttrDesc *attrList; 		    // linked list of attributes
 } CacheEntry;
 
