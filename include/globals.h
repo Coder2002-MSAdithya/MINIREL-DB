@@ -13,6 +13,7 @@ extern char DB_DIR[MAX_PATH_LENGTH];
 extern bool db_open;
 extern bool print_flag;
 extern bool debug_flag;
+extern int db_err_code;
 
 extern const int relcat_recLength;
 extern const int attrcat_recLength;
@@ -35,6 +36,9 @@ extern AttrCatRec AttrCat_length;
 extern AttrCatRec AttrCat_type;
 extern AttrCatRec AttrCat_attrName;
 extern AttrCatRec AttrCat_arelName;
+extern RelCatRec adv_rc, nn_rc, prof_rc, stud_rc;
+extern AttrCatRec profs_name, profs_id, profs_des, profs_sal;
+extern AttrCatRec stud_id, stud_name, stud_stp;
 #endif
 
 int Create (int argc, char **argv);

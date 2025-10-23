@@ -14,15 +14,24 @@ int ReadPage(int relNum, short pid)
     // Validate relation number
     if (relNum < 0 || relNum >= MAXOPEN)
     {
-        return ErrorMsgs(INVALID_RELNUM, print_flag);
+        db_err_code = INVALID_RELNUM;
+        return NOTOK;
     }
-        
+
+    
     Buffer *buf = &buffer[relNum];
     CacheEntry *entry = &catcache[relNum];
 
+    if(pid < 0 || pid >= (entry->relcat_rec).numPgs)
+    {
+        db_err_code = PAGE_OUT_OF_BOUNDS;
+        return NOTOK;
+    }
+    
     if (entry->relFile < 0)
     {
-        return ErrorMsgs(REL_OPEN_ERROR, print_flag);
+        db_err_code = REL_OPEN_ERROR;
+        return NOTOK;
     }
 
     // Already loaded
@@ -45,20 +54,22 @@ int ReadPage(int relNum, short pid)
     // Seek and read from file
     if (lseek(entry->relFile, offset, SEEK_SET) < 0)
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
     }
 
     ssize_t bytesRead = read(entry->relFile, buf->page, PAGESIZE);
     if (bytesRead != PAGESIZE)
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
     }
 
     // Update buffer metadata
     buf->pid = pid;
     buf->dirty = 0;
 
-    if (print_flag)
+    if (false)
     {
         printf("[DEBUG] Read page %d of relation '%s' into buffer slot %d\n", pid, entry->relcat_rec.relName, relNum);
     }

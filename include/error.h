@@ -39,4 +39,5 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define UNKNOWN_ERROR   901 /* Some unknown error */
 #define PAGE_MAGIC_ERROR 902 /* Page does not belong to MINIREL */
+#define PAGE_OUT_OF_BOUNDS 903 /* Page not in relation */
 #endif

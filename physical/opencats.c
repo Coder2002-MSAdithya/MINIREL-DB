@@ -56,7 +56,8 @@ int OpenCats()
 
     if (rel_fd == NOTOK || attr_fd == NOTOK)
     {
-        return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
+        db_err_code = CAT_OPEN_ERROR;
+        return NOTOK;
     }
 
     // Attributes of relcat relation
@@ -102,7 +103,6 @@ int OpenCats()
         buffer[i].relNum = -1;
         buffer[i].dirty = 0;
         buffer[i].pid = -1;
-        buffer[i].relFile = -1;
         memset(buffer[i].page, 0, sizeof(buffer[i].page));
     }
 

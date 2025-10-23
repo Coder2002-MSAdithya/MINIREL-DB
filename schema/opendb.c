@@ -3,6 +3,9 @@
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/opencats.h"
+#include "../include/readpage.h"
+#include "../include/openrel.h"
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -77,6 +80,12 @@ int OpenDB(int argc, char **argv)
     if(OpenCats() == OK)
     {
         printf("Database %s has been opened successufully for use.\n", DB_DIR);
+        int r1 = OpenRel("Students");
+        printf("Relation numbers is %d for Students\n", r1);
+        for(AttrDesc *p=catcache[r1].attrList;p;p=p->next)
+        {
+            printf("%s table has column %s\n", catcache[r1].relcat_rec.relName, p->attr.attrName);
+        }
     }
     else
     {

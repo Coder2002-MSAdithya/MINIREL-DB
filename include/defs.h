@@ -38,10 +38,13 @@
 
 #define NUM_CATS         2
 
+#define NT_RELCAT 2
+#define NT_ATTRCAT 7
+
 /*************************************************************
 						TYPE DEFINITIONS 
 *************************************************************/
-typedef unsigned short int pid_t;
+typedef unsigned short int pageid_t;
 typedef unsigned short int slotnum_t;
 
 /* Rid Structure */

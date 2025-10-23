@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include "include/defs.h"
 #include "include/helpers.h"
+#define BYTES_PER_LINE 16
 
 int ceil_div(int a, int b)
 {
@@ -179,4 +180,20 @@ int remove_contents(const char *dirpath)
 
     closedir(d);
     return overall_ret;
+}
+
+
+void print_page_hex(const char *buf) 
+{
+    for (int line = 0; line < PAGESIZE / BYTES_PER_LINE; ++line) {
+        int base = line * BYTES_PER_LINE;
+        /* print line number (decimal, zero-padded to 2 digits) */
+        printf("%02X: ", line);
+        /* print 16 bytes in hex */
+        for (int i = 0; i < BYTES_PER_LINE; ++i) {
+            printf("%02X", (unsigned char) buf[base + i]);
+            if (i + 1 < BYTES_PER_LINE) putchar(' ');
+        }
+        putchar('\n');
+    }
 }

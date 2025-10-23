@@ -7,13 +7,15 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 
+
 int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int recordSize, char magicChar)
 {
     FILE *fp = fopen(filename, "wb");
 
     if(!fp)
     {
-        return ErrorMsgs(CAT_CREATE_ERROR, print_flag);
+        db_err_code = CAT_CREATE_ERROR;
+        return NOTOK;
     }
 
     char page[PAGESIZE];
@@ -43,7 +45,7 @@ int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int record
         //Fill records into this page
         int slot = 0;
         
-        while(slot < recsPerPg && slot < SLOTMAP && written < numRecs)
+        while(slot < recsPerPg && slot < (SLOTMAP << 3) && written < numRecs)
         {
             memcpy(dataStart+slot*recordSize, (char *)recs+written*recordSize, recordSize);
 
@@ -65,12 +67,10 @@ int writeCatRecsToFile(const char *filename, void *recs, int numRecs, int record
 int CreateRelCat()
 {
     // Create array of RelCatRecs to insert them one by one into page
-    RelCatRec relcat_recs[] = {Relcat_rc, Relcat_ac};
+    RelCatRec relcat_recs[] = {Relcat_rc, Relcat_ac, stud_rc, prof_rc};
 
     // Write the records in an array to the catalog file in pages
-    writeCatRecsToFile(RELCAT, relcat_recs, NUM_CATS, sizeof(RelCatRec), '$');
-
-    return OK;
+    return writeCatRecsToFile(RELCAT, relcat_recs, NUM_CATS + NT_RELCAT, sizeof(RelCatRec), '$');
 }
 
 int CreateAttrCat()
@@ -84,16 +84,21 @@ int CreateAttrCat()
         AttrCat_numRecs,
         AttrCat_numPgs,
         AttrCat_offset,
+        profs_id,
         AttrCat_length,
         AttrCat_type,
+        profs_name,
         AttrCat_attrName,
-        AttrCat_arelName
+        stud_id,
+        profs_des,
+        AttrCat_arelName,
+        stud_name,
+        profs_sal,
+        stud_stp
     };
 
     // Write the records in an array to the catalog file in pages
-    writeCatRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '!');
-
-    return OK;
+    return writeCatRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '!');
 }
 
 
@@ -104,5 +109,6 @@ int CreateCats()
         return OK;
     }
 
+    db_err_code = CAT_CREATE_ERROR;
     return NOTOK;
 }
