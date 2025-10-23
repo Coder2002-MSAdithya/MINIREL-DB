@@ -100,6 +100,7 @@ int OpenRel(const char *relName)
 
     for(short pidx = 0; pidx < np; pidx++)
     {
+        //Prepare to create Linked list of attribute descriptors
         AttrDesc *ptr = NULL;
         AttrDesc **head = &(catcache[freeSlot].attrList);
 
