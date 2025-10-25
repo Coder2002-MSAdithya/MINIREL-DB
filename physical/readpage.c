@@ -18,7 +18,6 @@ int ReadPage(int relNum, short pid)
         return NOTOK;
     }
 
-    
     Buffer *buf = &buffer[relNum];
     CacheEntry *entry = &catcache[relNum];
 
@@ -67,9 +66,9 @@ int ReadPage(int relNum, short pid)
 
     // Update buffer metadata
     buf->pid = pid;
-    buf->dirty = 0;
+    buf->dirty = false;
 
-    if (true)
+    if(true)
     {
         printf("[DEBUG] Read page %d of relation '%s' into buffer slot %d\n", pid, entry->relcat_rec.relName, relNum);
     }

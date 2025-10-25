@@ -7,8 +7,7 @@
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
-
-int ReadPage(int relNum, int pid);
+#include "../include/readpage.h"
 
 AttrDesc* BuildAttrList(AttrCatRec **attrArray, int numAttrs)
 {
@@ -100,7 +99,6 @@ int OpenCats()
     // Initialize buffer pool
     for (int i = 0; i < MAXOPEN; i++) 
     {
-        buffer[i].relNum = -1;
         buffer[i].dirty = 0;
         buffer[i].pid = -1;
         memset(buffer[i].page, 0, sizeof(buffer[i].page));

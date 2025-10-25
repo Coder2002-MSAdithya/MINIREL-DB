@@ -6,6 +6,9 @@
 #include "../include/readpage.h"
 #include "../include/openrel.h"
 #include "../include/closerel.h"
+#include "../include/insertrec.h"
+#include "../include/deleterec.h"
+#include "../include/writerec.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -81,6 +84,26 @@ int OpenDB(int argc, char **argv)
     if(OpenCats() == OK)
     {
         printf("Database %s has been opened successfully for use.\n", DB_DIR);
+        // Code just to test InsertRec
+        Student s1 = {"Adithya M S", 24336, 12399.78};
+        Student s2 = {"Medha Dabhi", 24326, 12399.78};
+        Student s3 = {"Sai Dharma", 23334, 12123.32};
+        Student s4 = {"Sujoy Hansda", 23145, 21345.67};
+
+        Student su1 = {"AdithyaUpdated", 24337, 12100};
+        Student su2 = {"MedhaUpdated", 24327, 12200};
+        Student su3 = {"SaiUpdated", 24937, 12300};
+        Student su4 = {"SujoyUpdated", 24937, 12400};
+        
+        int r = OpenRel("Students");
+
+        DeleteRec(r, (Rid){2, 4});
+        DeleteRec(r, (Rid){3, 8});
+        InsertRec(r, &s2);
+        InsertRec(r, &s4);
+        WriteRec(r, &su2, (Rid){2, 4});
+        WriteRec(r, &su4, (Rid){3, 8});
+        CloseRel(r);
     }
     else
     {

@@ -8,10 +8,10 @@
 #include "../include/helpers.h"
 
 const int s_numRecs = sizeof(students) / sizeof(students[0]);
-const int s_recsPerPg = (PAGESIZE - HEADER_SIZE) / sizeof(Student);
+const int s_recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / sizeof(Student), SLOTMAP<<3);
 const int s_numPgs = (s_numRecs + s_recsPerPg - 1) / s_recsPerPg;
 const int p_numRecs = sizeof(professors) / sizeof(professors[0]);
-const int p_recsPerPg = (PAGESIZE - HEADER_SIZE) / sizeof(Professor);
+const int p_recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / sizeof(Professor), SLOTMAP<<3);
 const int p_numPgs = (p_numRecs + p_recsPerPg - 1) / p_recsPerPg;
 
 RelCatRec stud_rc = {

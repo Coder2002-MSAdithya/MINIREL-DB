@@ -42,14 +42,12 @@ int CloseRel(int relNum)
         fseek(fp, pid * PAGESIZE + HEADER_SIZE + slotnum * sizeof(RelCatRec), SEEK_SET);
         fwrite(&(entry->relcat_rec), sizeof(RelCatRec), 1, fp);
         fclose(fp);
+
+        (entry->status) &= ~VALID_MASK;
     }
 
     // Step 3: Close file
     close(entry->relFile);
-
-    // Step 4: Clear cache + buffer
-    memset(entry, 0, sizeof(CacheEntry));
-    memset(&buffer[relNum], 0, sizeof(Buffer));
 
     return OK;
 }

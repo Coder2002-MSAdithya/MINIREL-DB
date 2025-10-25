@@ -35,7 +35,7 @@ int Destroy(int argc, char *argv[])
     {
         if (strcmp(catcache[i].relcat_rec.relName, relName) == 0)
         {
-            res = CloseRel(buffer[i].relNum);
+            res = CloseRel(i);
             if (res != OK)
             {
                 return ErrorMsgs(REL_CLOSE_ERROR, print_flag);

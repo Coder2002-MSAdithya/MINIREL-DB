@@ -42,6 +42,8 @@
 #define NT_RELCAT 2
 #define NT_ATTRCAT 7
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 /*************************************************************
 						TYPE DEFINITIONS 
 *************************************************************/
@@ -98,7 +100,7 @@ typedef struct cacheentry {
 
 typedef struct buffer 
 {
-	int relNum;						// relation id
+	// int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
     short pid;              		// which page is stored here					// file descriptor of a relation

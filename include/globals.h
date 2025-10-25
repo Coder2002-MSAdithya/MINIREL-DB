@@ -40,8 +40,8 @@ extern RelCatRec adv_rc, nn_rc, prof_rc, stud_rc;
 extern AttrCatRec profs_name, profs_id, profs_des, profs_sal;
 extern AttrCatRec stud_id, stud_name, stud_stp;
 
-extern Student students[90];
-extern Professor professors[90];
+extern Student students[49];
+extern Professor professors[11];
 #endif
 
 int Create (int argc, char **argv);
