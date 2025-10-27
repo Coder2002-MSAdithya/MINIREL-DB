@@ -21,6 +21,7 @@ int OpenRel(const char *relName)
     
     if (relNum != NOTOK)
     {
+        catcache[relNum].timestamp = (uint32_t)time(NULL);
         return relNum;  // Already open
     }
 
