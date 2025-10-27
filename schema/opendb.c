@@ -122,18 +122,27 @@ int OpenDB(int argc, char **argv)
         // CloseRel(r);
 
         //Code to test GetNextRec
-        int r = OpenRel("Students");
-        Rid startRid = (Rid){1, 7};
-        Rid foundRid = (Rid){-1, -1};
-        void *recPtr = malloc(sizeof(Student));
-        while(startRid.pid != -1 && startRid.slotnum != -1)
-        {
-            GetNextRec(r, startRid, &startRid, recPtr);
-            Student s = *(Student *)(recPtr);
-            if(startRid.pid != -1 && startRid.slotnum != -1)
-            printf("StudentRec : name = %s | id = %d | stipend = %f\n", s.name, s.id, s.stipend);
-        }
-        CloseRel(r);
+        // int r = OpenRel("Students");
+        // Rid startRid = (Rid){1, 7};
+        // Rid foundRid = (Rid){-1, -1};
+        // void *recPtr = malloc(sizeof(Student));
+        // while(startRid.pid != -1 && startRid.slotnum != -1)
+        // {
+        //     GetNextRec(r, startRid, &startRid, recPtr);
+        //     Student s = *(Student *)(recPtr);
+        //     if(startRid.pid != -1 && startRid.slotnum != -1)
+        //     printf("StudentRec : name = %s | id = %d | stipend = %f\n", s.name, s.id, s.stipend);
+        // }
+        // CloseRel(r);
+
+        //Modified OpenRel to use FindRec
+        // int r = OpenRel("Profs");
+        // AttrDesc *p;
+        // for(p=catcache[r].attrList;p;p=p->next)
+        // {
+        //     printf("AttrName : %s\n", (p->attr).attrName);
+        // }
+        // CloseRel(r);
     }
     else
     {

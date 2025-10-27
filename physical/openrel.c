@@ -3,17 +3,19 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stddef.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
-#include "../include/readpage.h"
+#include "../include/findrec.h"
 
 
 int OpenRel(const char *relName)
 {
     // Step 1: Check if already open
     int relNum = FindRelNum(relName);
+    bool found = false;
     
     if (relNum != NOTOK)
     {
@@ -38,127 +40,62 @@ int OpenRel(const char *relName)
         return NOTOK;
     }
 
-    //Step 3: Loop through each record and page of relcat relation
-    int np = catcache[RELCAT_CACHE].relcat_rec.numPgs;
-    bool found = false;
+    Rid startRid = (Rid){-1, -1};
+    int relCatRecSize = catcache[RELCAT_CACHE].relcat_rec.recLength;
     RelCatRec rc;
+    FindRec(RELCAT_CACHE, startRid, &startRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), (void *)relName, CMP_EQ);
 
-    for(short pidx = 0; pidx < np; pidx++)
+    if(startRid.pid < 0 || startRid.slotnum < 0)
     {
-        if(ReadPage(RELCAT_CACHE, pidx) != OK)
-        {
-            db_err_code = REL_OPEN_ERROR;
-            return NOTOK;
-        }
-        
-        char *page = buffer[RELCAT_CACHE].page;
-
-        //Check magic
-        if(strncmp(page, "$MINIREL", MAGIC_SIZE))
-        {
-            db_err_code = PAGE_MAGIC_ERROR;
-            return NOTOK;
-        }
-
-        //Extract slotmap (8 bytes after magic)
-        unsigned long slotmap = 0;
-        memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
-
-        int recSize = catcache[RELCAT_CACHE].relcat_rec.recLength;
-        int recsPerPg = catcache[RELCAT_CACHE].relcat_rec.recsPerPg;
-
-        // Loop through each slot
-        for(short slot=0; slot<recsPerPg; slot++)
-        {
-            // If bit 'slot' is set (LSB-first means bit 0 = slot 0)
-            if((slotmap & (1UL << slot)))
-            {
-                int offset = HEADER_SIZE + slot * recSize;
-                memcpy(&rc, page + offset, recSize);
-
-                if(strncmp(rc.relName, relName, RELNAME) == 0)
-                {
-                    found = true;
-                    catcache[freeSlot].relcat_rec = rc;
-                    catcache[freeSlot].relFile = open(relName, O_RDWR);
-                    catcache[freeSlot].status = VALID_MASK;
-                    catcache[freeSlot].relcatRid.pid = pidx;
-                    catcache[freeSlot].relcatRid.slotnum = slot;
-                    catcache[freeSlot].attrList = NULL;
-                    if(found) break;
-                }
-            }
-        }
-
-        if(found) break;
+        db_err_code = RELNOEXIST;
+        return NOTOK;
+    }
+    else
+    {
+        found = true;
     }
 
-    // Now loop through each record of attrcat and add columns with matching relName in the attrList
-    np = catcache[ATTRCAT_CACHE].relcat_rec.numPgs;
-    AttrCatRec ac;
-
-    //Prepare to create Linked list of attribute descriptors
     AttrDesc *ptr = NULL;
     AttrDesc **head = &(catcache[freeSlot].attrList);
+    int attrCatRecSize = catcache[ATTRCAT_CACHE].relcat_rec.recLength;
+    AttrCatRec ac;
 
-    for(short pidx = 0; pidx < np; pidx++)
+    startRid = (Rid){-1, -1};
+    do
     {
-        if(ReadPage(ATTRCAT_CACHE, pidx) != OK)
+        FindRec(ATTRCAT_CACHE, startRid, &startRid, &ac, 's', ATTRNAME, offsetof(AttrCatRec, relName), (void *)relName, CMP_EQ);
+        
+        if(startRid.pid >= 0 && startRid.slotnum >= 0)
         {
-            db_err_code = REL_OPEN_ERROR;
-            return NOTOK;
-        }
-
-        char *page = buffer[ATTRCAT_CACHE].page;
-
-        //Check magic
-        if(strncmp(page, "!MINIREL", MAGIC_SIZE))
-        {
-            db_err_code = PAGE_MAGIC_ERROR;
-            return NOTOK;
-        }
-
-        //Extract slotmap (8 bytes after magic)
-        unsigned long slotmap = 0;
-        memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
-
-        int recSize = catcache[ATTRCAT_CACHE].relcat_rec.recLength;
-        int recsPerPg = catcache[ATTRCAT_CACHE].relcat_rec.recsPerPg;
-
-        // Loop through each slot
-        for(short slot=0; slot < recsPerPg; slot++)
-        {
-            if(slotmap & (1UL << slot))
+            if(!*head)
             {
-                int offset = HEADER_SIZE + slot * recSize;
-                memcpy(&ac, page + offset, recSize);
-                
-                if(strncmp(ac.relName, relName, RELNAME) == 0)
-                {
-                    if(!*head)
-                    {
-                        *head = malloc(sizeof(AttrDesc));
-                        (*head)->attr = ac;
-                        (*head)->next = NULL;
-                        ptr = *head;
-                    }
-                    else
-                    {
-                        ptr->next = malloc(sizeof(AttrDesc));
-                        ptr = ptr->next;
-                        ptr->attr = ac;
-                        ptr->next = NULL;
-                    }
-                }
+                *head = malloc(sizeof(AttrDesc));
+                (*head)->attr = ac;
+                (*head)->next = NULL;
+                ptr = *head;
+            }
+            else
+            {
+                ptr->next = malloc(sizeof(AttrDesc));
+                ptr = ptr->next;
+                ptr->attr = ac;
+                ptr->next = NULL;
             }
         }
+        else
+        {
+            break;
+        }
     }
-
+    while(1);
+    
     if(found)
     {
         return freeSlot;
     }
-
-    db_err_code = RELNOEXIST;
-    return NOTOK;
+    else
+    {
+        db_err_code = RELNOEXIST;
+        return NOTOK;
+    }
 }
