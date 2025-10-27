@@ -61,6 +61,7 @@
 *************************************************************/
 typedef unsigned short int pageid_t;
 typedef unsigned short int slotnum_t;
+typedef unsigned int uint32_t;
 
 /* Rid Structure */
 typedef struct recid {
@@ -106,7 +107,7 @@ typedef struct cacheentry {
     RelCatRec relcat_rec;           // relation catalogue record
     int relFile;            		// file descriptor
     int status;                     // LSB is for dirty and 2nd LSB for valid/invalid
-    int timestamp;                  //  4 byte UNIX timestamp to implement LRU policy
+    uint32_t timestamp;         //  4 byte UNIX timestamp to implement LRU policy
     AttrDesc *attrList; 		    // linked list of attributes
 } CacheEntry;
 

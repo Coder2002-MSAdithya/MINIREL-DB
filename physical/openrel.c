@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stddef.h>
+#include <limits.h>
+#include <time.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -33,11 +35,20 @@ int OpenRel(const char *relName)
         }
     }
 
-    //TODO : Find victim and do cache replacement here
     if(freeSlot == -1)
     {
-        db_err_code = BUFFER_FULL;
-        return NOTOK;
+        uint32_t minTimeStamp = UINT_MAX;
+
+        for(int i = 2; i < MAXOPEN; i++)
+        {
+            uint32_t ts = catcache[i].timestamp;
+
+            if(ts < minTimeStamp)
+            {
+                minTimeStamp = catcache[i].timestamp;
+                freeSlot = i;
+            }
+        }
     }
 
     Rid startRid = (Rid){-1, -1};
@@ -91,6 +102,7 @@ int OpenRel(const char *relName)
     
     if(found)
     {
+        catcache[freeSlot].timestamp = (uint32_t)time(NULL);
         return freeSlot;
     }
     else
