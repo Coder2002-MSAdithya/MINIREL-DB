@@ -63,7 +63,7 @@ int CreateDB(int argc, char **argv)
     }
     else
     {
-        ErrorMsgs(CAT_CREATE_ERROR, print_flag);
+        return ErrorMsgs(CAT_CREATE_ERROR, print_flag);
     }
 
     return flag;
