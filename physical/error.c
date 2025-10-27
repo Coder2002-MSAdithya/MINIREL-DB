@@ -89,6 +89,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case MEM_ALLOC_ERROR:
                     printf("Memory could NOT be allocated to perform this operation.\n");
                     break;
+            
+            case REC_TOO_LONG:
+                    printf("This relation CANNOT be created as its record would NOT fit within a page.\n");
+                    break;
 
             case DBNOTEXIST:
                 printf("Error %d: Database does not exist.\n"
