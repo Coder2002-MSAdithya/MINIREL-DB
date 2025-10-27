@@ -32,7 +32,10 @@ int WriteRec(int relNum, void *recPtr, Rid recRid)
         return NOTOK;
     }
 
-    ReadPage(relNum, recRid.pid);
+    if(ReadPage(relNum, recRid.pid) == NOTOK)
+    {
+        return NOTOK;
+    }
 
     void *recToUpdate = page + HEADER_SIZE + recRid.slotnum * recSize;
     memcpy(recToUpdate, recPtr, recSize);
