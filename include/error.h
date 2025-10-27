@@ -28,6 +28,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
 #define CAT_CLOSE_ERROR 304 /* Error in closing catalog files */
 #define CAT_DELETE_ERROR 305 /* Catalogue file can't be deleted */
+#define MEM_ALLOC_ERROR 401 /* Memory could not be allocated for processing query */
 #define DBNOTEXIST  501   /* DB does NOT exist */
 #define DBEXISTS    502   /* DB already exists */
 #define DB_LENGTH_EXCEEDED 503 /* DB name too long */

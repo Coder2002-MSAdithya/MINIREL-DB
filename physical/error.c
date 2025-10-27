@@ -86,6 +86,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
                 "Maybe you have chosen an invalid directory.\n");
                 break;
 
+            case MEM_ALLOC_ERROR:
+                    printf("Memory could NOT be allocated to perform this operation.\n");
+                    break;
+
             case DBNOTEXIST:
                 printf("Error %d: Database does not exist.\n"
                        "→ Verify the database name or create the database first.\n",
