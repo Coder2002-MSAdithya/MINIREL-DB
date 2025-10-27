@@ -60,7 +60,7 @@ int OpenRel(const char *relName)
     RelCatRec rc;
     FindRec(RELCAT_CACHE, startRid, &startRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), (void *)relName, CMP_EQ);
 
-    if(startRid.pid < 0 || startRid.slotnum < 0)
+    if(!isValidRid(startRid))
     {
         db_err_code = RELNOEXIST;
         return NOTOK;
@@ -80,23 +80,32 @@ int OpenRel(const char *relName)
     int attrCatRecSize = catcache[ATTRCAT_CACHE].relcat_rec.recLength;
     AttrCatRec ac;
 
-    startRid = (Rid){-1, -1};
+    startRid = INVALID_RID;
     do
     {
         FindRec(ATTRCAT_CACHE, startRid, &startRid, &ac, 's', ATTRNAME, offsetof(AttrCatRec, relName), (void *)relName, CMP_EQ);
         
-        if(startRid.pid >= 0 && startRid.slotnum >= 0)
+        if(isValidRid(startRid))
         {
+            void *newNodePtr = malloc(sizeof(AttrDesc)); 
+            
+            if(!newNodePtr)
+            {
+                db_err_code = MEM_ALLOC_ERROR;
+                FreeLinkedList(head, offsetof(AttrDesc, next));
+                return NOTOK;
+            }
+
             if(!*head)
             {
-                *head = malloc(sizeof(AttrDesc));
+                *head = newNodePtr;
                 (*head)->attr = ac;
                 (*head)->next = NULL;
                 ptr = *head;
             }
             else
             {
-                ptr->next = malloc(sizeof(AttrDesc));
+                ptr->next = newNodePtr;
                 ptr = ptr->next;
                 ptr->attr = ac;
                 ptr->next = NULL;

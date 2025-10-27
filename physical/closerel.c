@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
-
 
 int CloseRel(int relNum)
 {
@@ -42,11 +42,15 @@ int CloseRel(int relNum)
         fseek(fp, pid * PAGESIZE + HEADER_SIZE + slotnum * sizeof(RelCatRec), SEEK_SET);
         fwrite(&(entry->relcat_rec), sizeof(RelCatRec), 1, fp);
         fclose(fp);
-
-        (entry->status) &= ~VALID_MASK;
     }
 
-    // Step 3: Close file
+    //Step 3: Invalidate cache entry
+    (entry->status) &= ~VALID_MASK;
+
+    //Step 4: Free the linked list of attribute descriptors
+    FreeLinkedList((void **)&(entry->attrList), offsetof(AttrDesc, next));
+
+    // Step 4: Close file
     close(entry->relFile);
 
     return OK;
