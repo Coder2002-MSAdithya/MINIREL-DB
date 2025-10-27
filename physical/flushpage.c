@@ -45,9 +45,9 @@ int FlushPage(int relNum)
 
     buf->dirty = 0;
 
-    if (print_flag)
+    if (debug_flag)
     {
-        printf("[DEBUG] Flushed dirty page %d of relation '%s' to disk\n", buf->pid, entry->relcat_rec.relName);
+        // printf("[DEBUG] Flushed dirty page %d of relation '%s' to disk\n", buf->pid, entry->relcat_rec.relName);
     }
 
     return OK;
