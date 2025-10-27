@@ -9,11 +9,15 @@
 #include "../include/insertrec.h"
 #include "../include/deleterec.h"
 #include "../include/writerec.h"
+#include "../include/findrec.h"
+#include "../include/getnextrec.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <errno.h>
 
 /*
@@ -85,24 +89,50 @@ int OpenDB(int argc, char **argv)
     {
         printf("Database %s has been opened successfully for use.\n", DB_DIR);
         // Code just to test InsertRec
-        Student s1 = {"Adithya M S", 24336, 12399.78};
-        Student s2 = {"Medha Dabhi", 24326, 12399.78};
-        Student s3 = {"Sai Dharma", 23334, 12123.32};
-        Student s4 = {"Sujoy Hansda", 23145, 21345.67};
+        // Student s1 = {"Adithya M S", 24336, 12399.78};
+        // Student s2 = {"Medha Dabhi", 24326, 12399.78};
+        // Student s3 = {"Sai Dharma", 23334, 12123.32};
+        // Student s4 = {"Sujoy Hansda", 23145, 21345.67};
 
-        Student su1 = {"AdithyaUpdated", 24337, 12100};
-        Student su2 = {"MedhaUpdated", 24327, 12200};
-        Student su3 = {"SaiUpdated", 24937, 12300};
-        Student su4 = {"SujoyUpdated", 24937, 12400};
+        // Student su1 = {"AdithyaUpdated", 24337, 12100};
+        // Student su2 = {"MedhaUpdated", 24327, 12200};
+        // Student su3 = {"SaiUpdated", 24937, 12300};
+        // Student su4 = {"SujoyUpdated", 24937, 12400};
         
-        int r = OpenRel("Students");
+        
+        // DeleteRec(r, (Rid){2, 4});
+        // DeleteRec(r, (Rid){3, 8});
+        // InsertRec(r, &s2);
+        // InsertRec(r, &s4);
+        // WriteRec(r, &su2, (Rid){2, 4});
+        // WriteRec(r, &su4, (Rid){3, 8});
+        // CloseRel(r);
+        
+        // Code to test FindRec
+        // int r = OpenRel("Students");
+        // Rid foundRid;
+        // void *recPtr = malloc(sizeof(Student));
+        // float val = 9.00;
+        // int val1 = 300;
+        // char val2[] = "Belle";
+        // Rid startRid = (Rid){1, 8};
+        // FindRec(r, startRid, &foundRid, recPtr, 'f', sizeof(float), offsetof(Student, stipend), (void *)(&val), CMP_GTE);
+        // printf("Next record found has page number %d and slotnumber %d\n", foundRid.pid, foundRid.slotnum);
+        // printf("Name of that person is %s\n", ((Student *)recPtr)->name);
+        // CloseRel(r);
 
-        DeleteRec(r, (Rid){2, 4});
-        DeleteRec(r, (Rid){3, 8});
-        InsertRec(r, &s2);
-        InsertRec(r, &s4);
-        WriteRec(r, &su2, (Rid){2, 4});
-        WriteRec(r, &su4, (Rid){3, 8});
+        //Code to test GetNextRec
+        int r = OpenRel("Students");
+        Rid startRid = (Rid){1, 7};
+        Rid foundRid = (Rid){-1, -1};
+        void *recPtr = malloc(sizeof(Student));
+        while(startRid.pid != -1 && startRid.slotnum != -1)
+        {
+            GetNextRec(r, startRid, &startRid, recPtr);
+            Student s = *(Student *)(recPtr);
+            if(startRid.pid != -1 && startRid.slotnum != -1)
+            printf("StudentRec : name = %s | id = %d | stipend = %f\n", s.name, s.id, s.stipend);
+        }
         CloseRel(r);
     }
     else

@@ -31,6 +31,18 @@
 #define ATTRCAT		"attrcat"  /* name of the attribute catalog file */
 #define GEN_MAGIC   "MINIREL"  /* Common part of MAGIC BYTES of all relation files */
 
+#define CMP_EQ  501
+#define CMP_GTE 502
+#define CMP_GT  503
+#define CMP_LTE 504
+#define CMP_NE  505
+#define CMP_LT  506 
+
+#define EPSILON 1e-6
+
+#define FLOAT_REL_EPS 1e-6
+#define FLOAT_ABS_EPS 1e-9
+
 #define RELCAT_CACHE    0
 #define ATTRCAT_CACHE   1
 

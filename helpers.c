@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <math.h>
 #include "include/defs.h"
 #include "include/helpers.h"
 #include "include/globals.h"
@@ -16,6 +17,8 @@ int ceil_div(int a, int b)
 {
     return (a+b-1)/b;
 }
+
+double dmax(double a, double b) { return (a > b) ? a : b; }
 
 bool isValidPath(const char *path)
 {
@@ -254,4 +257,43 @@ int writeRecsToFile(const char *filename, void *recs, int numRecs, int recordSiz
 
     fclose(fp);
     return OK;
+}
+
+int float_cmp(double a, double b, double rel_eps, double abs_eps)
+{
+    if (isnan(a) || isnan(b)) return 2;
+
+    if (isinf(a) || isinf(b)) {
+        if (a == b) return 0;
+        return (a > b) ? 1 : -1;
+    }
+
+    double diff = a - b;
+    double tol = dmax(abs_eps, rel_eps * dmax(fabs(a), fabs(b)));
+
+    if (fabs(diff) <= tol)
+        return 0;
+    return (diff > 0) ? 1 : -1;
+}
+
+Rid IncRid(Rid rid, int recsPerPg)
+{
+    if(rid.pid == -1 || rid.slotnum == -1)
+    {
+        return (Rid){0, 0};
+    }
+    else
+    {
+        rid.slotnum++;
+        rid.slotnum %= recsPerPg;
+
+        if(!rid.slotnum)
+        {
+            rid.pid++;
+        }
+        
+        return rid;
+    }
+
+    return (Rid){-1, -1};
 }
