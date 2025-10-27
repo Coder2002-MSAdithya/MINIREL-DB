@@ -55,6 +55,7 @@
 #define NT_ATTRCAT 7
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define INVALID_RID ((Rid){-1, -1})
 
 /*************************************************************
 						TYPE DEFINITIONS 
