@@ -56,7 +56,7 @@ int Create(int argc, char *argv[])
     // ---- Initialize Header Page ----
     Page page;
     memset(&page, 0, sizeof(Page));
-    strcpy(page.magicString, "$MINIREL");
+    strcpy(page.magicString, "_MINIREL");
     page.slotmap = 0UL;
     write(fd, &page, PAGESIZE);
     close(fd);
