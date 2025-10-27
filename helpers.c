@@ -278,7 +278,7 @@ int float_cmp(double a, double b, double rel_eps, double abs_eps)
 
 Rid IncRid(Rid rid, int recsPerPg)
 {
-    if(rid.pid == -1 || rid.slotnum == -1)
+    if(!isValidRid(rid))
     {
         return (Rid){0, 0};
     }
@@ -296,4 +296,31 @@ Rid IncRid(Rid rid, int recsPerPg)
     }
 
     return (Rid){-1, -1};
+}
+
+bool isValidRid(Rid rid)
+{
+    return (rid.pid >= 0 && rid.slotnum >= 0);
+}
+
+int FreeLinkedList(void **headPtr, size_t nextOff)
+{
+    if (headPtr == NULL || *headPtr == NULL)
+        return NOTOK;
+
+    void *curr = *headPtr;
+    void *next = NULL;
+
+    while (curr != NULL)
+    {
+        // Compute address of the "next" field inside the current node
+        void **nextPtr = (void **)((char *)curr + nextOff);
+        next = *nextPtr;  // get next node
+
+        free(curr);       // free current node
+        curr = next;      // move to next
+    }
+
+    *headPtr = NULL;  // set head to NULL after freeing
+    return OK;
 }
