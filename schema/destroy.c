@@ -13,84 +13,26 @@
 
 int Destroy(int argc, char *argv[])
 {
-    if (!db_open)
+    if(!db_open)
     {
-        return ErrorMsgs(DBNOTOPEN, print_flag);
+        db_err_code = DBNOTOPEN;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
-    if (argc < 2)
+    if(argc < 2)
     {
-        return ErrorMsgs(ARGC_INSUFFICIENT, print_flag);
+        db_err_code = ARGC_INSUFFICIENT;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    if(argc > 2)
+    {
+        db_err_code = TOO_MANY_ARGS;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     char *relName = argv[1];
-
-    if (strcmp(relName, RELCAT) == 0 || strcmp(relName, ATTRCAT) == 0)
-    {
-        return ErrorMsgs(CAT_DELETE_ERROR, print_flag);
-    }
+    Rid 
     
-    int i, res;
-    for (i = 0; i < MAXOPEN; i++)
-    {
-        if (strcmp(catcache[i].relcat_rec.relName, relName) == 0)
-        {
-            res = CloseRel(i);
-            if (res != OK)
-            {
-                return ErrorMsgs(REL_CLOSE_ERROR, print_flag);
-            }
-        }
-        
-    }
-
-    // ---- Remove relation file ----
-    char path[MAX_PATH_LENGTH];
-    snprintf(path, sizeof(path) + RELNAME + 2, "%s/%s", DB_DIR, relName);
-
-    if (unlink(path) < 0)
-    {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
-    }
-    
-    // ---- Remove entries from relcat ----
-    FILE *relFp = fopen(RELCAT, "rb");
-    FILE *tempRel = fopen("relcat.tmp", "wb");
-
-    RelCatRec rec;
-    while (fread(&rec, sizeof(RelCatRec), 1, relFp))
-    {
-        if (strcmp(rec.relName, relName) != 0)
-        {
-            fwrite(&rec, sizeof(RelCatRec), 1, tempRel);
-        }
-    }
-
-    fclose(relFp);
-    fclose(tempRel);
-    rename("relcat.tmp", RELCAT);
-
-    // ---- Remove entries from attrcat ----
-    FILE *attrFp = fopen(ATTRCAT, "rb");
-    FILE *tempAttr = fopen("attrcat.tmp", "wb");
-
-    AttrCatRec attr;
-    while (fread(&attr, sizeof(AttrCatRec), 1, attrFp))
-    {
-        if (strcmp(attr.relName, relName) != 0)
-        {
-            fwrite(&attr, sizeof(AttrCatRec), 1, tempAttr);
-        }
-    }
-
-    fclose(attrFp);
-    fclose(tempAttr);
-    rename("attrcat.tmp", ATTRCAT);
-
-    if (print_flag)
-    {
-        printf("[INFO] Destroyed relation '%s'. All catalog entries removed.\n", relName);
-    }
-
     return OK;
 }

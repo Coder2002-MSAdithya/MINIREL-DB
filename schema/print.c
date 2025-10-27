@@ -87,7 +87,7 @@ int Print(int argc, char **argv)
     printHeader(catcache[r].attrList, colWidths);
 
     /* --------- Print records --------- */
-    Rid startRid = (Rid){-1, -1};
+    Rid startRid = INVALID_RID;
     int recSize = catcache[r].relcat_rec.recLength;
     void *recPtr = malloc(recSize);
     if(!recPtr)
