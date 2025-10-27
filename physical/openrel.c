@@ -92,7 +92,7 @@ int OpenRel(const char *relName)
             if(!newNodePtr)
             {
                 db_err_code = MEM_ALLOC_ERROR;
-                FreeLinkedList(head, offsetof(AttrDesc, next));
+                FreeLinkedList((void **)head, offsetof(AttrDesc, next));
                 return NOTOK;
             }
 
