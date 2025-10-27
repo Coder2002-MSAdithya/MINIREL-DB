@@ -1,159 +1,198 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
+#include "../include/insertrec.h"
+#include "../include/findrec.h"
 
 
 int Create(int argc, char *argv[])
 {
-    if (!db_open)
+    if(argc < 4)
     {
-        return ErrorMsgs(DBNOTOPEN, print_flag);
+        db_err_code = ARGC_INSUFFICIENT;
+        return ErrorMsgs(db_err_code, print_flag);
     }
-
-    if (argc < 3)
-    {
-        return ErrorMsgs(ARGC_INSUFFICIENT, print_flag);
-    }
-
+    
     char *relName = argv[1];
-    int numAttrs = (argc-2)/2;
-    int i;
-
-    FILE *fp = fopen(RELCAT, "rb");
-    if (!fp)
-    {
-        return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
-    }
-
-    RelCatRec rcrec;
-    int found = 0;
-    while (fread(&rcrec, sizeof(RelCatRec), 1, fp) == 1)
-    {
-        if (strcmp(rcrec.relName, relName) == 0)
-        {
-            return ErrorMsgs(RELEXIST, print_flag);
-            break;
-        }
-    }
-    fclose(fp);
-
-    // ---- Create Relation File ----
-    char path[MAX_PATH_LENGTH];
-    snprintf(path, sizeof(path) + RELNAME + 2, "%s/%s", DB_DIR, relName);
-
-    int fd = creat(path, 0777);
-    if (fd < 0)
-    {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
-    }
-
-    // ---- Initialize Header Page ----
-    Page page;
-    memset(&page, 0, sizeof(Page));
-    strcpy(page.magicString, "$MINIREL");
-    page.slotmap = 0UL;
-    write(fd, &page, PAGESIZE);
-    close(fd);
-
-    // ---- Build RelCat Record ----
-    RelCatRec newrel;
-    strcpy(newrel.relName, relName);
-    newrel.numAttrs = numAttrs;
-    newrel.numRecs = 0;
-    newrel.numPgs = 1;
-
-    // Compute record length from attribute list
     int recLength = 0;
-    unsigned len = 0;
-    int n = 0;
-    char type;
-    for (int i = 2; i < argc; i += 2)
+    int recsPerPg, numAttrs, numRecs, numPgs;
+
+    if(strlen(relName) >= RELNAME)
     {
-        type = argv[i+1][0];
-        if (type == 'i')
+        db_err_code = REL_LENGTH_EXCEEDED;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    for(int i=2; i<argc; i+=2)
+    {
+        char *attrName = argv[i];
+
+        if(strlen(attrName) >= ATTRNAME)
         {
-            len = sizeof(int);
+            db_err_code = ATTR_NAME_EXCEEDED;
+            return ErrorMsgs(db_err_code, print_flag);
+        }
+    }
+
+    for(int i=2; i<argc; i+=2)
+    {
+        for(int j=i+2; j<argc; j+=2)
+        {
+            if(!strncmp(argv[i], argv[j], ATTRNAME))
+            {
+                db_err_code = DUP_ATTR;
+                return ErrorMsgs(db_err_code, print_flag);
+            }
+        }
+    }
+
+    for(int j = 3; j < argc; j += 2)
+    {
+        char *format = argv[j];
+
+        // Case 1: integer type ("i")
+        if (strcmp(format, "i") == 0)
+        {
+            recLength += sizeof(int);
+            continue;
         }
 
-        else if (type == 'f')
+        // Case 2: float type ("f")
+        else if (strcmp(format, "f") == 0)
         {
-            len = sizeof(float);
+            recLength += sizeof(float);
+            continue;
         }
-        else if (type == 's')
+
+        // Case 3: string type ("sN")
+        else if (format[0] == 's')
         {
-            n = atoi(argv[i+1]+1);
-            if (n > 50 || n < 1)
+            // Ensure there is at least one digit after 's'
+            if(strlen(format) < 2)
             {
-                return ErrorMsgs(STR_LEN_INVALID, print_flag);
+                db_err_code = INVALID_FORMAT;
+                return ErrorMsgs(db_err_code, print_flag);
             }
-            len = n;
+
+            // Also verify that all chars after 's' are digits
+            for(const char *p = format + 1; *p; ++p)
+            {
+                if (!isdigit((unsigned char)*p))
+                {
+                    db_err_code = INVALID_FORMAT;
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
+            }
+            
+            if(strlen(format) >= 4)
+            {
+                db_err_code = STR_LEN_INVALID;
+                return ErrorMsgs(db_err_code, print_flag);
+            }
+
+            // Extract N (the string length)
+            int N = atoi(format + 1);
+
+            // Check validity of N
+            if (N <= 0 || N > MAX_N)
+            {
+                db_err_code = STR_LEN_INVALID;  // e.g. define this in your error codes
+                return ErrorMsgs(db_err_code, print_flag);
+            }
+            else
+            {
+                recLength += N;
+            }
+
         }
+        // Invalid format (none of "i", "f", or "sN")
         else
         {
-            return ErrorMsgs(INVALID_FORMAT, print_flag);
+            db_err_code = INVALID_FORMAT;
+            return ErrorMsgs(db_err_code, print_flag);
         }
-
-        recLength += len;
     }
-    newrel.recLength = recLength;
-    newrel.recsPerPg = (PAGESIZE - HEADER_SIZE) / recLength;
 
-    // ---- Update RelCat ----
-    FILE *relFp = fopen(RELCAT, "ab");
-    if (!relFp)
+    Rid startRid = INVALID_RID;
+    void *relCatRecPtr = malloc(sizeof(RelCatRec));
+    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relCatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
+
+    if(status == NOTOK)
     {
-        return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
+        db_err_code = UNKNOWN_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
-    fwrite(&newrel, sizeof(RelCatRec), 1, relFp);
-    fclose(relFp);
-
-    // ---- Update AttrCat ----
-    FILE *attrFp = fopen(ATTRCAT, "ab");
-    if (!attrFp)
+    if(isValidRid(startRid))
     {
-        return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
+        db_err_code = RELEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
     }
+
+    if(recLength > (PAGESIZE - HEADER_SIZE))
+    {
+        db_err_code = REC_TOO_LONG;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    recLength = recLength;
+    recsPerPg = (PAGESIZE - HEADER_SIZE) / recLength;
+    numAttrs = (argc - 2) >> 1;
+    numRecs = 0;
+    numPgs = 0;
+
+    RelCatRec rc = {"relName", recLength, recsPerPg, numAttrs, numRecs, numPgs};
+    strncpy(rc.relName, relName, RELNAME);
+    InsertRec(RELCAT_CACHE, &rc);
 
     int offset = 0;
-    for (int i = 2; i < argc; i += 2)
+    int fd;
+
+    for(int j = 3; j < argc; j += 2)
     {
-        AttrCatRec attr;
-        attr.offset = offset;
-        attr.type = argv[i+1][0];
-        if (attr.type == 'i')
+        char *format = argv[j];
+        AttrCatRec ac;
+
+        if(strcmp(format, "i") == 0)
         {
-            attr.length = sizeof(int);
+            ac = (AttrCatRec){offset, sizeof(int), 'i', "attrName", "relName"};
+            offset += sizeof(int);
+        }
+        else if(strcmp(format, "f") == 0)
+        {
+            ac = (AttrCatRec){offset, sizeof(float), 'f', "attrName", "relName"};
+            offset += sizeof(float);
+        }
+        else if(format[0] == 's')
+        {
+            int N = atoi(format + 1);
+            ac = (AttrCatRec){offset, N, 's', "attrName", "relName"};
+            offset += N;
         }
 
-        else if (attr.type == 'f')
-        {
-            attr.length = sizeof(float);
-        }
-        else if (attr.type == 's')
-        {
-            attr.length = n;
-        }
-        strcpy(attr.attrName, argv[i]);
-        strcpy(attr.relName, relName);
-
-        fwrite(&attr, sizeof(AttrCatRec), 1, attrFp);
-        offset += attr.length;
+        strncpy(ac.relName, relName, RELNAME);
+        strncpy(ac.attrName, argv[j-1], ATTRNAME);
+        InsertRec(ATTRCAT_CACHE, &ac);
     }
 
-    fclose(attrFp);
-
-    if (print_flag)
+    if(fd = open(relName, O_CREAT))
     {
-        printf("[INFO] Created relation '%s' with %d attributes.\n", relName, numAttrs);
-        printf("[INFO] Record length: %d bytes, Records/page: %d\n", newrel.recLength, newrel.recsPerPg);
+        printf("Relation %s successfully created.\n", relName);
+        close(fd);
+        return OK;
+    }
+    else
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        ErrorMsgs(db_err_code, print_flag);
     }
 
-    return OK;
 }
