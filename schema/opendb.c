@@ -143,6 +143,11 @@ int OpenDB(int argc, char **argv)
         //     printf("AttrName : %s\n", (p->attr).attrName);
         // }
         // CloseRel(r);
+
+        // Testing modified OpenRel
+        // int r1 = OpenRel("Students");
+        // int r2 = OpenRel("Profs");
+        // printf("Students : %d | Profs: %d", r1, r2);
     }
     else
     {
