@@ -13,6 +13,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define BUFFER_FULL 603 /* Buffer is full */
 #define INVALID_FORMAT 604 /* Attribute has invalid format */
 #define STR_LEN_INVALID 605 /* String length limit for attribute is more than 50 */
+#define TOO_MANY_ARGS   606 /* Too many command line arguments passed */
 #define RELNOEXIST  101   /* Relation does not exist */
 #define RELEXIST    102   /* Relation already exists */
 #define REL_LENGTH_EXCEEDED 103 /* Relation name too long */
