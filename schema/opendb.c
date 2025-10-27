@@ -89,9 +89,9 @@ int OpenDB(int argc, char **argv)
     {
         printf("Database %s has been opened successfully for use.\n", DB_DIR);
         // Code just to test InsertRec
-        // Student s1 = {"Adithya M S", 24336, 12399.78};
-        // Student s2 = {"Medha Dabhi", 24326, 12399.78};
-        // Student s3 = {"Sai Dharma", 23334, 12123.32};
+        // Student s1 = {"Adithya M S", 24336, 16399.78};
+        // Student s2 = {"Medha Dabhi", 24326, 18399.78};
+        // Student s3 = {"Sai Dharma", 23334, 12723.32};
         // Student s4 = {"Sujoy Hansda", 23145, 21345.67};
 
         // Student su1 = {"AdithyaUpdated", 24337, 12100};
@@ -99,7 +99,7 @@ int OpenDB(int argc, char **argv)
         // Student su3 = {"SaiUpdated", 24937, 12300};
         // Student su4 = {"SujoyUpdated", 24937, 12400};
         
-        
+        // int r = OpenRel("Students");
         // DeleteRec(r, (Rid){2, 4});
         // DeleteRec(r, (Rid){3, 8});
         // InsertRec(r, &s2);
@@ -109,10 +109,9 @@ int OpenDB(int argc, char **argv)
         // CloseRel(r);
         
         // Code to test FindRec
-        // int r = OpenRel("Students");
         // Rid foundRid;
         // void *recPtr = malloc(sizeof(Student));
-        // float val = 9.00;
+        // float val = 3.99;
         // int val1 = 300;
         // char val2[] = "Belle";
         // Rid startRid = (Rid){1, 8};
@@ -121,21 +120,26 @@ int OpenDB(int argc, char **argv)
         // printf("Name of that person is %s\n", ((Student *)recPtr)->name);
         // CloseRel(r);
 
-        //Code to test GetNextRec
-        // int r = OpenRel("Students");
-        // Rid startRid = (Rid){1, 7};
-        // Rid foundRid = (Rid){-1, -1};
-        // void *recPtr = malloc(sizeof(Student));
-        // while(startRid.pid != -1 && startRid.slotnum != -1)
+        // Code to test GetNextRec
+        // Professor ins = {"INS", 420, 23.45, "Senior Dean"};
+        // int r = OpenRel("Profs");
+        // DeleteRec(r, (Rid){2, 0});
+        // DeleteRec(r, (Rid){2, 1});
+        // DeleteRec(r, (Rid){2, 2});
+        // DeleteRec(r, (Rid){2, 3});
+        // Rid startRid = (Rid){-1, -1};
+        // void *recPtr = malloc(sizeof(Professor));
+        // do
         // {
         //     GetNextRec(r, startRid, &startRid, recPtr);
-        //     Student s = *(Student *)(recPtr);
+        //     Professor p = *(Professor *)(recPtr);
         //     if(startRid.pid != -1 && startRid.slotnum != -1)
-        //     printf("StudentRec : name = %s | id = %d | stipend = %f\n", s.name, s.id, s.stipend);
+        //     printf("ProfessorRec : name = %s  | id = %d | salary = %f | designation = %s\n", p.name, p.id, p.salary, p.designation);
+        //     else break;
         // }
-        // CloseRel(r);
+        // while(1);
 
-        //Modified OpenRel to use FindRec
+        // Modified OpenRel to use FindRec
         // int r = OpenRel("Profs");
         // AttrDesc *p;
         // for(p=catcache[r].attrList;p;p=p->next)
@@ -144,10 +148,10 @@ int OpenDB(int argc, char **argv)
         // }
         // CloseRel(r);
 
-        // Testing modified OpenRel
+        // // Testing modified OpenRel
         // int r1 = OpenRel("Students");
         // int r2 = OpenRel("Profs");
-        // printf("Students : %d | Profs: %d", r1, r2);
+        // printf("Students : %d | Profs: %d\n", r1, r2);
     }
     else
     {
