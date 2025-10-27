@@ -11,6 +11,7 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 #include "../include/findrec.h"
+#include "../include/closerel.h"
 
 
 int OpenRel(const char *relName)
@@ -50,6 +51,8 @@ int OpenRel(const char *relName)
                 freeSlot = i;
             }
         }
+
+        CloseRel(freeSlot);
     }
 
     Rid startRid = (Rid){-1, -1};
