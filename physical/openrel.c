@@ -68,6 +68,11 @@ int OpenRel(const char *relName)
     else
     {
         found = true;
+        catcache[freeSlot].relcat_rec = rc;
+        catcache[freeSlot].relFile = open(rc.relName, O_RDWR);
+        catcache[freeSlot].status = VALID_MASK;
+        catcache[freeSlot].relcatRid = startRid;
+        catcache[freeSlot].attrList = NULL; 
     }
 
     AttrDesc *ptr = NULL;
