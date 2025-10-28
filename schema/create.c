@@ -20,6 +20,12 @@ int Create(int argc, char *argv[])
         db_err_code = ARGC_INSUFFICIENT;
         return ErrorMsgs(db_err_code, print_flag);
     }
+
+    if(!db_open)
+    {
+        db_err_code = DBNOTOPEN;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
     
     char *relName = argv[1];
     int recLength = 0;
@@ -154,7 +160,7 @@ int Create(int argc, char *argv[])
     InsertRec(RELCAT_CACHE, &rc);
 
     int offset = 0;
-    int fd;
+    FILE *fp;
 
     for(int j = 3; j < argc; j += 2)
     {
@@ -183,10 +189,10 @@ int Create(int argc, char *argv[])
         InsertRec(ATTRCAT_CACHE, &ac);
     }
 
-    if(fd = open(relName, O_CREAT))
+    if(fp = fopen(relName, "w"))
     {
         printf("Relation %s successfully created.\n", relName);
-        close(fd);
+        fclose(fp);
         return OK;
     }
     else
