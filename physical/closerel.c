@@ -8,6 +8,7 @@
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
+#include "../include/writerec.h"
 
 int CloseRel(int relNum)
 {
@@ -19,29 +20,16 @@ int CloseRel(int relNum)
     if (!(entry->status & VALID_MASK))
         return NOTOK; // Not open
 
-    // Step 1: Flush dirty page if any
+    // Step 1: If catalog info dirty, update relcat in the buffer
+    if((entry->status) & DIRTY_MASK)
+    {
+        WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
+    }
+        
+    // Step 2: Flush dirty page if any
     if(buffer[relNum].dirty)
     {
         FlushPage(relNum);
-    }
-
-    // Step 2: If catalog info dirty, update relcat on disk
-    if ((entry->status) & DIRTY_MASK)
-    {
-        FILE *fp = fopen(RELCAT, "r+b");
-
-        if(!fp)
-        {
-            db_err_code = REL_CLOSE_ERROR;
-            return NOTOK;
-        }
-
-        short pid = catcache[relNum].relcatRid.pid;
-        short slotnum = catcache[relNum].relcatRid.slotnum;
-
-        fseek(fp, pid * PAGESIZE + HEADER_SIZE + slotnum * sizeof(RelCatRec), SEEK_SET);
-        fwrite(&(entry->relcat_rec), sizeof(RelCatRec), 1, fp);
-        fclose(fp);
     }
 
     //Step 3: Invalidate cache entry

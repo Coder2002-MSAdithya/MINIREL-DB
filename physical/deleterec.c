@@ -6,14 +6,16 @@
 #include "../include/globals.h"
 #include "../include/error.h"
 #include "../include/readpage.h"
+#include "../include/writerec.h"
 
 /* Read the given page of the relation and 
 unset the slotmap at the slotnum position of the map */
 
 int DeleteRec(int relNum, Rid recRid)
 {
-    int numPgs = catcache[relNum].relcat_rec.numPgs;
-    int recsPerPg = catcache[relNum].relcat_rec.recsPerPg;
+    CacheEntry *entry = &catcache[relNum];
+    int numPgs = (entry->relcat_rec).numPgs;
+    int recsPerPg = (entry->relcat_rec).recsPerPg;
     char *page = buffer[relNum].page;
 
     if(recRid.pid < 0 || recRid.slotnum < 0)
@@ -45,6 +47,7 @@ int DeleteRec(int relNum, Rid recRid)
     }
 
     catcache[relNum].status |= DIRTY_MASK;
+    WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
 
     return OK;
 }

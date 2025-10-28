@@ -4,18 +4,21 @@
 #include "../include/globals.h"
 #include "../include/error.h"
 #include "../include/readpage.h"
+#include "../include/writerec.h"
 
 int InsertRec(int relNum, void *recPtr)
 {
-    if(!(catcache[relNum].status & VALID_MASK))
+    CacheEntry *entry = &catcache[relNum];
+
+    if(!(entry->status & VALID_MASK))
     {
         db_err_code = INVALID_RELNUM;
         return NOTOK;
     }
 
-    int recSize = catcache[relNum].relcat_rec.recLength;
-    int recsPerPg = catcache[relNum].relcat_rec.recsPerPg;
-    int numPages = catcache[relNum].relcat_rec.numPgs;
+    int recSize = (entry->relcat_rec).recLength;
+    int recsPerPg = (entry->relcat_rec).recsPerPg;
+    int numPages = (entry->relcat_rec).numPgs;
 
     bool foundFreeSlot = false;
     char *page = buffer[relNum].page;
@@ -51,8 +54,9 @@ int InsertRec(int relNum, void *recPtr)
                 slotmap |= (1UL << slot);
                 memcpy(page + MAGIC_SIZE, &slotmap, SLOTMAP);
                 buffer[relNum].dirty = true;
-                catcache[relNum].relcat_rec.numRecs += 1;
-                catcache[relNum].status |= DIRTY_MASK;
+                (entry->relcat_rec).numRecs += 1;
+                entry->status |= DIRTY_MASK;
+                WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
                 return OK;
             }
         }
@@ -70,11 +74,13 @@ int InsertRec(int relNum, void *recPtr)
         strncpy(page+1, GEN_MAGIC, MAGIC_SIZE-1);
         memcpy(page+MAGIC_SIZE, &newMap, SLOTMAP);
         memcpy(page+HEADER_SIZE, recPtr, recSize);
-        catcache[relNum].relcat_rec.numRecs += 1;
-        catcache[relNum].relcat_rec.numPgs += 1;
-        catcache[relNum].status |= DIRTY_MASK;
+        (entry->relcat_rec).numRecs += 1;
+        (entry->relcat_rec).numPgs += 1;
+        entry->status |= DIRTY_MASK;
+        WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
         return OK;
     }
+
 
     return NOTOK;
 }
