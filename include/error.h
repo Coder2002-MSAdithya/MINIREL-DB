@@ -28,7 +28,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
 #define CAT_CLOSE_ERROR 304 /* Error in closing catalog files */
-#define CAT_DELETE_ERROR 305 /* Catalogue file can't be deleted */
+#define CAT_DELETE_ERROR 305 /* Catalog file can't be deleted */
 #define MEM_ALLOC_ERROR 401 /* Memory could not be allocated for processing query */
 #define REC_TOO_LONG    402 /* The relation record is too long to fit in one page*/
 #define DBNOTEXIST  501   /* DB does NOT exist */
@@ -40,7 +40,10 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DBPREFIXNOTFOUND 507 /* A prefix to the path does NOT exist */
 #define DBDESTROYERROR  508 /* DB directory could not be deleted */
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
+#define FILE_NO_EXIST   802 /* The file does NOT exist */
+#define LOAD_NONEMPTY   803 /* Attempt to load data into a non-empty relation */
 #define UNKNOWN_ERROR   901 /* Some unknown error */
 #define PAGE_MAGIC_ERROR 902 /* Page does not belong to MINIREL */
 #define PAGE_OUT_OF_BOUNDS 903 /* Page not in relation */
+#define INVALID_FILE_SIZE 904 /* Trying to load an invalid file */
 #endif

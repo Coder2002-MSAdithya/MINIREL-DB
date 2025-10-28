@@ -29,6 +29,14 @@ int ErrorMsgs(int errorNum, bool printFlag)
                        "  Use provided APIs or commands to alter metadata safely.\n",
                        errorNum);
                 break;
+            
+            case FILE_NO_EXIST:
+                    printf("Error %d: File that you are trying to load from does'nt exist.\n", errorNum);
+                break;
+            
+            case LOAD_NONEMPTY:
+                    printf("Error %d: CANNOT load data into a non-empty relation.\n", errorNum);
+                break;
 
             case RELNOEXIST:
                 printf("Error %d: Relation does not exist.\n"
