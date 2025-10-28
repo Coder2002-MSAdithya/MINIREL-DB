@@ -40,7 +40,8 @@ int DeleteRec(int relNum, Rid recRid)
 
     if(!slotmap)
     {
-        catcache[relNum].relcat_rec.numPgs -= 1;
+        /* Can't do this here because the emptied page need NOT be the last one */
+        // catcache[relNum].relcat_rec.numPgs -= 1;
     }
 
     catcache[relNum].status |= DIRTY_MASK;
