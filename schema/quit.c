@@ -3,6 +3,7 @@
 #include "../include/globals.h"
 #include "../include/closedb.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * Function:  Quit()
@@ -34,5 +35,6 @@ int Quit(int argc, char **argv)
         CloseDB(1, argv2);
     }
 
+    exit(OK);  
     return OK;
 }
