@@ -56,7 +56,7 @@ int OpenRel(const char *relName)
     }
 
     Rid startRid = (Rid){-1, -1};
-    int relCatRecSize = catcache[RELCAT_CACHE].relcat_rec.recLength;
+    int relcatRecSize = catcache[RELCAT_CACHE].relcat_rec.recLength;
     RelCatRec rc;
     FindRec(RELCAT_CACHE, startRid, &startRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), (void *)relName, CMP_EQ);
 
@@ -77,7 +77,7 @@ int OpenRel(const char *relName)
 
     AttrDesc *ptr = NULL;
     AttrDesc **head = &(catcache[freeSlot].attrList);
-    int attrCatRecSize = catcache[ATTRCAT_CACHE].relcat_rec.recLength;
+    int attrcatRecSize = catcache[ATTRCAT_CACHE].relcat_rec.recLength;
     AttrCatRec ac;
 
     startRid = INVALID_RID;

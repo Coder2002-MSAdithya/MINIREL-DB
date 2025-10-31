@@ -11,9 +11,9 @@ int Sort (int argc, char **argv)
     printf("%s:\n", argv[0]);
     for (k=1; k<argc; ++k)
     {
-        printf ("\targv[%d] = %s\n", k, argv[k]);
+        printf ("\targv[%d] = %s \n", k, argv[k]);
     }
     
-    printf ("Sort \n");
+    printf ("Sort \n\n");
     return (OK); /* all's fine */
 }

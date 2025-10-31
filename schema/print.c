@@ -43,7 +43,7 @@ int Print(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    printf("OK, printing relation %s\n\n", relName);
+    printf("OK, printing relation %s. \n\n", relName);
 
     /* --------- Count attributes --------- */
     int attrCount = 0;
@@ -52,7 +52,7 @@ int Print(int argc, char **argv)
 
     if(attrCount == 0)
     {
-        printf("(Empty relation)\n");
+        printf("(Empty relation)\n\n");
         return OK;
     }
 
@@ -60,7 +60,7 @@ int Print(int argc, char **argv)
     int *colWidths = (int *)malloc(sizeof(int) * attrCount);
     if(!colWidths)
     {
-        fprintf(stderr, "Memory allocation failed.\n");
+        fprintf(stderr, "Memory allocation failed. \n\n");
         return NOTOK;
     }
 
@@ -92,7 +92,7 @@ int Print(int argc, char **argv)
     void *recPtr = malloc(recSize);
     if(!recPtr)
     {
-        fprintf(stderr, "Memory allocation failed.\n");
+        fprintf(stderr, "Memory allocation failed. \n\n");
         free(colWidths);
         return NOTOK;
     }
@@ -161,7 +161,7 @@ int Print(int argc, char **argv)
 
     /* --------- Footer --------- */
     printSeparator(catcache[r].attrList, colWidths);
-    printf("%d row%s in set\n", rowCount, (rowCount == 1 ? "" : "s"));
+    printf("%d row%s in set. \n\n", rowCount, (rowCount == 1 ? "" : "s"));
 
     free(recPtr);
     free(colWidths);

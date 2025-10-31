@@ -61,9 +61,9 @@ int OpenCats()
 
     // Attributes of relcat relation
     AttrCatRec *rel_attrs[] = {
-        &Attrcat_rrelName,
-        &Attrcat_recLength,
-        &Attrcat_recsPerPg,
+        &AttrCat_rrelName,
+        &AttrCat_recLength,
+        &AttrCat_recsPerPg,
         &AttrCat_numAttrs,
         &AttrCat_numRecs,
         &AttrCat_numPgs

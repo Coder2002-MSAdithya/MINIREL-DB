@@ -15,6 +15,6 @@ int BuildIndex (int argc, char **argv)
         printf ("\targv[%d] = %s\n", k, argv[k]);
     }
     
-    printf ("BuildIndex \n");
+    printf ("BuildIndex \n\n");
     return (OK); /* all's fine */
 }

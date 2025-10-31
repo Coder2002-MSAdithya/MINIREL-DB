@@ -166,7 +166,7 @@ int Load(int argc, char **argv)
 
     CloseRel(r);
 
-    printf("Loaded relation '%s' successfully: %d pages, %d records.\n",
+    printf("Loaded relation '%s' successfully: %d pages, %d records. \n\n",
            relName, *numPgs, *numRecs);
 
     return OK;

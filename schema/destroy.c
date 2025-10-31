@@ -34,8 +34,8 @@ int Destroy(int argc, char *argv[])
     }
 
     char *relName = argv[1];
-    void *relCatRecPtr = malloc(sizeof(RelCatRec));
-    void *attrCatRecPtr = malloc(sizeof(AttrCatRec));
+    void *relcatRecPtr = malloc(sizeof(RelCatRec));
+    void *attrcatRecPtr = malloc(sizeof(AttrCatRec));
     Rid startRid = INVALID_RID;
 
     if(strncmp(relName, RELCAT, RELNAME) == OK)
@@ -50,7 +50,7 @@ int Destroy(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relCatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
+    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relcatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
 
     if(status == NOTOK)
     {
@@ -76,13 +76,13 @@ int Destroy(int argc, char *argv[])
 
     do
     {
-        status = FindRec(ATTRCAT_CACHE, startRid, &startRid, attrCatRecPtr, 's', RELNAME, offsetof(AttrCatRec, relName), relName, CMP_EQ);
+        status = FindRec(ATTRCAT_CACHE, startRid, &startRid, attrcatRecPtr, 's', RELNAME, offsetof(AttrCatRec, relName), relName, CMP_EQ);
         
         if(status == NOTOK)
         {
             db_err_code = UNKNOWN_ERROR;
-            free(relCatRecPtr);
-            free(attrCatRecPtr);
+            free(relcatRecPtr);
+            free(attrcatRecPtr);
             return ErrorMsgs(db_err_code, print_flag);
         }
 
@@ -96,7 +96,7 @@ int Destroy(int argc, char *argv[])
     
     if(remove(relName) == OK)
     {
-        printf("Relation %s destroyed successfully.\n", relName);
+        printf("Relation %s destroyed successfully. \n\n", relName);
     }
     else
     {
@@ -104,8 +104,8 @@ int Destroy(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    free(relCatRecPtr);
-    free(attrCatRecPtr);
+    free(relcatRecPtr);
+    free(attrcatRecPtr);
 
     return OK;
 }

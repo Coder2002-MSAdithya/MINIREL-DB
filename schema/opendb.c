@@ -87,7 +87,7 @@ int OpenDB(int argc, char **argv)
     //OpenCats also initializes various global data structures
     if(OpenCats() == OK)
     {
-        printf("Database %s has been opened successfully for use.\n", DB_DIR);
+        printf("Database %s has been opened successfully for use. \n\n", DB_DIR);
         // Code just to test InsertRec
         // Student s1 = {"Adithya M S", 24336, 16399.78};
         // Student s2 = {"Medha Dabhi", 24326, 18399.78};

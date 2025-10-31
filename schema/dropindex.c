@@ -15,6 +15,6 @@ int DropIndex (int argc, char **argv)
         printf ("\targv[%d] = %s\n", k, argv[k]);
     }
 
-    printf ("DropIndex \n");
+    printf ("DropIndex \n\n");
     return (OK); /* all's fine */
 }
