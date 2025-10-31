@@ -128,8 +128,8 @@ int Create(int argc, char *argv[])
     }
 
     Rid startRid = INVALID_RID;
-    void *relCatRecPtr = malloc(sizeof(RelCatRec));
-    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relCatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
+    void *relcatRecPtr = malloc(sizeof(RelCatRec));
+    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relcatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
 
     if(status == NOTOK)
     {
@@ -191,7 +191,7 @@ int Create(int argc, char *argv[])
 
     if(fp = fopen(relName, "w"))
     {
-        printf("Relation %s successfully created.\n", relName);
+        printf("Relation %s successfully created. \n\n", relName);
         fclose(fp);
         return OK;
     }

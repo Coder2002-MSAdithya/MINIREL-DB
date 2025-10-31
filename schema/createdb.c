@@ -59,7 +59,7 @@ int CreateDB(int argc, char **argv)
 
     if(flag == OK)
     {
-        printf("DB %s successfully created.\n", DB_PATH);
+        printf("DB %s successfully created. \n\n", DB_PATH);
     }
     else
     {

@@ -19,15 +19,16 @@ extern const int relcat_recLength;
 extern const int attrcat_recLength;
 extern const int relcat_recsPerPg;
 extern const int attrcat_recsPerPg;
-extern const int attrCat_numRecs;
-extern const int relCat_numPgs;
-extern const int attrCat_numPgs;
+extern const int relcat_numRecs;
+extern const int attrcat_numRecs;
+extern const int relcat_numPgs;
+extern const int attrcat_numPgs;
 
-extern RelCatRec Relcat_rc;
-extern RelCatRec Relcat_ac;
-extern AttrCatRec Attrcat_rrelName;
-extern AttrCatRec Attrcat_recLength;
-extern AttrCatRec Attrcat_recsPerPg;
+extern RelCatRec RelCat_rc;
+extern RelCatRec RelCat_ac;
+extern AttrCatRec AttrCat_rrelName;
+extern AttrCatRec AttrCat_recLength;
+extern AttrCatRec AttrCat_recsPerPg;
 extern AttrCatRec AttrCat_numAttrs;
 extern AttrCatRec AttrCat_numRecs;
 extern AttrCatRec AttrCat_numPgs;
@@ -36,12 +37,12 @@ extern AttrCatRec AttrCat_length;
 extern AttrCatRec AttrCat_type;
 extern AttrCatRec AttrCat_attrName;
 extern AttrCatRec AttrCat_arelName;
-extern RelCatRec adv_rc, nn_rc, prof_rc, stud_rc;
-extern AttrCatRec profs_name, profs_id, profs_des, profs_sal;
-extern AttrCatRec stud_id, stud_name, stud_stp;
+// extern RelCatRec adv_rc, nn_rc, prof_rc, stud_rc;
+// extern AttrCatRec profs_name, profs_id, profs_des, profs_sal;
+// extern AttrCatRec stud_id, stud_name, stud_stp;
 
-extern Student students[49];
-extern Professor professors[11];
+// extern Student students[49];
+// extern Professor professors[11];
 #endif
 
 int Create (int argc, char **argv);

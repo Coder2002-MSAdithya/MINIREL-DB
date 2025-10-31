@@ -62,7 +62,7 @@ int DestroyDB(int argc, char **argv)
 
     if(remove_all_entry(argv[1]) == OK)
     {
-        printf("Database %s destroyed.\n", argv[1]);
+        printf("Database %s destroyed.\n\n", argv[1]);
     }
     else
     {

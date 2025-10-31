@@ -45,7 +45,7 @@ int CloseDB(int argc, char **argv)
     {
         db_open = false;
         chdir(ORIG_DIR);
-        printf("Database %s CLOSED.\n", DB_DIR);
+        printf("Database %s CLOSED. \n\n", DB_DIR);
         return OK;
     }
     else
