@@ -1,0 +1,17 @@
+createdb DB;
+opendb DB;
+destroy Students;
+destroy Professors;
+destroy Profs;
+destroy Assistants;
+create Students(sname=s24, sid=i, gpa=f);
+create Professors(pname=s24, pid=i, salary=f, status=s24);
+create Assistants(sid=i, pid=i, ptime=i);
+load Students from /tmp/Students;
+load Professors from /tmp/Professors;
+load Assistants from /tmp/Assistants;
+print relcat;
+print attrcat;
+print Students;
+print Professors;
+print Assistants;

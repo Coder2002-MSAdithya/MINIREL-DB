@@ -56,7 +56,7 @@ int Load(int argc, char **argv)
     }
 
     // Check if source file exists
-    if (access(fileName, F_OK) != 0)
+    if(access(fileName, F_OK))
     {
         db_err_code = FILE_NO_EXIST;
         CloseRel(r);
@@ -67,7 +67,7 @@ int Load(int argc, char **argv)
     int *numRecs = &(catcache[r].relcat_rec.numRecs);
 
     // Ensure relation is empty
-    if (*numPgs != 0)
+    if(*numPgs)
     {
         db_err_code = LOAD_NONEMPTY;
         CloseRel(r);
@@ -141,9 +141,11 @@ int Load(int argc, char **argv)
         memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
 
         // Count number of set bits in slotmap → numRecs
-        for (int b = 0; b < sizeof(slotmap); b++)
+        for (int b = 0; b < (sizeof(slotmap)<<3); b++)
             if (slotmap & (1ULL << b))
                 (*numRecs)++;
+        
+        printf("Page %d - Records read till now : %d\n", (int)i, *numRecs);
     }
 
     close(srcFd);
