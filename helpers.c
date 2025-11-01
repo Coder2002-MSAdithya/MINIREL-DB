@@ -295,7 +295,7 @@ Rid IncRid(Rid rid, int recsPerPg)
         return rid;
     }
 
-    return (Rid){-1, -1};
+    return INVALID_RID;
 }
 
 bool isValidRid(Rid rid)
