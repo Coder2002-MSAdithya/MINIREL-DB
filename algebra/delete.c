@@ -103,6 +103,7 @@ int Delete(int argc, char **argv)
 
             free(recPtr);
             free(valuePtr);
+            break;
         }
     }
 
