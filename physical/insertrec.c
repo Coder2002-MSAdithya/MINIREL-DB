@@ -65,6 +65,8 @@ int InsertRec(int relNum, void *recPtr)
     if(!foundFreeSlot)
     {
         // Create a new page here
+        //First flush the currently read page
+        FlushPage(relNum);
         buffer[relNum].pid = numPages;
         buffer[relNum].dirty = true;
         memset(page, 0, PAGESIZE);
