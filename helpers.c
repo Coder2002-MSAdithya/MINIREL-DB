@@ -324,3 +324,49 @@ int FreeLinkedList(void **headPtr, size_t nextOff)
     *headPtr = NULL;  // set head to NULL after freeing
     return OK;
 }
+
+bool isValidInteger(char *str)
+{
+    if(*str == '-' || *str == '+')
+        str++;
+
+    if(!*str)
+        return false;
+
+    while(*str)
+    {
+        if(!isdigit((unsigned char)*str))
+            return false;
+        str++;
+    }
+
+    return true;
+}
+
+bool isValidFloat(char *str)
+{
+    int dotSeen = 0;
+
+    if(*str == '-' || *str == '+')
+        str++;
+
+    if(!*str)
+        return false;
+
+    while(*str)
+    {
+        if(*str == '.')
+        {
+            if(dotSeen)
+                return false;
+            dotSeen = 1;
+        }
+        else if(!isdigit((unsigned char)*str))
+        {
+            return false;
+        }
+        str++;
+    }
+
+    return true;
+}

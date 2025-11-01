@@ -13,4 +13,6 @@ double dmax(double, double);
 Rid IncRid(Rid rid, int recsPerPg);
 int FreeLinkedList(void **headPtr, size_t nextOff);
 bool isValidRid(Rid rid);
+bool isValidFloat(char *str);
+bool isValidInteger(char *str);
 #endif
