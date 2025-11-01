@@ -128,8 +128,8 @@ int Create(int argc, char *argv[])
     }
 
     Rid startRid = INVALID_RID;
-    void *relCatRecPtr = malloc(sizeof(RelCatRec));
-    int status = FindRec(RELCAT_CACHE, startRid, &startRid, relCatRecPtr, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
+    RelCatRec rcd;
+    int status = FindRec(RELCAT_CACHE, startRid, &startRid, &rcd, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
 
     if(status == NOTOK)
     {
