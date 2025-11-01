@@ -1,0 +1,8 @@
+createdb EC;
+opendb EC;
+create USERS ( USER_ID = i, NAME = s20, EMAIL = s30, AGE = i, BALANCE = f );
+insert into USERS ( USER_ID = 1, NAME = "Alice", EMAIL = "alice@example.com", AGE = 28, BALANCE = 1250.75 );
+insert into USERS ( USER_ID = 2, NAME = "Bob", EMAIL = "bob@example.com", AGE = 34, BALANCE = 980.50 );
+insert into USERS ( USER_ID = 3, NAME = "Charlie", EMAIL = "charlie@example.com", AGE = 22, BALANCE = 150.00 );
+insert into USERS ( USER_ID = 4, NAME = "Diana", EMAIL = "diana@example.com", AGE = 30, BALANCE = 2100.10 );
+insert into USERS ( USER_ID = 5, NAME = "Ethan", EMAIL = "ethan@example.com", AGE = 45, BALANCE = 5000.00 );

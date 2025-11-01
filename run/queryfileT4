@@ -1,0 +1,53 @@
+createdb EcommerceDB;
+opendb EcommerceDB;
+
+create Users ( UserId = i, Name = s20, Email = s30, Age = i, Balance = f );
+insert into Users ( UserId = 1, Name = "Alice", Email = "alice@example.com", Age = 28, Balance = 1250.50 );
+insert into Users ( UserId = 2, Name = "Bob", Email = "bob@example.com", Age = 34, Balance = 980.75 );
+insert into Users ( UserId = 3, Name = "Charlie", Email = "charlie@example.com", Age = 22, Balance = 300.00 );
+print Users;
+
+create Products ( ProductId = i, Name = s25, Category = s15, Price = f, Stock = i );
+insert into Products ( ProductId = 1, Name = "Laptop", Category = "Electronics", Price = 89999.99, Stock = 10 );
+insert into Products ( ProductId = 2, Name = "Shoes", Category = "Fashion", Price = 2999.99, Stock = 50 );
+insert into Products ( ProductId = 3, Name = "Watch", Category = "Accessories", Price = 7999.49, Stock = 20 );
+print Products;
+
+create Categories ( CategoryId = i, CategoryName = s20, Description = s30 );
+insert into Categories ( CategoryId = 1, CategoryName = "Electronics", Description = "Electronic goods" );
+insert into Categories ( CategoryId = 2, CategoryName = "Fashion", Description = "Apparel and style" );
+insert into Categories ( CategoryId = 3, CategoryName = "Accessories", Description = "Personal items" );
+print Categories;
+
+create Orders ( OrderId = i, UserId = i, Total = f, Status = s10 );
+insert into Orders ( OrderId = 1, UserId = 1, Total = 1250.50, Status = "PLACED" );
+insert into Orders ( OrderId = 2, UserId = 2, Total = 2999.99, Status = "SHIPPED" );
+insert into Orders ( OrderId = 3, UserId = 3, Total = 89999.99, Status = "DELIVERED" );
+print Orders;
+
+create OrderItems ( ItemId = i, OrderId = i, ProductId = i, Quantity = i, Price = f );
+insert into OrderItems ( ItemId = 1, OrderId = 1, ProductId = 2, Quantity = 1, Price = 2999.99 );
+insert into OrderItems ( ItemId = 2, OrderId = 2, ProductId = 1, Quantity = 1, Price = 89999.99 );
+insert into OrderItems ( ItemId = 3, OrderId = 3, ProductId = 3, Quantity = 2, Price = 7999.49 );
+print OrderItems;
+
+create Payments ( PaymentId = i, OrderId = i, Amount = f, Method = s10, Status = s10 );
+insert into Payments ( PaymentId = 1, OrderId = 1, Amount = 1250.50, Method = "CARD", Status = "PAID" );
+insert into Payments ( PaymentId = 2, OrderId = 2, Amount = 2999.99, Method = "UPI", Status = "PENDING" );
+insert into Payments ( PaymentId = 3, OrderId = 3, Amount = 89999.99, Method = "CASH", Status = "PAID" );
+print Payments;
+
+create Reviews ( ReviewId = i, ProductId = i, UserId = i, Rating = i, Comment = s40 );
+insert into Reviews ( ReviewId = 1, ProductId = 1, UserId = 1, Rating = 5, Comment = "Excellent product" );
+insert into Reviews ( ReviewId = 2, ProductId = 2, UserId = 2, Rating = 4, Comment = "Good quality" );
+insert into Reviews ( ReviewId = 3, ProductId = 3, UserId = 3, Rating = 3, Comment = "Average item" );
+print Reviews;
+
+create Shipping ( ShipId = i, OrderId = i, Address = s40, City = s20, Status = s10 );
+insert into Shipping ( ShipId = 1, OrderId = 1, Address = "12 MG Road", City = "Mumbai", Status = "SHIPPED" );
+insert into Shipping ( ShipId = 2, OrderId = 2, Address = "45 Brigade St", City = "Bangalore", Status = "DELIVERED" );
+insert into Shipping ( ShipId = 3, OrderId = 3, Address = "10 Park Ave", City = "Delhi", Status = "PENDING" );
+print Shipping;
+
+closedb;
+quit;
