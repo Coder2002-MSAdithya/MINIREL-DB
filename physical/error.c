@@ -84,6 +84,17 @@ int ErrorMsgs(int errorNum, bool printFlag)
                        errorNum);
                 break;
             
+            case DUP_ATTR_INSERT:
+                printf("Error %d: Duplicate assignment of fields in insert query NOT allowed\n", errorNum);
+            
+            case DUP_ROWS:
+                    printf("Error %d: CANNOT have duplicate tuples in relation..\n", errorNum);
+                    break;
+            
+            case INVALID_VALUE:
+                    printf("Error %d: You have entered an invalid value for a field that is incompatible with its type..\n", errorNum);
+                    break;
+            
             case CAT_CREATE_ERROR:
                 printf("Error %d: The catalog files could NOT be created.\n"
                 "Please try again after closing any processes that are using this directory.\n", errorNum);

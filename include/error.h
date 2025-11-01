@@ -24,6 +24,11 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define ATTREXIST   202   /* Attribute already exists */
 #define ATTR_NAME_EXCEEDED 203 /* Attribute name too long */
 #define DUP_ATTR    204   /* Duplicate attributes in table name */
+#define INVALID_VALUE 205 /* Value does NOT match field type */
+#define DUP_ATTR_INSERT 206 /* Repeated definition of attribute value during insertion */
+#define DUP_ROWS     207 /* CANNOT insert duplicate row into relation */
+#define REC_INS_ERR     207 /* Some error in inserting record */
+#define REC_DEL_ERR     208 /* Some error in deleting a record */
 #define CAT_CREATE_ERROR   301 /* Error in creating catalog tables */
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
