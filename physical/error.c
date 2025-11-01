@@ -95,6 +95,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
                     printf("Error %d: You have entered an invalid value for a field that is incompatible with its type..\n", errorNum);
                     break;
             
+            case INVALID_FORMAT:
+                    printf("Error %d: One or more type(s) you have specified CANNOT be understood..", errorNum);
+                    break;
+            
             case CAT_CREATE_ERROR:
                 printf("Error %d: The catalog files could NOT be created.\n"
                 "Please try again after closing any processes that are using this directory.\n", errorNum);
