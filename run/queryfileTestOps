@@ -1,0 +1,7 @@
+delete from Users where (age = 37);
+delete from Users where (age >= 37);
+delete from Users where (age > 37);
+delete from Users where (age <= 37);
+delete from Users where (age <> 37);
+delete from Users where (age < 37);
+quit;
