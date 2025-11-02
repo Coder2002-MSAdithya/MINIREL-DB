@@ -11,6 +11,7 @@
 #include "../include/helpers.h"
 #include "../include/insertrec.h"
 #include "../include/findrec.h"
+#include "../include/findrel.h"
 
 
 int Create(int argc, char *argv[])
@@ -18,7 +19,6 @@ int Create(int argc, char *argv[])
     bool flag = (strcmp(argv[0], "create") == OK);
     FILE *fp;
 
-    
     if(argc < 4)
     {
         db_err_code = ARGC_INSUFFICIENT;
@@ -131,17 +131,7 @@ int Create(int argc, char *argv[])
         }
     }
 
-    Rid startRid = INVALID_RID;
-    RelCatRec rcd;
-    int status = FindRec(RELCAT_CACHE, startRid, &startRid, &rcd, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
-
-    if(status == NOTOK)
-    {
-        db_err_code = UNKNOWN_ERROR;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    if(isValidRid(startRid))
+    if(FindRel(relName))
     {
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
