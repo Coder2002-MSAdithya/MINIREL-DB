@@ -3,6 +3,7 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 #include "../include/openrel.h"
+#include "../include/findrel.h"
 #include "../include/findrec.h"
 #include "../include/insertrec.h"
 #include <stdio.h>
@@ -27,10 +28,10 @@ int Select(int argc, char **argv)
 
     bool attrFound = false;
 
-    int r1 = OpenRel(dstRelName);
+    int r1 = FindRel(dstRelName);
     int r2 = OpenRel(srcRelName);
 
-    if(r1 != NOTOK)
+    if(r1)
     {
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
