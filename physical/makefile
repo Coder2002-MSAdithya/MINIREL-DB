@@ -11,7 +11,7 @@ CFLAGS = -g $(DFLAG) -I$(INCLUDE)
 
 SRCS = \
 	error.c createcats.c opencats.c closecats.c openrel.c closerel.c findrelnum.c \
-	readpage.c flushpage.c writerec.c findrec.c getnextrec.c insertrec.c deleterec.c
+	findrel.c readpage.c flushpage.c writerec.c findrec.c getnextrec.c insertrec.c deleterec.c
 
 OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 

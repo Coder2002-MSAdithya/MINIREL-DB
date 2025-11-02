@@ -51,8 +51,6 @@ int OpenRel(const char *relName)
                 freeSlot = i;
             }
         }
-
-        CloseRel(freeSlot);
     }
 
     Rid startRid = (Rid){-1, -1};
@@ -65,15 +63,14 @@ int OpenRel(const char *relName)
         db_err_code = RELNOEXIST;
         return NOTOK;
     }
-    else
-    {
-        found = true;
-        catcache[freeSlot].relcat_rec = rc;
-        catcache[freeSlot].relFile = open(rc.relName, O_RDWR);
-        catcache[freeSlot].status = VALID_MASK;
-        catcache[freeSlot].relcatRid = startRid;
-        catcache[freeSlot].attrList = NULL; 
-    }
+
+    found = true;
+    CloseRel(freeSlot);
+    catcache[freeSlot].relcat_rec = rc;
+    catcache[freeSlot].relFile = open(rc.relName, O_RDWR);
+    catcache[freeSlot].status = VALID_MASK;
+    catcache[freeSlot].relcatRid = startRid;
+    catcache[freeSlot].attrList = NULL; 
 
     AttrDesc *ptr = NULL;
     AttrDesc **head = &(catcache[freeSlot].attrList);
