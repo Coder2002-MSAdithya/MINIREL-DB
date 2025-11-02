@@ -13,6 +13,8 @@
 /* Here we assume that the right number of arguments are being passed */
 int Insert(int argc, char **argv)
 {
+    bool flag = (strcmp(argv[0], "insert") == OK);
+
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
@@ -203,6 +205,7 @@ int Insert(int argc, char **argv)
     /* Insert the new record in the relation */
     if(InsertRec(r, newRecord) == OK)
     {
+        if(flag)
         printf("Inserted record successfully into %s\n", relName);
         free(newRecord);
         return OK;
