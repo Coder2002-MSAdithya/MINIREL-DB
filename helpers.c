@@ -370,3 +370,33 @@ bool isValidFloat(char *str)
 
     return true;
 }
+
+bool isValidForType(char type, int size, void *value, void *dstValuePtr)
+{
+    if(type == 'i')
+    {
+        if(!isValidInteger(value))
+        {
+            return false;
+        }
+
+        *(int *)(dstValuePtr) = atoi(value);
+    }
+    else if(type == 'f')
+    {
+        if(!isValidFloat(value))
+        {
+            return false;
+        }
+
+        *(float *)(dstValuePtr) = atof(value);
+    }
+    else if(type == 's')
+    {
+        strncpy(dstValuePtr, value, size);
+        ((char *)dstValuePtr)[size - 1] = '\0';
+        return true;
+    }
+
+    return true;
+}

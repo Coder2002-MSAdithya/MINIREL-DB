@@ -15,4 +15,5 @@ int FreeLinkedList(void **headPtr, size_t nextOff);
 bool isValidRid(Rid rid);
 bool isValidFloat(char *str);
 bool isValidInteger(char *str);
+bool isValidForType(char type, int size, void *value, void *resultPtr);
 #endif
