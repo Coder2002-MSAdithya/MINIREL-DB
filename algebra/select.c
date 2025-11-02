@@ -73,7 +73,7 @@ int Select(int argc, char **argv)
     // "create", dstRelName, and (name, format) for each attr
     int createArgc = 2 + 2 * numAttrs;
     char **createArgv = (char **)malloc(createArgc * sizeof(char *));
-    createArgv[0] = strdup("create");
+    createArgv[0] = strdup("_create");
     createArgv[1] = strdup(dstRelName);
 
     for(;ptr;ptr=ptr->next)

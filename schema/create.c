@@ -15,6 +15,8 @@
 
 int Create(int argc, char *argv[])
 {
+    bool flag = (strcmp(argv[0], "create") == OK);
+
     if(argc < 4)
     {
         db_err_code = ARGC_INSUFFICIENT;
@@ -191,6 +193,7 @@ int Create(int argc, char *argv[])
 
     if(fp = fopen(relName, "w"))
     {
+        if(flag)
         printf("Relation %s successfully created.\n", relName);
         fclose(fp);
         return OK;
@@ -198,7 +201,6 @@ int Create(int argc, char *argv[])
     else
     {
         db_err_code = FILESYSTEM_ERROR;
-        ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
-
 }
