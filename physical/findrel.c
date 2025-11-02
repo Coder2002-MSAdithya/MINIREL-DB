@@ -11,5 +11,5 @@ int FindRel(char *relName)
     RelCatRec rc;
     FindRec(RELCAT_CACHE, foundRid, &foundRid, &rc, 's', 
     RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
-    return isValidRid(foundRid);
+    return (int)isValidRid(foundRid);
 }
