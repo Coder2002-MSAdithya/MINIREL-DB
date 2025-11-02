@@ -16,13 +16,15 @@
 int Create(int argc, char *argv[])
 {
     bool flag = (strcmp(argv[0], "create") == OK);
+    FILE *fp;
 
+    
     if(argc < 4)
     {
         db_err_code = ARGC_INSUFFICIENT;
         return ErrorMsgs(db_err_code, print_flag);
     }
-
+    
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
@@ -32,24 +34,24 @@ int Create(int argc, char *argv[])
     char *relName = argv[1];
     int recLength = 0;
     int recsPerPg, numAttrs, numRecs, numPgs;
-
+    
     if(strlen(relName) >= RELNAME)
     {
         db_err_code = REL_LENGTH_EXCEEDED;
         return ErrorMsgs(db_err_code, print_flag);
     }
-
+    
     for(int i=2; i<argc; i+=2)
     {
         char *attrName = argv[i];
-
+        
         if(strlen(attrName) >= ATTRNAME)
         {
             db_err_code = ATTR_NAME_EXCEEDED;
             return ErrorMsgs(db_err_code, print_flag);
         }
     }
-
+    
     for(int i=2; i<argc; i+=2)
     {
         for(int j=i+2; j<argc; j+=2)
@@ -61,7 +63,7 @@ int Create(int argc, char *argv[])
             }
         }
     }
-
+    
     for(int j = 3; j < argc; j += 2)
     {
         char *format = argv[j];
@@ -151,6 +153,12 @@ int Create(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    if(!(fp = fopen(relName, "w")))
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     recLength = recLength;
     recsPerPg = (PAGESIZE - HEADER_SIZE) / recLength;
     numAttrs = (argc - 2) >> 1;
@@ -162,7 +170,6 @@ int Create(int argc, char *argv[])
     InsertRec(RELCAT_CACHE, &rc);
 
     int offset = 0;
-    FILE *fp;
 
     for(int j = 3; j < argc; j += 2)
     {
@@ -191,16 +198,8 @@ int Create(int argc, char *argv[])
         InsertRec(ATTRCAT_CACHE, &ac);
     }
 
-    if(fp = fopen(relName, "w"))
-    {
-        if(flag)
-        printf("Relation %s successfully created.\n", relName);
-        fclose(fp);
-        return OK;
-    }
-    else
-    {
-        db_err_code = FILESYSTEM_ERROR;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
+    if(flag)
+    printf("Relation %s created successfully with %d attributes.\n", relName, numAttrs);
+
+    return OK;
 }

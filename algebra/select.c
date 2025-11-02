@@ -110,7 +110,7 @@ int Select(int argc, char **argv)
     createArgv[i] = NULL;
 
     // Create the new relation
-    Create(createArgc, createArgv);
+    int cStatus = Create(createArgc, createArgv);
 
     // ---- Free allocated memory ----
     for(int j = 0; j < createArgc; j++)
@@ -118,6 +118,11 @@ int Select(int argc, char **argv)
         free(createArgv[j]);
     }
     free(createArgv);
+
+    if(cStatus != OK)
+    {
+        return NOTOK;
+    }
 
     /* Insert records into result relation that satisfy criteria */
     r1 = OpenRel(dstRelName);
