@@ -61,30 +61,10 @@ int Delete(int argc, char **argv)
             void *recPtr = malloc(recSize);
             void *valuePtr = malloc(size);
 
-            if(type == 'i')
+            if(!isValidForType(type, size, value, valuePtr))
             {
-                if(!isValidInteger(value))
-                {
-                    db_err_code = INVALID_VALUE;
-                    return ErrorMsgs(db_err_code, print_flag);
-                }
-
-                *(int *)valuePtr = atoi(value);
-            }
-            else if(type == 'f')
-            {
-                if(!isValidFloat(value))
-                {
-                    db_err_code = INVALID_VALUE;
-                    return ErrorMsgs(db_err_code, print_flag);
-                }
-
-                *(float *)valuePtr = atof(value);
-            }
-            else if(type == 's')
-            {
-                strncpy(valuePtr, value, size);
-                ((char *)valuePtr)[size - 1] = '\0';
+                db_err_code = INVALID_VALUE;
+                return ErrorMsgs(db_err_code, print_flag);
             }
 
             do

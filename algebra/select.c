@@ -123,41 +123,21 @@ int Select(int argc, char **argv)
     r1 = OpenRel(dstRelName);
     Rid recRid = INVALID_RID;
     int offset = (foundField->attr).offset;
-    int length = (foundField->attr).length;
+    int size = (foundField->attr).length;
     char type = (foundField->attr).type;
-    void *valuePtr = malloc(length);
+    void *valuePtr = malloc(size);
     void *recPtr = malloc(recSize);
 
-    if(type == 'i')
+    if(!isValidForType(type, size, value, valuePtr))
     {
-        if(!isValidInteger(value))
-        {
-            db_err_code = INVALID_VALUE;
-            return ErrorMsgs(db_err_code, print_flag);
-        }
-
-        *(int *)valuePtr = atoi(value);
-    }
-    else if(type == 'f')
-    {
-        if(!isValidFloat(value))
-        {
-            db_err_code = INVALID_VALUE;
-            return ErrorMsgs(db_err_code, print_flag);
-        }
-
-        *(float *)valuePtr = atof(value);
-    }
-    else if(type == 's')
-    {
-        strncpy(valuePtr, value, length);
-        ((char *)valuePtr)[length - 1] = '\0';
+        db_err_code = INVALID_VALUE;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     /* Go through each record of srcRelName and filter */
     do
     {
-        FindRec(r2, recRid, &recRid, recPtr, type, length, offset, valuePtr, operator);
+        FindRec(r2, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator);
 
         if(!isValidRid(recRid))
         {
