@@ -26,13 +26,13 @@ int Insert(int argc, char **argv)
     if(strncmp(relName, RELCAT, RELNAME) == OK)
     {
         db_err_code = METADATA_SECURITY;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     if(strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
         db_err_code = METADATA_SECURITY;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     int r = OpenRel(relName);
@@ -40,7 +40,7 @@ int Insert(int argc, char **argv)
     if(r == NOTOK)
     {
         db_err_code = RELNOEXIST;
-        return ErrorMsgs(RELNOEXIST, print_flag);
+        return ErrorMsgs(RELNOEXIST, print_flag && flag);
     }
 
     int recLength = catcache[r].relcat_rec.recLength;
@@ -72,7 +72,7 @@ int Insert(int argc, char **argv)
                     {
                         db_err_code = INVALID_VALUE;
                         free(newRecord);
-                        return ErrorMsgs(INVALID_VALUE, print_flag);
+                        return ErrorMsgs(INVALID_VALUE, print_flag && flag);
                     }
 
                     int intval = atoi(value);
@@ -89,7 +89,7 @@ int Insert(int argc, char **argv)
                     {
                         db_err_code = INVALID_VALUE;
                         free(newRecord);
-                        return ErrorMsgs(INVALID_VALUE, print_flag);
+                        return ErrorMsgs(INVALID_VALUE, print_flag && flag);
                     }
 
                     float fval = atof(value);
@@ -112,7 +112,7 @@ int Insert(int argc, char **argv)
         if(!found)
         {
             db_err_code = ATTRNOEXIST;
-            return ErrorMsgs(ATTRNOEXIST, print_flag);
+            return ErrorMsgs(ATTRNOEXIST, print_flag && flag);
         }
     }
 
@@ -194,7 +194,7 @@ int Insert(int argc, char **argv)
         if(matchingTupleFound)
         {
             db_err_code = DUP_ROWS;
-            return ErrorMsgs(db_err_code, print_flag);
+            return ErrorMsgs(db_err_code, print_flag && flag);
         }
     } 
     while(1);
@@ -214,6 +214,6 @@ int Insert(int argc, char **argv)
     {
         free(newRecord);
         db_err_code = REC_INS_ERR;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 }

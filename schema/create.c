@@ -22,13 +22,13 @@ int Create(int argc, char *argv[])
     if(argc < 4)
     {
         db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
     
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
     
     char *relName = argv[1];
@@ -38,7 +38,7 @@ int Create(int argc, char *argv[])
     if(strlen(relName) >= RELNAME)
     {
         db_err_code = REL_LENGTH_EXCEEDED;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
     
     for(int i=2; i<argc; i+=2)
@@ -48,7 +48,7 @@ int Create(int argc, char *argv[])
         if(strlen(attrName) >= ATTRNAME)
         {
             db_err_code = ATTR_NAME_EXCEEDED;
-            return ErrorMsgs(db_err_code, print_flag);
+            return ErrorMsgs(db_err_code, print_flag && flag);
         }
     }
     
@@ -59,7 +59,7 @@ int Create(int argc, char *argv[])
             if(!strncmp(argv[i], argv[j], ATTRNAME))
             {
                 db_err_code = DUP_ATTR;
-                return ErrorMsgs(db_err_code, print_flag);
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
         }
     }
@@ -89,7 +89,7 @@ int Create(int argc, char *argv[])
             if(strlen(format) < 2)
             {
                 db_err_code = INVALID_FORMAT;
-                return ErrorMsgs(db_err_code, print_flag);
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
 
             // Also verify that all chars after 's' are digits
@@ -98,14 +98,14 @@ int Create(int argc, char *argv[])
                 if (!isdigit((unsigned char)*p))
                 {
                     db_err_code = INVALID_FORMAT;
-                    return ErrorMsgs(db_err_code, print_flag);
+                    return ErrorMsgs(db_err_code, print_flag && flag);
                 }
             }
             
             if(strlen(format) >= 4)
             {
                 db_err_code = STR_LEN_INVALID;
-                return ErrorMsgs(db_err_code, print_flag);
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
 
             // Extract N (the string length)
@@ -115,7 +115,7 @@ int Create(int argc, char *argv[])
             if (N <= 0 || N > MAX_N)
             {
                 db_err_code = STR_LEN_INVALID;  // e.g. define this in your error codes
-                return ErrorMsgs(db_err_code, print_flag);
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
             else
             {
@@ -127,30 +127,30 @@ int Create(int argc, char *argv[])
         else
         {
             db_err_code = INVALID_FORMAT;
-            return ErrorMsgs(db_err_code, print_flag);
+            return ErrorMsgs(db_err_code, print_flag && flag);
         }
     }
 
     if(FindRel(relName))
     {
         db_err_code = RELEXIST;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     if(recLength > (PAGESIZE - HEADER_SIZE))
     {
         db_err_code = REC_TOO_LONG;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     if(!(fp = fopen(relName, "w")))
     {
         db_err_code = FILESYSTEM_ERROR;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     recLength = recLength;
-    recsPerPg = (PAGESIZE - HEADER_SIZE) / recLength;
+    recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / recLength, (sizeof(unsigned long) << 3));
     numAttrs = (argc - 2) >> 1;
     numRecs = 0;
     numPgs = 0;
