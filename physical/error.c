@@ -95,6 +95,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
                     printf("Error %d: You have entered an invalid value for a field that is incompatible with its type..\n", errorNum);
                     break;
             
+            case INCOMPATIBLE_TYPES:
+                    printf("Error %d: Join attributes of BOTH the relations are of incompatible types..\n", errorNum);
+                    break;
+            
             case INVALID_FORMAT:
                     printf("Error %d: One or more type(s) you have specified CANNOT be understood..", errorNum);
                     break;

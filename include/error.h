@@ -29,6 +29,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DUP_ROWS     207 /* CANNOT insert duplicate row into relation */
 #define REC_INS_ERR     207 /* Some error in inserting record */
 #define REC_DEL_ERR     208 /* Some error in deleting a record */
+#define INCOMPATIBLE_TYPES  209 /* Attribute types for Join are incompatible */
 #define CAT_CREATE_ERROR   301 /* Error in creating catalog tables */
 #define CAT_OPEN_ERROR 302 /* Error in opening catalog files */
 #define CAT_ALREADY_EXISTS 303 /* Something went wrong. Catalog files already exist */
