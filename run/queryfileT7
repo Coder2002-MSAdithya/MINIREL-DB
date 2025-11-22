@@ -1,0 +1,17 @@
+createdb JOINDB;
+opendb JOINDB;
+create P(A=i, B=s20);
+create Q(B=s20, C=i, D=f);
+insert into P(A=1, B="HELLO");
+insert into P(A=2, B="WORLD");
+insert into P(A=3, B="NAME");
+insert into Q(B="NAME", C=20, D=5.86);
+insert into Q(B="HELLO", C=2, D=5.46);
+insert into Q(B="SAD", C=3, D=3.14);
+join into R1(P.B, Q.B);
+join into R2(P.A, Q.C);
+print R1;
+print R2;
+destroydb JOINDB;
+quit;
+
