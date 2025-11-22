@@ -17,4 +17,6 @@ bool isValidRid(Rid rid);
 bool isValidFloat(char *str);
 bool isValidInteger(char *str);
 bool isValidForType(char type, int size, void *value, void *resultPtr);
+bool compareVals(void *valPtr1, void *valPtr2, char type, int size, int cmpOp);
+void writeAttrToRec(void *dstRecPtr, void *valuePtr, int type, int size, int offset);
 #endif

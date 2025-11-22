@@ -466,3 +466,36 @@ int CreateFromAttrList(const char *dstRelName, AttrDesc *head)
 
     return status;
 }
+
+bool compareVals(void *valPtr1, void *valPtr2, char type, int size, int cmpOp)
+{
+    if(type == 'i')
+    {
+        return *(int *)(valPtr1) == *(int *)(valPtr2);
+    }
+    else if(type == 'f')
+    {
+        return float_cmp(*(float *)(valPtr1), *(float *)(valPtr2), FLOAT_REL_EPS, FLOAT_ABS_EPS) == 0;
+    }
+    else if(type == 's')
+    {
+        return strncmp(valPtr1, valPtr2, size) == 0;
+    }
+}
+
+void writeAttrToRec(void *dstRecPtr, void *valuePtr, int type, int size, int offset)
+{
+    if(type == 'i')
+    {
+        *(int *)((char *)dstRecPtr + offset) = *(int *)valuePtr;
+    }
+    else if(type == 'f')
+    {
+        *(float *)((char *)dstRecPtr + offset) = *(float *)valuePtr;
+    }
+    else if(type == 's')
+    {
+        strncpy(dstRecPtr + offset, valuePtr, size);
+        *((char *)dstRecPtr + offset + size) = '\0';
+    }
+}
