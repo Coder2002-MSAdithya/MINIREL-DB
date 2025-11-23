@@ -37,6 +37,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case LOAD_NONEMPTY:
                     printf("Error %d: CANNOT load data into a non-empty relation.\n", errorNum);
                 break;
+            
+            case INDEX_NONEMPTY:
+                    printf("Error %d: CANNOT create index for an attribute of a non-empty relation.\n", errorNum);
+                    break;
 
             case RELNOEXIST:
                 printf("Error %d: Relation does not exist.\n"

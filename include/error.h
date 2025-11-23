@@ -48,6 +48,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define FILE_NO_EXIST   802 /* The file does NOT exist */
 #define LOAD_NONEMPTY   803 /* Attempt to load data into a non-empty relation */
+#define INDEX_NONEMPTY  804 /* Attempt to create an index for an attribute of a non-empty relation*/
 #define UNKNOWN_ERROR   901 /* Some unknown error */
 #define PAGE_MAGIC_ERROR 902 /* Page does not belong to MINIREL */
 #define PAGE_OUT_OF_BOUNDS 903 /* Page not in relation */
