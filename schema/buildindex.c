@@ -1,20 +1,43 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
+#include "../include/openrel.h"
+#include "../include/findrelattr.h"
 #include <stdio.h>
 
-
-int BuildIndex (int argc, char **argv)
+int BuildIndex(int argc, char **argv)
 {
-    /* print command line arguments */
-    short k; /* iteration counter */
-    printf ("%s:\n", argv[0]);
-    
-    for (k=1; k<argc; ++k)
+    if(!db_open)
     {
-        printf ("\targv[%d] = %s\n", k, argv[k]);
+        return ErrorMsgs(DBNOTOPEN, print_flag);
     }
-    
-    printf ("BuildIndex \n");
-    return (OK); /* all's fine */
+
+    char *relName = argv[1];
+    char *attrName = argv[2];
+
+    int r = OpenRel(relName);
+
+    if(r == NOTOK)
+    {
+        return ErrorMsgs(RELNOEXIST, print_flag);
+    }
+
+    AttrDesc *attrDesc = FindRelAttr(r, attrName);
+
+    if(!attrDesc)
+    {
+        return ErrorMsgs(ATTRNOEXIST, print_flag);
+    }
+
+    int numPgs = catcache[r].relcat_rec.numRecs;
+    int numRecs = catcache[r].relcat_rec.numPgs;
+
+    if(numPgs || numRecs)
+    {
+        return ErrorMsgs(INDEX_NONEMPTY, print_flag);
+    }
+
+    printf("Building index for attribute %s of %s.\n", attrName, relName);
+
+    return OK;
 }
