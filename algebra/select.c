@@ -153,6 +153,9 @@ int Select(int argc, char **argv)
         InsertRec(r1, recPtr);
     } 
     while(true);
+
+    printf("Created relation %s successfully and placed filtered tuples of %s\n", 
+    dstRelName, srcRelName);
     
     return OK;
 }
