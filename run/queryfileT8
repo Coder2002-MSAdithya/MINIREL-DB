@@ -5,10 +5,10 @@ print attrcat;
 
 
 ; Create Relations
-create Student(ID=i, Name=s30, Dept=s10, GPA=f);
-create Professor(Faculty=s30, Dept=s10, SID=i);
-create Course(Course=s10, Credits=i, Dept=s10);
-create Enrollment(SID=i, Course=s10, Semester=s10);
+create Student(ID=i, Name=s16, Dept=s16, GPA=f);
+create Professor(Faculty=s16, Dept=s16, SID=i);
+create Course(Course=s16, Credits=i, Dept=s16);
+create Enrollment(SID=i, Course=s16, Semester=s16);
 
 print relcat;
 print attrcat;
