@@ -4,6 +4,7 @@
 
 #ifndef TYPES_MINIREL
 #define TYPES_MINIREL
+#include <stdbool.h>
 
 /*************************************************************
 							CONSTANTS							
@@ -47,7 +48,7 @@
 #define ATTRCAT_CACHE   1
 
 #define RELCAT_NUMATTRS  6
-#define ATTRCAT_NUMATTRS 5
+#define ATTRCAT_NUMATTRS 8
 
 #define NUM_CATS         2
 
@@ -94,7 +95,10 @@ typedef struct attrcat_rec
     int length;                 	// length of attribute
     char type;                      // 'i', 'f', 's'
     char attrName[ATTRNAME]; 		// attribute name
-    char relName[RELNAME];   		// relation name it belongs to
+    char relName[RELNAME];          // relation name it belongs to
+    bool hasIndex;
+    int nPages;
+    int nKeys;   
 } AttrCatRec;
 
 typedef struct attrDesc 

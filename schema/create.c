@@ -168,18 +168,18 @@ int Create(int argc, char *argv[])
 
         if(strcmp(format, "i") == 0)
         {
-            ac = (AttrCatRec){offset, sizeof(int), 'i', "attrName", "relName"};
+            ac = (AttrCatRec){offset, sizeof(int), 'i', "attrName", "relName", false, 0, 0};
             offset += sizeof(int);
         }
         else if(strcmp(format, "f") == 0)
         {
-            ac = (AttrCatRec){offset, sizeof(float), 'f', "attrName", "relName"};
+            ac = (AttrCatRec){offset, sizeof(float), 'f', "attrName", "relName", false, 0, 0};
             offset += sizeof(float);
         }
         else if(format[0] == 's')
         {
             int N = atoi(format + 1);
-            ac = (AttrCatRec){offset, N, 's', "attrName", "relName"};
+            ac = (AttrCatRec){offset, N, 's', "attrName", "relName", false, 0, 0};
             offset += N;
         }
 

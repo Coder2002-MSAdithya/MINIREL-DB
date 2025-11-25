@@ -75,7 +75,10 @@ int OpenCats()
         &AttrCat_length,
         &AttrCat_type,
         &AttrCat_attrName,
-        &AttrCat_arelName
+        &AttrCat_arelName,
+        &AttrCat_hasIndex,
+        &AttrCat_nPages,
+        &AttrCat_nKeys
     };
 
     // Load relcat entry into cache[0]
