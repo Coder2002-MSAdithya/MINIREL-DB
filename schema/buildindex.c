@@ -9,7 +9,8 @@ int BuildIndex(int argc, char **argv)
 {
     if(!db_open)
     {
-        return ErrorMsgs(DBNOTOPEN, print_flag);
+        db_err_code = DBNOTOPEN;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     char *relName = argv[1];
@@ -19,14 +20,15 @@ int BuildIndex(int argc, char **argv)
 
     if(r == NOTOK)
     {
-        return ErrorMsgs(RELNOEXIST, print_flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     AttrDesc *attrDesc = FindRelAttr(r, attrName);
 
     if(!attrDesc)
     {
-        return ErrorMsgs(ATTRNOEXIST, print_flag);
+        db_err_code = ATTRNOEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     int numPgs = catcache[r].relcat_rec.numRecs;
@@ -34,7 +36,8 @@ int BuildIndex(int argc, char **argv)
 
     if(numPgs || numRecs)
     {
-        return ErrorMsgs(INDEX_NONEMPTY, print_flag);
+        db_err_code = INDEX_NONEMPTY;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     printf("Building index for attribute %s of %s.\n", attrName, relName);
