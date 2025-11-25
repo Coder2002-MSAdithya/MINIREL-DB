@@ -46,9 +46,6 @@ AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), 'f', "stipend"
 
 
 
-/************************LOCAL DEFINES**************************/
-
-
 /*------------------------------------------------------------
 
 FUNCTION CreateRelCat (void)
