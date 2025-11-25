@@ -60,8 +60,7 @@ int Print(int argc, char **argv)
     int *colWidths = (int *)malloc(sizeof(int) * attrCount);
     if(!colWidths)
     {
-        fprintf(stderr, "Memory allocation failed.\n");
-        return NOTOK;
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
     }
 
     /* --------- Determine column widths --------- */
@@ -92,9 +91,8 @@ int Print(int argc, char **argv)
     void *recPtr = malloc(recSize);
     if(!recPtr)
     {
-        fprintf(stderr, "Memory allocation failed.\n");
         free(colWidths);
-        return NOTOK;
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
     }
 
     int rowCount = 0;
