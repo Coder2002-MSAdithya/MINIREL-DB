@@ -1,3 +1,4 @@
+/************************INCLUDES*******************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,46 @@ AttrCatRec stud_name = {offsetof(Student, name), 40, 's', "name", "Students"};
 AttrCatRec stud_id = {offsetof(Student, id), sizeof(int), 'i', "id", "Students"};
 AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), 'f', "stipend", "Students"};
 
+
+
+/************************LOCAL DEFINES**************************/
+
+
+/*------------------------------------------------------------
+
+FUNCTION CreateRelCat (void)
+
+PARAMETER DESCRIPTION:
+    None.
+
+FUNCTION DESCRIPTION:
+    Creates the system relation catalog RELCAT. 
+    It contains one RelCatRec entry for each system-defined relation:
+        - relcat
+        - attrcat
+    These catalog records describe the schema of the system catalogs.
+
+ALGORITHM:
+    1. Build an array relcat_recs[] containing:
+           Relcat_rc, Relcat_ac
+    2. Pass this array to writeRecsToFile(), which:
+           - formats them into pages
+           - writes appropriate magic header
+           - stores into physical file RELCAT
+    3. Return OK or NOTOK based on write status.
+
+ERRORS REPORTED:
+    CAT_CREATE_ERROR (forwarded from writeRecsToFile)
+
+GLOBAL VARIABLES MODIFIED:
+    None directly (but overwrites RELCAT file on disk).
+
+IMPLEMENTATION NOTES:
+    - RELCAT must always be written before ATTRCAT.
+    - Order of records must be consistent.
+
+------------------------------------------------------------*/
+
 int CreateRelCat()
 {
     // Create array of RelCatRecs to insert them one by one into page
@@ -51,6 +92,38 @@ int CreateRelCat()
     // Write the records in an array to the catalog file in pages
     return writeRecsToFile(RELCAT, relcat_recs, NUM_CATS + NT_RELCAT, sizeof(RelCatRec), '$');
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION CreateAttrCat (void)
+
+PARAMETER DESCRIPTION:
+    None.
+
+FUNCTION DESCRIPTION:
+    Creates the attribute catalog ATTRCAT. It contains AttrCatRec entries describing the attributes of:
+        - relcat
+        - attrcat
+    Each attribute record includes its:
+        - offset
+        - length
+        - type
+        - attribute name
+        - parent relation name
+
+ALGORITHM:
+    1. Build an array attrcat_recs[] containing all attribute descriptions for system catalogs.
+    2. Call writeRecsToFile() to physically write pages to ATTRCAT.
+    3. Return OK or NOTOK based on write status.
+
+ERRORS REPORTED:
+    CAT_CREATE_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    ATTRCAT file on disk.
+
+------------------------------------------------------------*/
 
 int CreateAttrCat()
 {
@@ -80,6 +153,7 @@ int CreateAttrCat()
     return writeRecsToFile(ATTRCAT, attrcat_recs, attrCat_numRecs, sizeof(AttrCatRec), '!');
 }
 
+
 // Just for testing
 int CreateDummy()
 {
@@ -95,6 +169,37 @@ int CreateDummy()
     
     return OK;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION CreateCats (void)
+
+PARAMETER DESCRIPTION:
+    None.
+
+FUNCTION DESCRIPTION:
+    This routine initializes the MiniRel system catalogs. 
+    It creates:
+        - RELCAT    (relation catalog)
+        - ATTRCAT   (attribute catalog)
+    This routine is called during CreateDB(), and must succeed before the database can be opened or relations can be created.
+
+ALGORITHM:
+    1. Call CreateRelCat().
+    2. Call CreateAttrCat().
+    3. If both succeed, return OK.
+    4. On failure:
+            - set db_err_code = CAT_CREATE_ERROR
+            - return NOTOK.
+
+ERRORS REPORTED:
+    CAT_CREATE_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+
+------------------------------------------------------------*/
 
 int CreateCats()
 {
