@@ -34,15 +34,15 @@ RelCatRec prof_rc = {
 };
 
 //attrcat records for columns of Profs
-AttrCatRec profs_name = {offsetof(Professor, name), 30, 's', "name", "Profs"};
-AttrCatRec profs_id = {offsetof(Professor, id), sizeof(int), 'i', "id", "Profs"};
-AttrCatRec profs_sal = {offsetof(Professor, salary), sizeof(float), 'f', "salary", "Profs"};
-AttrCatRec profs_des = {offsetof(Professor, designation), 30, 's', "designation", "Profs"};
+AttrCatRec profs_name = {offsetof(Professor, name), 30, 's', "name", "Profs", false, 0, 0};
+AttrCatRec profs_id = {offsetof(Professor, id), sizeof(int), 'i', "id", "Profs", false, 0, 0};
+AttrCatRec profs_sal = {offsetof(Professor, salary), sizeof(float), 'f', "salary", "Profs", false, 0, 0};
+AttrCatRec profs_des = {offsetof(Professor, designation), 30, 's', "designation", "Profs", false, 0, 0};
 
 //attrcat records for columns of Students
-AttrCatRec stud_name = {offsetof(Student, name), 40, 's', "name", "Students"};
-AttrCatRec stud_id = {offsetof(Student, id), sizeof(int), 'i', "id", "Students"};
-AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), 'f', "stipend", "Students"};
+AttrCatRec stud_name = {offsetof(Student, name), 40, 's', "name", "Students", false, 0, 0};
+AttrCatRec stud_id = {offsetof(Student, id), sizeof(int), 'i', "id", "Students", false, 0, 0};
+AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), 'f', "stipend", "Students", false, 0, 0};
 
 
 
@@ -62,11 +62,11 @@ FUNCTION DESCRIPTION:
 
 ALGORITHM:
     1. Build an array relcat_recs[] containing:
-           Relcat_rc, Relcat_ac
+            Relcat_rc, Relcat_ac
     2. Pass this array to writeRecsToFile(), which:
-           - formats them into pages
-           - writes appropriate magic header
-           - stores into physical file RELCAT
+            - formats them into pages
+            - writes appropriate magic header
+            - stores into physical file RELCAT
     3. Return OK or NOTOK based on write status.
 
 ERRORS REPORTED:
@@ -137,6 +137,9 @@ int CreateAttrCat()
         AttrCat_type,
         AttrCat_attrName,
         AttrCat_arelName,
+        AttrCat_hasIndex,
+        AttrCat_nPages,
+        AttrCat_nKeys,
         profs_id,
         profs_name,
         profs_des,
@@ -187,8 +190,8 @@ ALGORITHM:
     2. Call CreateAttrCat().
     3. If both succeed, return OK.
     4. On failure:
-            - set db_err_code = CAT_CREATE_ERROR
-            - return NOTOK.
+        - set db_err_code = CAT_CREATE_ERROR
+        - return NOTOK.
 
 ERRORS REPORTED:
     CAT_CREATE_ERROR

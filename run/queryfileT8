@@ -2,22 +2,16 @@ createdb JOINDB;
 opendb JOINDB;
 print relcat;
 print attrcat;
-
-
-; Create Relations
 create Student(ID=i, Name=s16, Dept=s16, GPA=f);
 create Professor(Faculty=s16, Dept=s16, SID=i);
 create Course(Course=s16, Credits=i, Dept=s16);
 create Enrollment(SID=i, Course=s16, Semester=s16);
-
 print relcat;
 print attrcat;
 print Student;
 print Professor;
 print Course;
 print Enrollment;
-
-; Insert 40 Student
 insert into Student(ID=1, Name="Alice", Dept="CS", GPA=3.90);
 insert into Student(ID=2, Name="Bob", Dept="CS", GPA=3.10);
 insert into Student(ID=3, Name="Charlie", Dept="EE", GPA=3.50);
@@ -38,8 +32,6 @@ insert into Student(ID=17, Name="Queen", Dept="EE", GPA=3.10);
 insert into Student(ID=18, Name="Rick", Dept="ME", GPA=3.60);
 insert into Student(ID=19, Name="Susan", Dept="CS", GPA=3.30);
 insert into Student(ID=20, Name="Tom", Dept="EE", GPA=2.50);
-
-; Insert Course (10 rows)
 insert into Course(Course="CS101", Credits=4, Dept="CS");
 insert into Course(Course="CS201", Credits=4, Dept="CS");
 insert into Course(Course="CS303", Credits=3, Dept="CS");
@@ -50,8 +42,6 @@ insert into Course(Course="EE101", Credits=3, Dept="EE");
 insert into Course(Course="CS404", Credits=4, Dept="CS");
 insert into Course(Course="ME404", Credits=4, Dept="ME");
 insert into Course(Course="EE404", Credits=4, Dept="EE");
-
-; Insert Professor (20 rows)
 insert into Professor(Faculty="Prof. Raman", Dept="CS", SID=1);
 insert into Professor(Faculty="Dr. Kamala", Dept="CS", SID=5);
 insert into Professor(Faculty="Prof. Rao", Dept="EE", SID=3);
@@ -62,110 +52,65 @@ insert into Professor(Faculty="Dr. Nair", Dept="ME", SID=8);
 insert into Professor(Faculty="Prof. Bhatt", Dept="CS", SID=13);
 insert into Professor(Faculty="Dr. Das", Dept="EE", SID=10);
 insert into Professor(Faculty="Prof. Patel", Dept="CS", SID=16);
-
-
-
-; Insert Enrollment (multiple per student)
-
 insert into Enrollment(SID=1, Course="CS101", Semester="Fall2024");
 insert into Enrollment(SID=1, Course="CS201", Semester="Spring2025");
 insert into Enrollment(SID=1, Course="CS303", Semester="Fall2025");
-
 insert into Enrollment(SID=2, Course="ME101", Semester="Fall2024");
 insert into Enrollment(SID=2, Course="ME202", Semester="Spring2025");
+insert into Enrollment(SID=5, Course="EE210", Semester="Spring2025");
 insert into Enrollment(SID=2, Course="ME404", Semester="Fall2025");
-
 insert into Enrollment(SID=3, Course="EE101", Semester="Fall2024");
 insert into Enrollment(SID=3, Course="EE210", Semester="Spring2025");
-
 insert into Enrollment(SID=4, Course="CS101", Semester="Fall2024");
 insert into Enrollment(SID=4, Course="CS303", Semester="Spring2025");
 insert into Enrollment(SID=4, Course="CS404", Semester="Fall2025");
-
-insert into Enrollment(SID=5, Course="EE404", Semester="Fall2024");
-insert into Enrollment(SID=5, Course="EE210", Semester="Spring2025");
-
-insert into Enrollment(SID=6, Course="ME101", Semester="Fall2024");
-insert into Enrollment(SID=6, Course="CS101", Semester="Spring2025");
 insert into Enrollment(SID=6, Course="CS201", Semester="Fall2025");
-
-insert into Enrollment(SID=7, Course="CS303", Semester="Fall2024");
+insert into Enrollment(SID=5, Course="EE404", Semester="Fall2024");
+insert into Enrollment(SID=6, Course="ME101", Semester="Fall2024");
 insert into Enrollment(SID=7, Course="CS404", Semester="Spring2025");
+insert into Enrollment(SID=6, Course="CS101", Semester="Spring2025");
+insert into Enrollment(SID=7, Course="CS303", Semester="Fall2024");
 insert into Enrollment(SID=7, Course="CS201", Semester="Fall2025");
-
 insert into Enrollment(SID=8, Course="EE101", Semester="Fall2024");
 insert into Enrollment(SID=8, Course="EE404", Semester="Spring2025");
 insert into Enrollment(SID=8, Course="EE210", Semester="Fall2025");
-
 insert into Enrollment(SID=9, Course="ME202", Semester="Fall2024");
 insert into Enrollment(SID=9, Course="ME404", Semester="Spring2025");
-
 insert into Enrollment(SID=10, Course="CS101", Semester="Fall2024");
 insert into Enrollment(SID=10, Course="CS201", Semester="Spring2025");
 insert into Enrollment(SID=10, Course="CS303", Semester="Fall2025");
 insert into Enrollment(SID=10, Course="CS404", Semester="Fall2025");
-
 insert into Enrollment(SID=11, Course="EE101", Semester="Fall2024");
 insert into Enrollment(SID=11, Course="EE210", Semester="Spring2025");
 insert into Enrollment(SID=11, Course="EE404", Semester="Fall2025");
-
 insert into Enrollment(SID=12, Course="ME101", Semester="Fall2024");
 insert into Enrollment(SID=12, Course="CS101", Semester="Spring2025");
-
 insert into Enrollment(SID=13, Course="CS201", Semester="Fall2024");
 insert into Enrollment(SID=13, Course="CS404", Semester="Spring2025");
 insert into Enrollment(SID=13, Course="ME202", Semester="Fall2025");
-
 insert into Enrollment(SID=14, Course="ME404", Semester="Fall2024");
 insert into Enrollment(SID=14, Course="EE404", Semester="Spring2025");
-
 insert into Enrollment(SID=15, Course="CS303", Semester="Fall2024");
 insert into Enrollment(SID=15, Course="ME101", Semester="Spring2025");
 insert into Enrollment(SID=15, Course="ME202", Semester="Fall2025");
-
 insert into Enrollment(SID=16, Course="EE210", Semester="Fall2024");
 insert into Enrollment(SID=16, Course="CS404", Semester="Spring2025");
-
 insert into Enrollment(SID=17, Course="CS101", Semester="Fall2024");
 insert into Enrollment(SID=17, Course="EE101", Semester="Spring2025");
 insert into Enrollment(SID=17, Course="EE404", Semester="Fall2025");
-
 insert into Enrollment(SID=18, Course="ME202", Semester="Fall2024");
 insert into Enrollment(SID=18, Course="CS303", Semester="Spring2025");
-
 insert into Enrollment(SID=19, Course="CS404", Semester="Fall2024");
 insert into Enrollment(SID=19, Course="EE210", Semester="Spring2025");
 insert into Enrollment(SID=19, Course="ME101", Semester="Fall2025");
-
 insert into Enrollment(SID=20, Course="CS201", Semester="Fall2024");
 insert into Enrollment(SID=21, Course="EE404", Semester="Spring2025");
 insert into Enrollment(SID=20, Course="ME405", Semester="Fall2025");
-
-
-
-; 6. Perform Multiple Joins
-
-; Join Student ↔ Enrollment on ID = SID
 join into StudentEnrollment (Student.ID, Enrollment.SID);
-
-; Join Enrollment ↔ Course on Course = Course
 join into CourseEnrollment (Enrollment.Course, Course.Course);
-
-; Join Student ↔ Professor on Department
 join into AdvisorMappingPossibility (Student.Dept, Professor.Dept);
-
-; Join Student ↔ Course on Department
 join into CourseMappingPossibility (Student.Dept, Course.Dept);
-
-; Natural join style: Student(ID) ↔ Professor(SID)
 join into StudentAdvisors (Student.ID, Professor.SID);
-
-
-
-
-
-; 7. Print Results
-
 print Student;
 print Enrollment;
 print Course;
@@ -175,9 +120,6 @@ print CourseEnrollment;
 print AdvisorMappingPossibility;
 print CourseMappingPossibility;
 print StudentAdvisors;
-
 closedb;
 destroydb JOINDB;
 quit;
-
-

@@ -87,7 +87,7 @@ ALGORITHM:
     6. Populate catcache[0] with relcat metadata.
     7. Populate catcache[1] with attrcat metadata.
     8. Initialize buffer pool entries:
-         - Mark dirty = 0, pid = -1, clear page memory.
+        - Mark dirty = 0, pid = -1, clear page memory.
     9. Return OK.
 
 ERRORS REPORTED:
@@ -136,7 +136,10 @@ int OpenCats()
         &AttrCat_length,
         &AttrCat_type,
         &AttrCat_attrName,
-        &AttrCat_arelName
+        &AttrCat_arelName,
+        &AttrCat_hasIndex,
+        &AttrCat_nPages,
+        &AttrCat_nKeys
     };
 
     catcache[0].relcat_rec = Relcat_rc;
