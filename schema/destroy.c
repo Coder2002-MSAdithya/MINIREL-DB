@@ -1,3 +1,4 @@
+/************************INCLUDES*******************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,53 @@
 #include "../include/closerel.h"
 #include "../include/deleterec.h"
 #include "../include/findrec.h"
+
+
+/*------------------------------------------------------------
+
+FUNCTION Destroy (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command line arguments.
+    argv → array of strings:
+            argv[0] = "destroy"
+            argv[1] = relation name to delete
+
+FUNCTION DESCRIPTION:
+    Deletes a relation from the database. The function:
+      - verifies the DB is open,
+      - performs argument validation,
+      - prevents deleting system catalogs (relcat/attrcat),
+      - finds the relation's entry in relcat,
+      - closes relation if currently open,
+      - deletes relcat entry for the relation,
+      - deletes all attribute catalog entries for the relation,
+      - deletes underlying relation file from disk.
+
+ALGORITHM:
+    1. Ensure DB is open and argc = 2.
+    2. Reject attempts to destroy system catalogs (metadata security).
+    3. Locate relation's relcat record via FindRec.
+    4. If relation is open, call CloseRel(relNum).
+    5. Delete the relcat record via DeleteRec.
+    6. Repeatedly find and delete attrcat entries belonging to the relation.
+    7. Remove the relation file using remove().
+    8. Report success or an appropriate error code.
+
+ERRORS REPORTED:
+    DBNOTOPEN
+    ARGC_INSUFFICIENT
+    TOO_MANY_ARGS
+    METADATA_SECURITY
+    RELNOEXIST
+    FILESYSTEM_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    - Catalog contents: relcat and attrcat (through DeleteRec)
+    - catcache entries may change (CloseRel)
+    - db_err_code
+
+------------------------------------------------------------*/
 
 int Destroy(int argc, char *argv[])
 {

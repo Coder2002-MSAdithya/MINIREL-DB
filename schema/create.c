@@ -1,3 +1,4 @@
+/************************INCLUDES*******************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,21 +15,86 @@
 #include "../include/findrel.h"
 
 
+/*------------------------------------------------------------
+
+FUNCTION Create (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command line arguments.
+           Expected format:
+               create relName attr1 fmt1 attr2 fmt2 ... attrN fmtN
+    argv → array of strings:
+            argv[0] = "create"
+            argv[1] = relation name
+            argv[2] = attribute1 name
+            argv[3] = attribute1 format ("i", "f", or "sN")
+               ...
+
+FUNCTION DESCRIPTION:
+    Creates a new relation by:
+      - validating the provided schema
+      - computing record length and recsPerPg
+      - inserting a new RelCatRec into relcat
+      - inserting one AttrCatRec for each attribute into attrcat
+      - creating the corresponding empty relation file
+
+ALGORITHM:
+    1. Validate argument count.
+    2. Ensure DB is open.
+    3. Validate relation name length.
+    4. Validate each attribute name length.
+    5. Check for duplicate attribute names.
+    6. Parse formats:
+        i → integer (4 bytes)
+        f → float   (4 bytes)
+        sN → string of length N (1 ≤ N ≤ MAX_N)
+    7. Compute total record length.
+    8. Ensure recLength ≤ (PAGESIZE − HEADER_SIZE).
+    9. Check that relation does not already exist (FindRel()).
+    10. Create the empty relation file.
+    11. Compute recsPerPg = min((PAGESIZE-HEADER)/recLength, SLOTMAP bits).
+    12. Prepare RelCatRec and insert via InsertRec().
+    13. For each attribute:
+            - build AttrCatRec
+            - insert into attrcat via InsertRec().
+    14. Print success message.
+
+ERRORS REPORTED:
+    ARGC_INSUFFICIENT
+    DBNOTOPEN
+    REL_LENGTH_EXCEEDED
+    ATTR_NAME_EXCEEDED
+    DUP_ATTR
+    INVALID_FORMAT
+    STR_LEN_INVALID
+    RELEXIST
+    REC_TOO_LONG
+    FILESYSTEM_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+    catcache (indirectly through InsertRec)
+    underlying catalog relations relcat/attrcat
+
+IMPLEMENTATION NOTES:
+    • Attribute order in argv determines storage order.
+
+------------------------------------------------------------*/
+
 int Create(int argc, char *argv[])
 {
-    bool flag = (strcmp(argv[0], "create") == OK);
     FILE *fp;
 
     if(argc < 4)
     {
         db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
     
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
     
     char *relName = argv[1];
@@ -38,7 +104,7 @@ int Create(int argc, char *argv[])
     if(strlen(relName) >= RELNAME)
     {
         db_err_code = REL_LENGTH_EXCEEDED;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
     
     for(int i=2; i<argc; i+=2)
@@ -48,7 +114,7 @@ int Create(int argc, char *argv[])
         if(strlen(attrName) >= ATTRNAME)
         {
             db_err_code = ATTR_NAME_EXCEEDED;
-            return ErrorMsgs(db_err_code, print_flag && flag);
+            return ErrorMsgs(db_err_code, print_flag);
         }
     }
     
@@ -59,63 +125,55 @@ int Create(int argc, char *argv[])
             if(!strncmp(argv[i], argv[j], ATTRNAME))
             {
                 db_err_code = DUP_ATTR;
-                return ErrorMsgs(db_err_code, print_flag && flag);
+                return ErrorMsgs(db_err_code, print_flag);
             }
         }
     }
     
-    for(int j = 3; j < argc; j += 2)
+    for(int j=3; j<argc; j+=2)
     {
         char *format = argv[j];
 
-        // Case 1: integer type ("i")
         if (strcmp(format, "i") == 0)
         {
             recLength += sizeof(int);
             continue;
         }
 
-        // Case 2: float type ("f")
         else if (strcmp(format, "f") == 0)
         {
             recLength += sizeof(float);
             continue;
         }
 
-        // Case 3: string type ("sN")
         else if (format[0] == 's')
         {
-            // Ensure there is at least one digit after 's'
             if(strlen(format) < 2)
             {
                 db_err_code = INVALID_FORMAT;
-                return ErrorMsgs(db_err_code, print_flag && flag);
+                return ErrorMsgs(db_err_code, print_flag );
             }
 
-            // Also verify that all chars after 's' are digits
-            for(const char *p = format + 1; *p; ++p)
+            for(const char *p = format+1; *p; ++p)
             {
                 if (!isdigit((unsigned char)*p))
                 {
                     db_err_code = INVALID_FORMAT;
-                    return ErrorMsgs(db_err_code, print_flag && flag);
+                    return ErrorMsgs(db_err_code, print_flag);
                 }
             }
             
             if(strlen(format) >= 4)
             {
                 db_err_code = STR_LEN_INVALID;
-                return ErrorMsgs(db_err_code, print_flag && flag);
+                return ErrorMsgs(db_err_code, print_flag);
             }
 
-            // Extract N (the string length)
-            int N = atoi(format + 1);
-
-            // Check validity of N
-            if (N <= 0 || N > MAX_N)
+            int N = atoi(format+1);
+            if (N<=0 || N>MAX_N)
             {
-                db_err_code = STR_LEN_INVALID;  // e.g. define this in your error codes
-                return ErrorMsgs(db_err_code, print_flag && flag);
+                db_err_code = STR_LEN_INVALID; 
+                return ErrorMsgs(db_err_code, print_flag);
             }
             else
             {
@@ -123,45 +181,42 @@ int Create(int argc, char *argv[])
             }
 
         }
-        // Invalid format (none of "i", "f", or "sN")
         else
         {
             db_err_code = INVALID_FORMAT;
-            return ErrorMsgs(db_err_code, print_flag && flag);
+            return ErrorMsgs(db_err_code, print_flag);
         }
     }
 
     if(FindRel(relName))
     {
         db_err_code = RELEXIST;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
-    if(recLength > (PAGESIZE - HEADER_SIZE))
+    if(recLength > (PAGESIZE-HEADER_SIZE))
     {
         db_err_code = REC_TOO_LONG;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(!(fp = fopen(relName, "w")))
     {
         db_err_code = FILESYSTEM_ERROR;
-        return ErrorMsgs(db_err_code, print_flag && flag);
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
-    recLength = recLength;
-    recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / recLength, (sizeof(unsigned long) << 3));
-    numAttrs = (argc - 2) >> 1;
+    recsPerPg = MIN((PAGESIZE-HEADER_SIZE)/recLength, (sizeof(unsigned long)<<3));
+    numAttrs = (argc-2) >> 1;
     numRecs = 0;
     numPgs = 0;
 
-    RelCatRec rc = {"relName", recLength, recsPerPg, numAttrs, numRecs, numPgs};
-    strncpy(rc.relName, relName, RELNAME);
+    RelCatRec rc = {relName, recLength, recsPerPg, numAttrs, numRecs, numPgs};
     InsertRec(RELCAT_CACHE, &rc);
 
     int offset = 0;
 
-    for(int j = 3; j < argc; j += 2)
+    for(int j=3; j<argc; j+=2)
     {
         char *format = argv[j];
         AttrCatRec ac;
@@ -188,7 +243,6 @@ int Create(int argc, char *argv[])
         InsertRec(ATTRCAT_CACHE, &ac);
     }
 
-    if(flag)
     printf("Relation %s created successfully with %d attributes.\n", relName, numAttrs);
 
     return OK;
