@@ -3,10 +3,22 @@
 #include "../include/globals.h"
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
+#include "../include/writerec.h"
 #include <stdio.h>
 
+int removeIndex(AttrDesc *attrPtr)
+{
+    attrPtr->attr.hasIndex = 0;
 
-int DropIndex (int argc, char **argv)
+    if(WriteRec(ATTRCAT_CACHE, &(attrPtr->attr), attrPtr->attrCatRid) != OK)
+    {
+        return NOTOK;
+    }
+
+    return OK;
+}
+
+int DropIndex(int argc, char **argv)
 {
     if(!db_open)
     {
@@ -35,14 +47,31 @@ int DropIndex (int argc, char **argv)
             db_err_code = ATTRNOEXIST;
             return ErrorMsgs(db_err_code, print_flag);
         }
+
+        if(!attrPtr->attr.hasIndex)
+        {
+            db_err_code = IDXNOEXIST;
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     }
 
     if(attrPtr)
     {
-        // Remove ONLY index on that attribute ...
+        removeIndex(attrPtr);
+        printf("Destroyed index successfully on attribute %s of relation %s\n", 
+        attrName, relName);
     }
     else
     {
-        // Remove all indices on relation r ...
+        attrPtr = catcache[r].attrList;
+
+        for(;attrPtr;attrPtr=attrPtr->next)
+        {
+            if(attrPtr->attr.hasIndex)
+            removeIndex(attrPtr);
+        }
+
+        printf("Destroyed index successfully on all attributes of relation %s\n", 
+        relName);
     }
 }

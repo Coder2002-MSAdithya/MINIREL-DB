@@ -3,6 +3,7 @@
 #include "../include/globals.h"
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
+#include "../include/writerec.h"
 #include <stdio.h>
 
 int BuildIndex(int argc, char **argv)
@@ -40,7 +41,17 @@ int BuildIndex(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    printf("Building index for attribute %s of %s.\n", attrName, relName);
+    if(attrDesc->attr.hasIndex)
+    {
+        db_err_code = IDXEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    attrDesc->attr.hasIndex = 1;
+    WriteRec(ATTRCAT_CACHE, &(attrDesc->attr), attrDesc->attrCatRid);
+
+    printf("Built index successfully on attribute %s of relation %s\n", 
+    attrName, relName);
 
     return OK;
 }
