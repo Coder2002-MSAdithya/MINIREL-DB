@@ -1,12 +1,9 @@
 #!/bin/bash
 
-# Stop on first error
-set -e
-
 echo "📁 Entering physical directory..."
 cd physical # ensures script works no matter where you call it from
 
-# rm *.bpidx
+rm *.bpidx
 echo "🚧 Compiling bptree_test.c..."
 
 gcc -Wall -Wextra -g -I../include \
