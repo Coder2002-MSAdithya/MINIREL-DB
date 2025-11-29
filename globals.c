@@ -28,46 +28,46 @@ RelCatRec Relcat_rc = {RELCAT, relcat_recLength, relcat_recsPerPg, RELCAT_NUMATT
 RelCatRec Relcat_ac = {ATTRCAT, attrcat_recLength, attrcat_recsPerPg, ATTRCAT_NUMATTRS, attrCat_numRecs, attrCat_numPgs};
 
 //attrcat record for relName column of relcat
-AttrCatRec Attrcat_rrelName = {offsetof(RelCatRec, relName), RELNAME, 's', "relName", RELCAT, false, 0, 0};
+AttrCatRec Attrcat_rrelName = {offsetof(RelCatRec, relName), RELNAME, 's', "relName", RELCAT, 0, 0, 0};
 
 //attrcat record for recLength column of relcat
-AttrCatRec Attrcat_recLength = {offsetof(RelCatRec, recLength), sizeof(int), 'i', "recLength", RELCAT, false, 0, 0};
+AttrCatRec Attrcat_recLength = {offsetof(RelCatRec, recLength), sizeof(int), 'i', "recLength", RELCAT, 0, 0, 0};
 
 //attrcat record for recsPerPg column of relcat
-AttrCatRec Attrcat_recsPerPg = {offsetof(RelCatRec, recsPerPg), sizeof(int), 'i', "recsPerPg", RELCAT, false, 0, 0};
+AttrCatRec Attrcat_recsPerPg = {offsetof(RelCatRec, recsPerPg), sizeof(int), 'i', "recsPerPg", RELCAT, 0, 0, 0};
 
 //attrcat record for numAttrs column of relcat
-AttrCatRec AttrCat_numAttrs = {offsetof(RelCatRec, numAttrs), sizeof(int), 'i', "numAttrs", RELCAT, false, 0, 0};
+AttrCatRec AttrCat_numAttrs = {offsetof(RelCatRec, numAttrs), sizeof(int), 'i', "numAttrs", RELCAT, 0, 0, 0};
 
 //attrcat record for numRecs column of relcat
-AttrCatRec AttrCat_numRecs = {offsetof(RelCatRec, numRecs), sizeof(int), 'i', "numRecs", RELCAT, false, 0, 0};
+AttrCatRec AttrCat_numRecs = {offsetof(RelCatRec, numRecs), sizeof(int), 'i', "numRecs", RELCAT, 0, 0, 0};
 
 //attrcat record for numPgs column of relcat
-AttrCatRec AttrCat_numPgs = {offsetof(RelCatRec, numPgs), sizeof(int), 'i', "numPgs", RELCAT, false, 0, 0};
+AttrCatRec AttrCat_numPgs = {offsetof(RelCatRec, numPgs), sizeof(int), 'i', "numPgs", RELCAT, 0, 0, 0};
 
 //attrcat record for offset column of attrcat
-AttrCatRec AttrCat_offset = {offsetof(AttrCatRec, offset), sizeof(int), 'i', "offset", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_offset = {offsetof(AttrCatRec, offset), sizeof(int), 'i', "offset", ATTRCAT, 0, 0, 0};
 
 //attrcat record for length column of attrcat
-AttrCatRec AttrCat_length = {offsetof(AttrCatRec, length), sizeof(int), 'i', "length", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_length = {offsetof(AttrCatRec, length), sizeof(int), 'i', "length", ATTRCAT, 0, 0, 0};
 
 //attrcat record for type column of attrcat
-AttrCatRec AttrCat_type = {offsetof(AttrCatRec, type), sizeof(char), 's', "type", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_type = {offsetof(AttrCatRec, type), sizeof(char), 's', "type", ATTRCAT, 0, 0, 0};
 
 //attrcat record for attrName column of attrCat
-AttrCatRec AttrCat_attrName = {offsetof(AttrCatRec, attrName), ATTRNAME, 's', "attrName", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_attrName = {offsetof(AttrCatRec, attrName), ATTRNAME, 's', "attrName", ATTRCAT, 0, 0, 0};
 
 //attrcat record for relName column of attrCat
-AttrCatRec AttrCat_arelName = {offsetof(AttrCatRec, relName), RELNAME, 's', "relName", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_arelName = {offsetof(AttrCatRec, relName), RELNAME, 's', "relName", ATTRCAT, 0, 0, 0};
 
 //attrcat record for hasIndex column of attrCat
-AttrCatRec AttrCat_hasIndex = {offsetof(AttrCatRec, hasIndex), sizeof(bool), 'i', "hasIndex", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_hasIndex = {offsetof(AttrCatRec, hasIndex), sizeof(bool), 'i', "hasIndex", ATTRCAT, 0, 0, 0};
 
 //attrcat record for nPages column of attrCat
-AttrCatRec AttrCat_nPages = {offsetof(AttrCatRec, nPages), sizeof(int), 'i', "nPages", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_nPages = {offsetof(AttrCatRec, nPages), sizeof(int), 'i', "nPages", ATTRCAT, 0, 0, 0};
 
 //attrcat record for nKeys column of attrCat
-AttrCatRec AttrCat_nKeys = {offsetof(AttrCatRec, nKeys), sizeof(int), 'i', "nKeys", ATTRCAT, false, 0, 0};
+AttrCatRec AttrCat_nKeys = {offsetof(AttrCatRec, nKeys), sizeof(int), 'i', "nKeys", ATTRCAT, 0, 0, 0};
 
 Student students[] = {
     {"Charlie Brown", 0, 3.00},
