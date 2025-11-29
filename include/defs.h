@@ -119,11 +119,17 @@ typedef struct cacheentry {
 
 typedef struct buffer 
 {
-	// int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
-    short pid;              		// which page is stored here					// file descriptor of a relation
+    short pid;              		// which page is stored here
 } Buffer;
+
+typedef struct idxbuf
+{
+    Buffer buffer;
+    int valid;
+    AttrCatRec *attrCatRecPtr;
+} IdxBuf;
 
 typedef struct Student
 {

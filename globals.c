@@ -6,6 +6,7 @@
 
 CacheEntry catcache[MAXOPEN];	/* catalog cache */
 Buffer buffer[MAXOPEN];         /* buffer pool */
+IdxBuf idx_buffer[MAXOPEN];     /* buffer pool for the indexes */
 char ORIG_DIR[MAX_PATH_LENGTH]; /*original invoked directory */
 char DB_DIR[MAX_PATH_LENGTH];  /* database working directory */
 bool db_open = false;   /* database open */

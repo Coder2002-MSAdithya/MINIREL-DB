@@ -8,6 +8,7 @@
 #include <stdbool.h>
 extern CacheEntry catcache[MAXOPEN];	/* catalog cache */
 extern Buffer buffer[MAXOPEN];	/* buffer pool */
+extern IdxBuf idx_buffer[MAXOPEN]; /* index buffer pool */
 extern char ORIG_DIR[MAX_PATH_LENGTH];
 extern char DB_DIR[MAX_PATH_LENGTH];
 extern bool db_open;
