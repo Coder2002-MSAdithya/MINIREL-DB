@@ -1,3 +1,4 @@
+/************************INCLUDES*******************************/
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -8,10 +9,71 @@
 #include <stdlib.h>
 #include <string.h>
 
-
+/************************LOCAL DEFINES**************************/
 /* assume all required headers, types, and globals (db_open, db_err_code, etc.) are defined */
 static void printSeparator(AttrDesc *attrList, int *colWidths);
 static void printHeader(AttrDesc *attrList, int *colWidths);
+
+
+/*------------------------------------------------------------
+
+FUNCTION Print (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc  → number of command arguments
+    argv  → command argument vector
+            argv[0] = "print"
+            argv[1] = relation name
+            argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    Prints all tuples of a specified relation in a formatted, tabular output. 
+    The function: 
+        - opens the relation. 
+        - inspects its attribute catalog entries. 
+        - computes dynamically sized column widths. 
+        - prints a header. 
+        - iterates through all records in physical order using GetNextRec().
+        - prints values with appropriate alignment based on attribute type.
+
+ALGORITHM:
+    1. Verify that a database is open.
+    2. Validate argument count.
+    3. Attempt to open the relation using OpenRel().
+       - Report RELNOEXIST if the relation does not exist.
+    4. Count attributes by traversing catcache[r].attrList.
+    5. Allocate an array of column widths:
+        - For each attribute, determine width based on:
+            a. attribute name length
+            b. display width for its data type
+        - Store final width (with padding) in colWidths[].
+    6. Print header separator and column titles using helper functions.
+    7. Allocate a buffer of size recLength to hold each tuple.
+    8. Set startRid = INVALID_RID and repeatedly call GetNextRec():
+        a. If no valid RID is returned, stop iteration.
+        b. For each attribute in the record:
+            - Compute pointer to its data via offset.
+            - Decode based on type:
+                int  → right-aligned integer
+                float → right-aligned with 2 decimals
+                string → left-aligned, trimmed of trailing nulls/spaces
+            - Print in a fixed-width column.
+    9. After all tuples are printed:
+        - Print closing separator.
+        - Print row count summary.
+   10. Free allocated buffers and return OK.
+
+ERRORS REPORTED:
+    DBNOTOPEN
+    ARGC_INSUFFICIENT
+    TOO_MANY_ARGS
+    RELNOEXIST
+    MEM_ALLOC_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+
+------------------------------------------------------------*/
 
 /* ============================================================= */
 int Print(int argc, char **argv)

@@ -1,3 +1,4 @@
+/************************INCLUDES*******************************/
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -11,6 +12,87 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
+
+
+/*------------------------------------------------------------
+
+FUNCTION Load (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc  → number of command arguments
+    argv  → command argument vector
+            argv[0] = "load"
+            argv[1] = relation name
+            argv[2] = input filename
+            argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    Loads an external MINIREL-formatted data file into an existing relation. 
+    The function:
+        - validates arguments. 
+        - verifies that the database and relation are properly accessible. 
+        - ensures the relation is empty.
+        - checks the structural validity of the input file. 
+        - copies its pages into the relation file.
+        - updates catalog metadata. 
+        - performs full rollback if any error occurs during the load process.
+
+ALGORITHM:
+    1. Validate argument count.
+    2. Check that a database is currently open.
+    3. Attempt to open the target relation using OpenRel().
+       - If the relation does not exist, report RELNOEXIST.
+    4. Lookup the relation’s catalog entry via FindRec() to obtain metadata such as recLength, recsPerPg, and expected page size.
+    5. Validate the existence of the input file (access()) and open it.
+    6. Obtain file statistics and verify:
+        - file size is non-negative,
+        - file size is an exact multiple of PAGESIZE.
+       Otherwise, report INVALID_FILE_SIZE.
+    7. Ensure the target relation is completely empty (numPgs must be 0).
+       If not, report LOAD_NONEMPTY.
+    8. For each page in the input file:
+        a. Read exactly PAGESIZE bytes.
+        b. Validate the MINIREL magic header inside the page.
+        c. Write the page to the relation file.
+        d. Increment numPgs.
+        e. Extract slotmap and count set bits to update numRecs.
+        f. Print progress information.
+    9. If any read, write, or validation error occurs:
+        - Truncate the relation file back to zero length,
+        - Reset numPgs and numRecs,
+        - Close the relation,
+        - Return the corresponding error.
+   10. Mark the relation’s catalog entry dirty (DIRTY_MASK) so that CloseRel() updates relcat.
+   11. Close the relation.
+   12. Print load completion message.
+
+BUGS:
+    - Assumes the external file strictly follows MINIREL page layout.
+    - Does not verify semantic correctness of individual records.
+
+ERRORS REPORTED:
+    ARGC_INSUFFICIENT
+    TOO_MANY_ARGS
+    DBNOTOPEN
+    RELNOEXIST
+    FILE_NO_EXIST
+    INVALID_FILE_SIZE
+    PAGE_MAGIC_ERROR
+    LOAD_NONEMPTY
+    FILESYSTEM_ERROR
+    UNKNOWN_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    catcache[relNum].relcat_rec.numPgs
+    catcache[relNum].relcat_rec.numRecs
+    catcache[relNum].status (DIRTY_MASK set)
+    db_err_code
+
+IMPLEMENTATION NOTES:
+    - Relation must be empty before loading; appending is not supported.
+    - File is processed page-by-page to maintain exact MINIREL format.
+
+------------------------------------------------------------*/
 
 int Load(int argc, char **argv)
 {
@@ -45,8 +127,7 @@ int Load(int argc, char **argv)
     Rid foundRid = INVALID_RID;
     RelCatRec rc;
 
-    FindRec(RELCAT_CACHE, foundRid, &foundRid, &rc, 's', RELNAME,
-            offsetof(RelCatRec, relName), relName, CMP_EQ);
+    FindRec(RELCAT_CACHE, foundRid, &foundRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), relName, CMP_EQ);
 
     if (!isValidRid(foundRid))
     {
@@ -55,7 +136,6 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    // Check if source file exists
     if(access(fileName, F_OK))
     {
         db_err_code = FILE_NO_EXIST;
@@ -66,7 +146,6 @@ int Load(int argc, char **argv)
     int *numPgs = &(catcache[r].relcat_rec.numPgs);
     int *numRecs = &(catcache[r].relcat_rec.numRecs);
 
-    // Ensure relation is empty
     if(*numPgs)
     {
         db_err_code = LOAD_NONEMPTY;
@@ -74,7 +153,8 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    // ------------------- FILE COPY SECTION -------------------
+
+    /* ------------------- FILE COPY SECTION ------------------- */
 
     int srcFd = open(fileName, O_RDONLY);
     if (srcFd < 0)
@@ -142,9 +222,12 @@ int Load(int argc, char **argv)
 
         // Count number of set bits in slotmap → numRecs
         for (int b = 0; b < (sizeof(slotmap)<<3); b++)
+        {
             if (slotmap & (1ULL << b))
+            {
                 (*numRecs)++;
-        
+            }
+        }
         printf("Page %d - Records read till now : %d\n", (int)i, *numRecs);
     }
 
@@ -168,8 +251,7 @@ int Load(int argc, char **argv)
 
     CloseRel(r);
 
-    printf("Loaded relation '%s' successfully: %d pages, %d records.\n",
-           relName, *numPgs, *numRecs);
+    printf("Loaded relation '%s' successfully: %d pages, %d records.\n", relName, *numPgs, *numRecs);
 
     return OK;
 }
