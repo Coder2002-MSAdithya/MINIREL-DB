@@ -26,10 +26,19 @@ void sigIntHandler(int sig)
     Quit(1, argv);
 }
 
+void sigSegvHandler(int sig)
+{
+    printf("There was a memory error with the DB system.\n");
+    printf("Closing currently open database.\n");
+    char *argv[] = {"quit"};
+    Quit(1, argv);
+}
+
 void main()
 {   
     printf("\n\nWelcome to MINIREL Database System\n\n");
     signal(SIGINT, sigIntHandler);
+    signal(SIGSEGV, sigSegvHandler);
     if(saveOrigDir() == OK)
     {   
         parser();
