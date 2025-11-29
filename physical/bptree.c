@@ -6,7 +6,7 @@
 #include "../include/defs.h"
 #include "../include/globals.h"
 #include "../include/error.h"
-#include "../include/helpers.h"   /* for compareVals, etc. */
+#include "../include/helpers.h"   /* for float_cmp, isValidRid, etc. */
 #include "../include/bptree.h"    /* declare the public prototypes here */
 
 /* ============================================================
@@ -31,10 +31,10 @@
  * ============================================================ */
 
 typedef struct __attribute__((packed)) {
-    char magic[8];    // "BPTREE\0"
-    short rootPid;    // >=1 if tree has root, 0 if empty
-    short keyLength;  // bytes
-    char  keyType;    // 'i','f','s'
+    char  magic[8];    // "BPTREE\0"
+    short rootPid;     // >=1 if tree has root, 0 if empty
+    short keyLength;   // bytes
+    char  keyType;     // 'i','f','s'
     char  padding[PAGESIZE - 8 - 2 - 2 - 1];
 } BPTMetaPage;
 
@@ -263,10 +263,45 @@ int FlushBPTreePage(int relNum, AttrCatRec *attrPtr)
 static int key_size_bytes(AttrCatRec *attrPtr)
 {
     switch (attrPtr->type) {
-        case 'i': return sizeof(int);
-        case 'f': return sizeof(float);
+        case 'i': return (int)sizeof(int);
+        case 'f': return (int)sizeof(float);
         case 's': return attrPtr->length;
         default:  return -1;
+    }
+}
+
+/* Type-aware, 3-way comparator for keys:
+ *  <0 if a < b
+ *   0 if a == b
+ *  >0 if a > b
+ */
+static int key_cmp_raw(void *a, void *b, AttrCatRec *attrPtr)
+{
+    int ksize = key_size_bytes(attrPtr);
+
+    if (attrPtr->type == 'i') {
+        int x, y;
+        memcpy(&x, a, sizeof(int));
+        memcpy(&y, b, sizeof(int));
+        if (x < y) return -1;
+        if (x > y) return 1;
+        return 0;
+    } else if (attrPtr->type == 'f') {
+        float x, y;
+        memcpy(&x, a, sizeof(float));
+        memcpy(&y, b, sizeof(float));
+        int cmp = float_cmp((double)x, (double)y, FLOAT_REL_EPS, FLOAT_ABS_EPS);
+        if (cmp < 0) return -1;
+        if (cmp > 0) return 1;
+        return 0;
+    } else if (attrPtr->type == 's') {
+        int cmp = strncmp((char *)a, (char *)b, ksize);
+        if (cmp < 0) return -1;
+        if (cmp > 0) return 1;
+        return 0;
+    } else {
+        /* Unknown type: treat as equal */
+        return 0;
     }
 }
 
@@ -279,7 +314,7 @@ static int bptree_insert_key(AttrCatRec *attrPtr, int relNum,
 static int bptree_find_key(AttrCatRec *attrPtr, int relNum,
                            Rid startRid, Rid *foundRid, void *valuePtr, int cmpOp);
 static int bptree_delete_key(AttrCatRec *attrPtr, int relNum,
-                             void *valuePtr, Rid *removeRid);
+                             void *valuePtr, Rid removeRid);
 static int find_leaf(AttrCatRec *attrPtr, int relNum, void *valuePtr, short *leafPidOut);
 static int dump_node_recursive(int relNum, AttrCatRec *attrPtr,
                                short pid, int level);
@@ -425,7 +460,16 @@ int AddKeytoBPTree(int relNum, AttrCatRec *attrPtr, void *valuePtr, Rid insertRi
     return bptree_insert_key(attrPtr, relNum, valuePtr, insertRid);
 }
 
-int RemoveKeyfromBPTree(int relNum, AttrCatRec *attrPtr, Rid *removeRid)
+/*
+ * RemoveKeyfromBPTree:
+ *   Remove a specific (key, Rid) pair.
+ *   - valuePtr: pointer to key (int*, float*, or char[] depending on type)
+ *   - removeRid: RID of the record to remove for that key
+ *
+ *   We allow duplicate keys; this removes the first matching entry where
+ *   key == *valuePtr AND Rid == removeRid.
+ */
+int RemoveKeyfromBPTree(int relNum, AttrCatRec *attrPtr, void *valuePtr, Rid removeRid)
 {
     if (!db_open) {
         db_err_code = DBNOTOPEN;
@@ -437,9 +481,7 @@ int RemoveKeyfromBPTree(int relNum, AttrCatRec *attrPtr, Rid *removeRid)
         return NOTOK;
     }
 
-    /* TODO: extend to supply key value; currently just a stub */
-    void *dummyVal = NULL;
-    return bptree_delete_key(attrPtr, relNum, dummyVal, removeRid);
+    return bptree_delete_key(attrPtr, relNum, valuePtr, removeRid);
 }
 
 int FindKeyWithBPTree(int relNum, AttrCatRec *attrPtr, Rid startRid,
@@ -497,7 +539,7 @@ static int find_leaf(AttrCatRec *attrPtr, int relNum, void *valuePtr, short *lea
         char *p = data + sizeof(short);  // points to key0
         for (int i = 0; i < numKeys; i++) {
             void *keyPtr = p + i * (ksize + sizeof(short));
-            if (compareVals(valuePtr, keyPtr, attrPtr->type, ksize, CMP_GTE)) {
+            if (key_cmp_raw(valuePtr, keyPtr, attrPtr) >= 0) {
                 child = *(short *)((char *)keyPtr + ksize);
             } else {
                 break;
@@ -511,7 +553,7 @@ static int find_leaf(AttrCatRec *attrPtr, int relNum, void *valuePtr, short *lea
 }
 
 /*
- * insertIntoPage:
+ * insertIntoLeafPage:
  *   Try to insert recPtr into leaf page pidx of relation relNum.
  *
  *   Parameters:
@@ -525,9 +567,9 @@ static int find_leaf(AttrCatRec *attrPtr, int relNum, void *valuePtr, short *lea
  *   This function:
  *     - reads the page into idx_buffer[relNum].buffer.page
  *     - updates the leaf contents (key+Rid pairs)
- *     - updates relcat_rec.numRecs is NOT touched here (that's for data, not index)
+ *     - does NOT touch relcat_rec.numRecs (that's for data, not index)
  *
- *   It does NOT touch the freemap; the caller handles that if needed.
+ *   It does NOT touch any freemap; the caller handles that if needed.
  */
 static int insertIntoLeafPage(int relNum,
                               short pidx,
@@ -556,7 +598,7 @@ static int insertIntoLeafPage(int relNum,
     short numKeys = get_num_keys(page);
     char *data = node_data(page);
 
-    int entrySize = ksize + sizeof(Rid);
+    int entrySize = ksize + (int)sizeof(Rid);
     int maxKeys = (PAGESIZE - NODE_HDR_SIZE) / entrySize;
 
     /* Compute full mask logically (for flags) */
@@ -566,7 +608,7 @@ static int insertIntoLeafPage(int relNum,
     int pos = 0;
     for (; pos < numKeys; pos++) {
         char *keyPtr = data + pos * entrySize;
-        if (compareVals(valuePtr, keyPtr, attrPtr->type, ksize, CMP_LT))
+        if (key_cmp_raw(valuePtr, keyPtr, attrPtr) < 0)  // newKey < existingKey
             break;
     }
 
@@ -579,10 +621,10 @@ static int insertIntoLeafPage(int relNum,
     /* Simple insert without split: shift right and insert */
     memmove(data + (pos + 1) * entrySize,
             data + pos       * entrySize,
-            (numKeys - pos) * entrySize);
+            (size_t)((numKeys - pos) * entrySize));
 
     /* Copy key */
-    memcpy(data + pos * entrySize, valuePtr, ksize);
+    memcpy(data + pos * entrySize, valuePtr, (size_t)ksize);
     /* Copy Rid */
     memcpy(data + pos * entrySize + ksize, &insertRid, sizeof(Rid));
 
@@ -643,43 +685,156 @@ static int bptree_insert_key(AttrCatRec *attrPtr, int relNum,
     return NOTOK;
 }
 
-/* Skeleton for search: currently unimplemented. */
+/* Basic search: single-leaf, range-support via cmpOp. */
 static int bptree_find_key(AttrCatRec *attrPtr, int relNum,
                            Rid startRid, Rid *foundRid, void *valuePtr, int cmpOp)
 {
-    (void)attrPtr;
-    (void)relNum;
-    (void)startRid;
-    (void)foundRid;
-    (void)valuePtr;
-    (void)cmpOp;
+    BPTMetaPage meta;
+    if (read_meta_page(attrPtr, &meta) != OK)
+        return NOTOK;
 
-    /* TODO:
-       - Implement leaf scanning and nextLeafPid following
-       - Use compareVals with cmpOp to find the first matching key
-         after startRid.
-    */
-    db_err_code = UNKNOWN_ERROR;
+    if (meta.rootPid == 0) {
+        db_err_code = IDXNOEXIST;
+        return NOTOK;
+    }
+
+    /* For now we assume a single-leaf tree (no splits yet). */
+    short leafPid;
+    if (find_leaf(attrPtr, relNum, valuePtr, &leafPid) != OK)
+        return NOTOK;
+
+    if (ReadBPTreePage(relNum, attrPtr, leafPid) != OK)
+        return NOTOK;
+
+    char *page = IDX_PAGE(relNum);
+    if (get_node_type(page) != BPT_LEAF) {
+        db_err_code = UNKNOWN_ERROR;
+        return NOTOK;
+    }
+
+    int ksize = key_size_bytes(attrPtr);
+    if (ksize <= 0) {
+        db_err_code = INVALID_FORMAT;
+        return NOTOK;
+    }
+
+    short numKeys = get_num_keys(page);
+    char *data = node_data(page);
+    int entrySize = ksize + (int)sizeof(Rid);
+
+    /* Determine starting index based on startRid (basic version) */
+    int startIndex = 0;
+    if (isValidRid(startRid) &&
+        startRid.pid == leafPid &&
+        startRid.slotnum >= 0 &&
+        startRid.slotnum < numKeys)
+    {
+        startIndex = startRid.slotnum + 1;
+    }
+
+    for (int i = startIndex; i < numKeys; i++) {
+        char *entryPtr = data + i * entrySize;
+        void *keyPtr   = entryPtr;
+        Rid rid;
+        memcpy(&rid, entryPtr + ksize, sizeof(Rid));
+
+        int sign = key_cmp_raw(keyPtr, valuePtr, attrPtr);
+        bool match = false;
+
+        switch (cmpOp) {
+            case CMP_EQ:  match = (sign == 0);  break;
+            case CMP_NE:  match = (sign != 0);  break;
+            case CMP_LT:  match = (sign <  0);  break;
+            case CMP_LTE: match = (sign <= 0);  break;
+            case CMP_GT:  match = (sign >  0);  break;
+            case CMP_GTE: match = (sign >= 0);  break;
+            default:
+                db_err_code = INVALID_VALUE;
+                return NOTOK;
+        }
+
+        if (match) {
+            *foundRid = rid;
+            return OK;
+        }
+    }
+
+    db_err_code = IDXNOEXIST;  /* key not found */
     return NOTOK;
 }
 
-/* Skeleton for delete: currently unimplemented. */
+/* Basic delete: single-leaf, remove specific (key, Rid) pair. */
 static int bptree_delete_key(AttrCatRec *attrPtr, int relNum,
-                             void *valuePtr, Rid *removeRid)
+                             void *valuePtr, Rid removeRid)
 {
-    (void)attrPtr;
-    (void)relNum;
-    (void)valuePtr;
-    (void)removeRid;
+    BPTMetaPage meta;
+    if (read_meta_page(attrPtr, &meta) != OK)
+        return NOTOK;
 
-    /* TODO:
-       - Descend to leaf that should contain key.
-       - Locate entry matching key and/or RID and remove it.
-       - Handle underflow with borrow/merge if needed.
-       - Update meta/root if root shrinks.
-    */
-    db_err_code = UNKNOWN_ERROR;
-    return NOTOK;
+    if (meta.rootPid == 0) {
+        db_err_code = IDXNOEXIST;
+        return NOTOK;
+    }
+
+    short leafPid;
+    if (find_leaf(attrPtr, relNum, valuePtr, &leafPid) != OK)
+        return NOTOK;
+
+    if (ReadBPTreePage(relNum, attrPtr, leafPid) != OK)
+        return NOTOK;
+
+    char *page = IDX_PAGE(relNum);
+    if (get_node_type(page) != BPT_LEAF) {
+        db_err_code = UNKNOWN_ERROR;
+        return NOTOK;
+    }
+
+    int ksize = key_size_bytes(attrPtr);
+    if (ksize <= 0) {
+        db_err_code = INVALID_FORMAT;
+        return NOTOK;
+    }
+
+    short numKeys = get_num_keys(page);
+    char *data = node_data(page);
+    int entrySize = ksize + (int)sizeof(Rid);
+
+    int foundIndex = -1;
+    for (int i = 0; i < numKeys; i++) {
+        char *entryPtr = data + i * entrySize;
+        void *keyPtr   = entryPtr;
+        Rid rid;
+        memcpy(&rid, entryPtr + ksize, sizeof(Rid));
+
+        if (key_cmp_raw(keyPtr, valuePtr, attrPtr) == 0 &&
+            rid.pid == removeRid.pid &&
+            rid.slotnum == removeRid.slotnum)
+        {
+            foundIndex = i;
+            break;
+        }
+    }
+
+    if (foundIndex < 0) {
+        db_err_code = IDXNOEXIST;  /* (key, Rid) not found in index */
+        return NOTOK;
+    }
+
+    /* Shift entries left to fill the gap */
+    if (foundIndex < numKeys - 1) {
+        memmove(data + foundIndex * entrySize,
+                data + (foundIndex + 1) * entrySize,
+                (size_t)((numKeys - foundIndex - 1) * entrySize));
+    }
+
+    set_num_keys(page, numKeys - 1);
+    IDX_BUF(relNum).buffer.dirty = 1;
+
+    if (attrPtr->nKeys > 0)
+        attrPtr->nKeys -= 1;
+
+    /* No underflow handling or root shrink yet (single-leaf case) */
+    return OK;
 }
 
 /* ============================================================
@@ -754,7 +909,7 @@ static int dump_node_recursive(int relNum, AttrCatRec *attrPtr,
         printf("Leaf(pid=%d, parent=%d, next=%d, numKeys=%d)\n",
                pid, parent, nextLeaf, numKeys);
 
-        int entrySize = ksize + sizeof(Rid);
+        int entrySize = ksize + (int)sizeof(Rid);
         for (int i = 0; i < numKeys; i++) {
             char *entryPtr = data + i * entrySize;
             char keyBuf[128];

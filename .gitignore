@@ -8,3 +8,5 @@ build
 git_token_sym
 run/*/
 data/
+*.bpidx
+bptree_test
