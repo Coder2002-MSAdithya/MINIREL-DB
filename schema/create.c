@@ -12,7 +12,7 @@
 #include "../include/insertrec.h"
 #include "../include/findrec.h"
 #include "../include/findrel.h"
-
+#include "../include/freemap.h"   // <-- for build_fmap_filename
 
 int Create(int argc, char *argv[])
 {
@@ -68,31 +68,24 @@ int Create(int argc, char *argv[])
     {
         char *format = argv[j];
 
-        // Case 1: integer type ("i")
         if (strcmp(format, "i") == 0)
         {
             recLength += sizeof(int);
             continue;
         }
-
-        // Case 2: float type ("f")
         else if (strcmp(format, "f") == 0)
         {
             recLength += sizeof(float);
             continue;
         }
-
-        // Case 3: string type ("sN")
         else if (format[0] == 's')
         {
-            // Ensure there is at least one digit after 's'
             if(strlen(format) < 2)
             {
                 db_err_code = INVALID_FORMAT;
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
 
-            // Also verify that all chars after 's' are digits
             for(const char *p = format + 1; *p; ++p)
             {
                 if (!isdigit((unsigned char)*p))
@@ -108,22 +101,18 @@ int Create(int argc, char *argv[])
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
 
-            // Extract N (the string length)
             int N = atoi(format + 1);
 
-            // Check validity of N
             if (N <= 0 || N > MAX_N)
             {
-                db_err_code = STR_LEN_INVALID;  // e.g. define this in your error codes
+                db_err_code = STR_LEN_INVALID;
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
             else
             {
                 recLength += N;
             }
-
         }
-        // Invalid format (none of "i", "f", or "sN")
         else
         {
             db_err_code = INVALID_FORMAT;
@@ -143,17 +132,30 @@ int Create(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
+    /* Create the heap file */
     if(!(fp = fopen(relName, "w")))
     {
         db_err_code = FILESYSTEM_ERROR;
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
+    fclose(fp);
 
-    recLength = recLength;
+    /* Create the freemap file using build_fmap_filename */
+    char freeMapName[RELNAME + 6];
+    build_fmap_filename(relName, freeMapName, sizeof(freeMapName));
+
+    FILE *fmap = fopen(freeMapName, "w");
+    if (!fmap)
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return ErrorMsgs(db_err_code, print_flag && flag);
+    }
+    fclose(fmap);
+
     recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / recLength, (sizeof(unsigned long) << 3));
-    numAttrs = (argc - 2) >> 1;
-    numRecs = 0;
-    numPgs = 0;
+    numAttrs  = (argc - 2) >> 1;
+    numRecs   = 0;
+    numPgs    = 0;
 
     RelCatRec rc = {"relName", recLength, recsPerPg, numAttrs, numRecs, numPgs};
     strncpy(rc.relName, relName, RELNAME);
@@ -189,7 +191,7 @@ int Create(int argc, char *argv[])
     }
 
     if(flag)
-    printf("Relation %s created successfully with %d attributes.\n", relName, numAttrs);
+        printf("Relation %s created successfully with %d attributes.\n", relName, numAttrs);
 
     return OK;
 }
