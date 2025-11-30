@@ -96,20 +96,21 @@ typedef struct attrcat_rec
     char type;                      // 'i', 'f', 's'
     char attrName[ATTRNAME]; 		// attribute name
     char relName[RELNAME];          // relation name it belongs to
-    bool hasIndex;
+    int hasIndex;
     int nPages;
     int nKeys;   
 } AttrCatRec;
 
 typedef struct attrDesc 
 {
-    AttrCatRec attr;  				// attribute catalog record
+    AttrCatRec attr;                // attribute catalog record
+    Rid attrCatRid;  				// Pointer to attrcat record where changes should be written
     struct attrDesc *next;			// pointer to next attribute catalog record
 } AttrDesc;
 
 typedef struct cacheentry {
 	Rid relcatRid;          		// catalog record RID
-    RelCatRec relcat_rec;           // relation catalogue record
+    RelCatRec relcat_rec;           // relation catalog record
     int relFile;            		// file descriptor
     int status;                     // LSB is for dirty and 2nd LSB for valid/invalid
     uint32_t timestamp;         //  4 byte UNIX timestamp to implement LRU policy
@@ -118,11 +119,17 @@ typedef struct cacheentry {
 
 typedef struct buffer 
 {
-	// int relNum;						// relation id
     char page[PAGESIZE];  			// page content
     int dirty;            			// 1 if modified
-    short pid;              		// which page is stored here					// file descriptor of a relation
+    short pid;              		// which page is stored here
 } Buffer;
+
+typedef struct idxbuf
+{
+    Buffer buffer;
+    int valid;
+    AttrCatRec *attrCatRecPtr;
+} IdxBuf;
 
 typedef struct Student
 {

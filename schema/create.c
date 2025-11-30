@@ -13,7 +13,7 @@
 #include "../include/insertrec.h"
 #include "../include/findrec.h"
 #include "../include/findrel.h"
-
+#include "../include/freemap.h"   // <-- for build_fmap_filename
 
 /*------------------------------------------------------------
 
@@ -139,13 +139,11 @@ int Create(int argc, char *argv[])
             recLength += sizeof(int);
             continue;
         }
-
         else if (strcmp(format, "f") == 0)
         {
             recLength += sizeof(float);
             continue;
         }
-
         else if (format[0] == 's')
         {
             if(strlen(format) < 2)
@@ -154,7 +152,7 @@ int Create(int argc, char *argv[])
                 return ErrorMsgs(db_err_code, print_flag );
             }
 
-            for(const char *p = format+1; *p; ++p)
+            for(const char *p = format + 1; *p; ++p)
             {
                 if (!isdigit((unsigned char)*p))
                 {
@@ -169,17 +167,17 @@ int Create(int argc, char *argv[])
                 return ErrorMsgs(db_err_code, print_flag);
             }
 
-            int N = atoi(format+1);
-            if (N<=0 || N>MAX_N)
+            int N = atoi(format + 1);
+
+            if (N <= 0 || N > MAX_N)
             {
-                db_err_code = STR_LEN_INVALID; 
-                return ErrorMsgs(db_err_code, print_flag);
+                db_err_code = STR_LEN_INVALID;
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
             else
             {
                 recLength += N;
             }
-
         }
         else
         {
@@ -200,16 +198,30 @@ int Create(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    /* Create the heap file */
     if(!(fp = fopen(relName, "w")))
     {
         db_err_code = FILESYSTEM_ERROR;
         return ErrorMsgs(db_err_code, print_flag);
     }
+    fclose(fp);
 
-    recsPerPg = MIN((PAGESIZE-HEADER_SIZE)/recLength, (sizeof(unsigned long)<<3));
-    numAttrs = (argc-2) >> 1;
-    numRecs = 0;
-    numPgs = 0;
+    /* Create the freemap file using build_fmap_filename */
+    char freeMapName[RELNAME + 6];
+    build_fmap_filename(relName, freeMapName, sizeof(freeMapName));
+
+    FILE *fmap = fopen(freeMapName, "w");
+    if (!fmap)
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return ErrorMsgs(db_err_code, print_flag && flag);
+    }
+    fclose(fmap);
+
+    recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / recLength, (sizeof(unsigned long) << 3));
+    numAttrs  = (argc - 2) >> 1;
+    numRecs   = 0;
+    numPgs    = 0;
 
     RelCatRec rc = {relName, recLength, recsPerPg, numAttrs, numRecs, numPgs};
     InsertRec(RELCAT_CACHE, &rc);

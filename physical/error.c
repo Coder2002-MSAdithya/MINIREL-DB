@@ -41,6 +41,14 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case INDEX_NONEMPTY:
                     printf("Error %d: CANNOT create index for an attribute of a non-empty relation.\n", errorNum);
                     break;
+            
+            case IDXNOEXIST:
+                    printf("Error %d: Index on the given attribute for the given relation does NOT exist.\n", errorNum);
+                    break;
+            
+            case IDXEXIST:
+                    printf("Error %d: Index already exists on given attribute of the relation.\n", errorNum);
+                    break;
 
             case RELNOEXIST:
                 printf("Error %d: Relation does not exist.\n"

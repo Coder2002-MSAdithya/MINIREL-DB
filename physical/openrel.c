@@ -150,6 +150,7 @@ int OpenRel(const char *relName)
             {
                 *head = newNodePtr;
                 (*head)->attr = ac;
+                (*head)->attrCatRid = startRid;
                 (*head)->next = NULL;
                 ptr = *head;
             }
@@ -158,6 +159,7 @@ int OpenRel(const char *relName)
                 ptr->next = newNodePtr;
                 ptr = ptr->next;
                 ptr->attr = ac;
+                ptr->attrCatRid = startRid;
                 ptr->next = NULL;
             }
         }

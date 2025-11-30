@@ -152,6 +152,7 @@ int Join(int argc, char **argv)
 
     if(status != OK)
     {
+        return ErrorMsgs(db_err_code, print_flag);
         return NOTOK;
     }
 

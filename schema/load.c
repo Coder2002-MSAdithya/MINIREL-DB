@@ -6,6 +6,7 @@
 #include "../include/findrec.h"
 #include "../include/openrel.h"
 #include "../include/closerel.h"
+#include "../include/freemap.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <fcntl.h>
@@ -218,16 +219,25 @@ int Load(int argc, char **argv)
 
         // Extract 8-byte slotmap (bytes 8–15)
         unsigned long slotmap = 0;
+        bool foundFreeSlot = false;
         memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
 
         // Count number of set bits in slotmap → numRecs
-        for (int b = 0; b < (sizeof(slotmap)<<3); b++)
+        for(int b = 0; b < (sizeof(slotmap)<<3); b++)
         {
-            if (slotmap & (1ULL << b))
+            if(slotmap & (1ULL << b))
             {
                 (*numRecs)++;
             }
+            else
+            {
+                foundFreeSlot = true;
+            }
         }
+
+        if(foundFreeSlot)
+        AddToFreeMap(relName, i);
+        
         printf("Page %d - Records read till now : %d\n", (int)i, *numRecs);
     }
 

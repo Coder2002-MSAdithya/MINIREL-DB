@@ -20,6 +20,8 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define REL_OPEN_ERROR 104 /* Relation not open */
 #define REL_CLOSE_ERROR 105 /* Relation not closed */
 #define INVALID_RELNUM 106 /* Relation number is invalid */
+#define IDXNOEXIST   107  /* Index does NOT exist for given attribute of the relation */
+#define IDXEXIST     108 /* Index already exists for the given relation attribute */
 #define ATTRNOEXIST 201   /* Attribute does not exist */
 #define ATTREXIST   202   /* Attribute already exists */
 #define ATTR_NAME_EXCEEDED 203 /* Attribute name too long */
