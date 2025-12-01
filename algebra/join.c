@@ -10,6 +10,23 @@
 #include <stdio.h>
 #include <string.h>
 
+void copy_attribute(void *srcRec, void *dstRec, AttrDesc **srcAttrDesc, AttrDesc **dstAttrDesc) 
+{
+    int dOffset = (*dstAttrDesc)->attr.offset;
+    int sOffset = (*srcAttrDesc)->attr.offset;
+    int sType = (*srcAttrDesc)->attr.type;
+    int sSize = (*srcAttrDesc)->attr.length;
+    
+    writeAttrToRec((char *)dstRec, 
+                   (char *)srcRec + sOffset, 
+                   sType, 
+                   sSize, 
+                   dOffset);
+    
+    *dstAttrDesc = (*dstAttrDesc)->next;
+    *srcAttrDesc = (*srcAttrDesc)->next;
+}
+
 int Join(int argc, char **argv)
 {
     if (!db_open)
@@ -220,39 +237,19 @@ int Join(int argc, char **argv)
 
                     if(ctr < s1NumAttrs)
                     {
-                        int s1Offset = src1AttrDescPtr->attr.offset;
-                        int s1Type = src1AttrDescPtr->attr.type;
-                        int s1Size = src1AttrDescPtr->attr.length;
-                        writeAttrToRec
-                        ((void *)((char *)dstRecPtr), 
-                        (void *)((char *)recPtr1 + s1Offset), 
-                        s1Type, 
-                        s1Size, 
-                        dOffset);
-                        src1AttrDescPtr = src1AttrDescPtr->next;
-                        dstAttrDescPtr = dstAttrDescPtr->next;
+                        copy_attribute(recPtr1, dstRecPtr, &src1AttrDescPtr, &dstAttrDescPtr);
                     }
                     else
                     {
-                        if(src2AttrDescPtr != ad2)
+                        if(src2AttrDescPtr == ad2) 
                         {
-                            int s2Offset = src2AttrDescPtr->attr.offset;
-                            int s2Type = src2AttrDescPtr->attr.type;
-                            int s2Size = src2AttrDescPtr->attr.length;
-                            writeAttrToRec
-                            ((void *)((char *)dstRecPtr), 
-                            (void *)((char *)recPtr2 + s2Offset), 
-                            s2Type, 
-                            s2Size, 
-                            dOffset);
-                            dstAttrDescPtr = dstAttrDescPtr->next;
+                            src2AttrDescPtr = src2AttrDescPtr->next;
+                            ctr--;
                         }
                         else
                         {
-                            ctr--;
+                            copy_attribute(recPtr2, dstRecPtr, &src2AttrDescPtr, &dstAttrDescPtr);
                         }
-
-                        src2AttrDescPtr = src2AttrDescPtr->next;
                     }
                 }
 
