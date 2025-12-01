@@ -38,6 +38,12 @@ int DropIndex(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    if(strncmp(relName, RELCAT) == OK || strncmp(relName, ATTRCAT) == OK)
+    {
+        db_err_code = METADATA_SECURITY;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     if(argc == 3)
     {
         attrPtr = FindRelAttr(r, attrName);
