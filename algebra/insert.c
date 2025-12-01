@@ -171,11 +171,9 @@ int Insert(int argc, char **argv)
                 float f1 = *(float *)((char *)recPtr + offset);
                 float f2 = *(float *)((char *)newRecord + offset);
                 float diff = f1 - f2;
-                if(diff < 0) diff = -diff;
-                if(diff > EPSILON)
+                if(!compareVals(&f1, &f2, 'f', sizeof(float), CMP_EQ))
                 {
                     matchingTupleFound = false;
-                    break;
                 }
             }
             else if(type == 's')
@@ -183,7 +181,9 @@ int Insert(int argc, char **argv)
                 /* Compare ((char *)recPtr + offset) and ((char *)recPtr + offset) 
                 as size length strings*/
                 /* If NOT equal, then set matchingTupleFound = false */
-                if(strncmp((char *)recPtr + offset, (char *)newRecord + offset, size))
+                char *s1 = (char *)recPtr + offset;
+                char *s2 = (char *)newRecord + offset;
+                if(compareVals(s1, s2, 's', size, CMP_EQ))
                 {
                     matchingTupleFound = false;
                     break;
