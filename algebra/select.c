@@ -44,7 +44,7 @@ int Select(int argc, char **argv)
         if(db_err_code == RELNOEXIST)
         {
             printf("Relation '%s' does NOT exist in the DB.\n", srcRelName);
-            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), srcRelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), srcRelName, NULL);
         }
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -65,7 +65,7 @@ int Select(int argc, char **argv)
     if(!attrFound)
     {
         printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", attrName, srcRelName);
-        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, srcRelName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

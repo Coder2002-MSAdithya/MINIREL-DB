@@ -47,8 +47,8 @@ int Join(int argc, char **argv)
 
     if (s1 == NOTOK)
     {
-        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName);
+        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName, NULL);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -56,7 +56,7 @@ int Join(int argc, char **argv)
     if (s2 == NOTOK)
     {
         printf("Relation '%s' does NOT exist in the DB.\n", src2RelName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src2RelName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src2RelName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -75,7 +75,7 @@ int Join(int argc, char **argv)
     if (!ad1)
     {
         printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", src1RelName, attrName1);
-        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName1);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName1, src1RelName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -83,7 +83,7 @@ int Join(int argc, char **argv)
     if (!ad2)
     {
         printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", src2RelName, attrName2);
-        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName2);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName2, src2RelName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

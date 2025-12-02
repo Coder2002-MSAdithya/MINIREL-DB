@@ -43,7 +43,7 @@ int Insert(int argc, char **argv)
     if(r == NOTOK)
     {
         printf("Relation '%s' does NOT exist in the DB.\n", relName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(RELNOEXIST, print_flag && flag);
     }
@@ -125,7 +125,7 @@ int Insert(int argc, char **argv)
         if(!found)
         {
             printf("Attribute '%s' does NOT exist in relation %s of DB.\n", argv[i], relName);
-            printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), argv[i]);
+            printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), argv[i], relName);
             db_err_code = ATTRNOEXIST;
             return ErrorMsgs(db_err_code, print_flag && flag);
         }

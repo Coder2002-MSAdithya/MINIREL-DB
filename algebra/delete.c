@@ -45,7 +45,7 @@ int Delete(int argc, char **argv)
     if(r == NOTOK)
     {
         printf("Relation '%s' does NOT exist in the DB.\n", relName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -109,7 +109,7 @@ int Delete(int argc, char **argv)
     if(!found)
     {
         printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", attrName, relName);
-        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, relName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
