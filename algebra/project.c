@@ -192,14 +192,20 @@ int Project(int argc, char **argv)
     void *recPtr = malloc(recLength);
     do
     {
-        GetNextRec(r, recRid, &recRid, recPtr);
+        if(GetNextRec(r, recRid, &recRid, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recRid))
         {
             break;
         }
 
-        InsertProjectedRecFromLL(dstRelName, head, recPtr);
+        if(InsertProjectedRecFromLL(dstRelName, head, recPtr) != OK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     }
     while(true);
 
