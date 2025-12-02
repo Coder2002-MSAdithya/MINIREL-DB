@@ -40,6 +40,7 @@ int Destroy(int argc, char *argv[])
     if (strncmp(relName, RELCAT, RELNAME) == OK ||
         strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
+        printf("CANNOT destroy catalog relation %s.\n", relName);
         db_err_code = METADATA_SECURITY;
         free(relCatRecPtr);
         free(attrCatRecPtr);
@@ -61,6 +62,8 @@ int Destroy(int argc, char *argv[])
 
     if (!isValidRid(startRid))
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         free(relCatRecPtr);
         free(attrCatRecPtr);

@@ -41,6 +41,8 @@ int Create(int argc, char *argv[])
         
         if(strlen(attrName) >= ATTRNAME)
         {
+            printf("Attribute name '%s' is too long.\n" 
+            "Please consider using a different name.\n", attrName);
             db_err_code = ATTR_NAME_EXCEEDED;
             return ErrorMsgs(db_err_code, print_flag && flag);
         }
@@ -52,6 +54,7 @@ int Create(int argc, char *argv[])
         {
             if(!strncmp(argv[i], argv[j], ATTRNAME))
             {
+                printf("Attribute name '%s' has been duplicated.\n", argv[i]);
                 db_err_code = DUP_ATTR;
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
@@ -76,6 +79,7 @@ int Create(int argc, char *argv[])
         {
             if(strlen(format) < 2)
             {
+                printf("Format '%s' for attribute '%s' is INVALID.\n", argv[j], argv[j-1]);
                 db_err_code = INVALID_FORMAT;
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
@@ -84,6 +88,7 @@ int Create(int argc, char *argv[])
             {
                 if (!isdigit((unsigned char)*p))
                 {
+                    printf("Format '%s' for attribute '%s' is INVALID.\n", argv[j], argv[j-1]);
                     db_err_code = INVALID_FORMAT;
                     return ErrorMsgs(db_err_code, print_flag && flag);
                 }
@@ -99,6 +104,7 @@ int Create(int argc, char *argv[])
 
             if (N <= 0 || N > MAX_N)
             {
+                printf("String length for attribute '%s' is INVALID.\n", argv[j-1]);
                 db_err_code = STR_LEN_INVALID;
                 return ErrorMsgs(db_err_code, print_flag && flag);
             }
@@ -109,6 +115,7 @@ int Create(int argc, char *argv[])
         }
         else
         {
+            printf("Format '%s' for attribute '%s' is INVALID.\n", argv[j], argv[j-1]);
             db_err_code = INVALID_FORMAT;
             return ErrorMsgs(db_err_code, print_flag && flag);
         }
@@ -116,6 +123,7 @@ int Create(int argc, char *argv[])
 
     if(FindRel(relName))
     {
+        printf("Relation '%s' already exists in the DB.\n", relName);
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
