@@ -47,7 +47,7 @@ int Join(int argc, char **argv)
 
     if (s1 == NOTOK)
     {
-        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName, NULL);
+        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName);
         printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
@@ -93,7 +93,7 @@ int Join(int argc, char **argv)
 
     if (t1 != t2)
     {
-        printf("Type '%s' of '%s.%s' incompatible with '%s' of '%s.%s'.\n", t1, src1RelName, attrName1, t2, src2RelName, attrName2);
+        printf("Type '%c' of '%s.%s' incompatible with '%c' of '%s.%s'.\n", t1, src1RelName, attrName1, t2, src2RelName, attrName2);
         db_err_code = INCOMPATIBLE_TYPES;
         return ErrorMsgs(db_err_code, print_flag);
     }
