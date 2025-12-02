@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
@@ -11,6 +12,8 @@
 #include "include/helpers.h"
 #include "include/globals.h"
 #include "include/error.h"
+#include "include/getnextrec.h"
+#include "include/findrec.h"
 #define BYTES_PER_LINE 16
 
 int ceil_div(int a, int b)
@@ -498,4 +501,298 @@ void writeAttrToRec(void *dstRecPtr, void *valuePtr, int type, int size, int off
         strncpy(dstRecPtr + offset, valuePtr, size);
         *((char *)dstRecPtr + offset + size) = '\0';
     }
+}
+
+// Helper function to calculate Levenshtein distance (edit distance)
+static int levenshtein_distance(const char *s1, const char *s2)
+{
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
+    int **dp = malloc((len1 + 1) * sizeof(int *));
+    
+    for (int i = 0; i <= len1; i++)
+    {
+        dp[i] = malloc((len2 + 1) * sizeof(int));
+    }
+    
+    for (int i = 0; i <= len1; i++)
+    {
+        dp[i][0] = i;
+    }
+    
+    for (int j = 0; j <= len2; j++)
+    {
+        dp[0][j] = j;
+    }
+    
+    for (int i = 1; i <= len1; i++)
+    {
+        for (int j = 1; j <= len2; j++)
+        {
+            int cost = (tolower(s1[i-1]) == tolower(s2[j-1])) ? 0 : 1;
+            dp[i][j] = dp[i-1][j-1] + cost; // substitution
+            
+            if (dp[i-1][j] + 1 < dp[i][j]) // deletion
+            {
+                dp[i][j] = dp[i-1][j] + 1;
+            }
+            
+            if (dp[i][j-1] + 1 < dp[i][j]) // insertion
+            {
+                dp[i][j] = dp[i][j-1] + 1;
+            }
+        }
+    }
+    
+    int result = dp[len1][len2];
+    
+    for (int i = 0; i <= len1; i++)
+    {
+        free(dp[i]);
+    }
+    free(dp);
+    
+    return result;
+}
+
+// Helper function to calculate Jaro-Winkler similarity (good for short strings like names)
+static float jaro_winkler_similarity(const char *s1, const char *s2)
+{
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
+    
+    if (len1 == 0 || len2 == 0)
+    {
+        return 0.0f;
+    }
+    
+    // Calculate match distance
+    int max_len = (len1 > len2) ? len1 : len2;
+    int match_distance = max_len / 2 - 1;
+    if (match_distance < 0)
+    {
+        match_distance = 0;
+    }
+    
+    int *s1_matches = calloc(len1, sizeof(int));
+    int *s2_matches = calloc(len2, sizeof(int));
+    
+    int matches = 0;
+    int transpositions = 0;
+    
+    // Count matches
+    for (int i = 0; i < len1; i++)
+    {
+        int start = i - match_distance;
+        if (start < 0)
+        {
+            start = 0;
+        }
+        
+        int end = i + match_distance + 1;
+        if (end > len2)
+        {
+            end = len2;
+        }
+        
+        for (int j = start; j < end; j++)
+        {
+            if (!s2_matches[j] && tolower(s1[i]) == tolower(s2[j]))
+            {
+                s1_matches[i] = 1;
+                s2_matches[j] = 1;
+                matches++;
+                break;
+            }
+        }
+    }
+    
+    if (matches == 0)
+    {
+        free(s1_matches);
+        free(s2_matches);
+        return 0.0f;
+    }
+    
+    // Count transpositions
+    int k = 0;
+    for (int i = 0; i < len1; i++)
+    {
+        if (s1_matches[i])
+        {
+            while (!s2_matches[k])
+            {
+                k++;
+            }
+            if (tolower(s1[i]) != tolower(s2[k]))
+            {
+                transpositions++;
+            }
+            k++;
+        }
+    }
+    
+    float jaro = ((float)matches / len1 + (float)matches / len2 + 
+                 ((float)matches - transpositions / 2.0f) / matches) / 3.0f;
+    
+    // Calculate common prefix (up to 4 characters)
+    int prefix = 0;
+    int max_prefix = 4;
+    if (len1 < max_prefix)
+    {
+        max_prefix = len1;
+    }
+    if (len2 < max_prefix)
+    {
+        max_prefix = len2;
+    }
+    
+    while (prefix < max_prefix && tolower(s1[prefix]) == tolower(s2[prefix]))
+    {
+        prefix++;
+    }
+    
+    float winkler = jaro + prefix * 0.1f * (1.0f - jaro);
+    
+    free(s1_matches);
+    free(s2_matches);
+    
+    return winkler;
+}
+
+void printCloseStrings(int catRelNum, int offset, char *typedVal, char *filter)
+{
+    Rid startRid = INVALID_RID;
+    int recSize = catcache[catRelNum].relcat_rec.recLength;
+    char *recPtr = malloc(recSize);
+    
+    // Print a Did you mean message
+    printf("Did you mean? ");
+    
+    if (!recPtr)
+    {
+        printf("Memory allocation error.\n");
+        return;
+    }
+    
+    // Array to store candidates
+    Candidate *candidates = NULL;
+    int candidate_count = 0;
+    int candidate_capacity = 0;
+    
+    // Collect all schema object names and calculate similarity
+    do
+    {
+        if(catRelNum == RELCAT_CACHE)
+        {
+            if(GetNextRec(catRelNum, startRid, &startRid, recPtr) == NOTOK)
+            {
+                break; // No more records
+            }
+        }
+        else
+        {
+            if(FindRec(catRelNum, startRid, &startRid, recPtr, 's', RELNAME, 
+            offsetof(AttrCatRec, relName), filter, CMP_EQ) == NOTOK)
+            {
+                break;
+            }
+        }
+
+        if(!isValidRid(startRid))
+        {
+            break;
+        }
+        
+        char *schemaObjName = recPtr + offset;
+        
+        // Calculate various similarity measures
+        int edit_distance = levenshtein_distance(typedVal, schemaObjName);
+        float jw_similarity = jaro_winkler_similarity(typedVal, schemaObjName);
+        
+        // Check if it's a close match
+        // Criteria: 
+        // 1. Edit distance <= 3 (for short names) or <= 20% of the longer string length
+        // 2. OR Jaro-Winkler similarity >= 0.7
+        // 3. OR typedVal is a substring of schemaObjName (or vice versa)
+        int max_len = MAX(strlen(typedVal), strlen(schemaObjName));
+        int is_substring = (strstr(schemaObjName, typedVal) != NULL) || 
+                           (strstr(typedVal, schemaObjName) != NULL);
+        
+        if (edit_distance <= 3 || 
+            edit_distance <= max_len * 0.2 || 
+            jw_similarity >= 0.7f ||
+            is_substring)
+        {
+            // Add candidate to array
+            if (candidate_count >= candidate_capacity)
+            {
+                candidate_capacity = candidate_capacity == 0 ? 10 : candidate_capacity * 2;
+                Candidate *new_candidates = realloc(candidates, 
+                                                   candidate_capacity * sizeof(Candidate));
+                if (!new_candidates)
+                {
+                    // Memory allocation failed
+                    for (int i = 0; i < candidate_count; i++)
+                    {
+                        free(candidates[i].name);
+                    }
+                    free(candidates);
+                    free(recPtr);
+                    return;
+                }
+                candidates = new_candidates;
+            }
+            
+            candidates[candidate_count].name = strdup(schemaObjName);
+            candidates[candidate_count].similarity = jw_similarity;
+            candidates[candidate_count].edit_distance = edit_distance;
+            candidate_count++;
+        }
+    }
+    while(1);
+    
+    // Sort candidates by similarity (highest first) and then by edit distance (lowest first)
+    for (int i = 0; i < candidate_count - 1; i++)
+    {
+        for (int j = i + 1; j < candidate_count; j++)
+        {
+            if (candidates[j].similarity > candidates[i].similarity || 
+                (candidates[j].similarity == candidates[i].similarity && 
+                 candidates[j].edit_distance < candidates[i].edit_distance))
+            {
+                Candidate temp = candidates[i];
+                candidates[i] = candidates[j];
+                candidates[j] = temp;
+            }
+        }
+    }
+    
+    // Print suggestions (limit to 5 best matches)
+    if (candidate_count == 0)
+    {
+        printf("No close matches found.\n");
+    }
+    else
+    {
+        int print_count = candidate_count > 5 ? 5 : candidate_count;
+        
+        for (int i = 0; i < print_count; i++)
+        {
+            if (i > 0)
+            {
+                printf(", ");
+            }
+            printf("\"%s\"", candidates[i].name);
+        }
+        printf("\n");
+    }
+    
+    // Free allocated memory
+    for (int i = 0; i < candidate_count; i++)
+    {
+        free(candidates[i].name);
+    }
+    free(candidates);
+    free(recPtr);
 }

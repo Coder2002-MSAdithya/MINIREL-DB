@@ -8,6 +8,7 @@
 #include "../include/freemap.h"
 #include "../include/insertrec.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
@@ -38,6 +39,8 @@ int Load(int argc, char **argv)
     int r = OpenRel(relName);
     if (r == NOTOK)
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

@@ -5,7 +5,8 @@
 #include <limits.h>
 
 #include "../include/defs.h"     /* for OK, NOTOK, RELNAME, etc. */
-#include "../include/error.h"    /* for db_err_code, MEM_ALLOC_ERROR, etc. */
+#include "../include/error.h"    /* for FILESYSTEM_ERROR, MEM_ALLOC_ERROR, etc. */
+#include "../include/globals.h"  /* For db_err_code catcache etc*/
 
 /*
  * We use a fixed-size bitmap indexed by pageNum (short, 0..32767).
@@ -56,7 +57,10 @@ int CreateFreeMap(const char *relName)
 
     FILE *fp = fopen(fname, "wb");
     if (!fp)
+    {
+        db_err_code = FILESYSTEM_ERROR;
         return NOTOK;
+    }
 
     unsigned char zero[FREEMAP_BYTES];
     memset(zero, 0, sizeof(zero));
@@ -64,6 +68,7 @@ int CreateFreeMap(const char *relName)
     if (fwrite(zero, 1, sizeof(zero), fp) != sizeof(zero))
     {
         fclose(fp);
+        db_err_code = FILESYSTEM_ERROR;
         return NOTOK;
     }
 
@@ -90,7 +95,10 @@ int set_freemap_bit(const char *relName, short pageNum, int value /*0 or 1*/)
                 return NOTOK;
             fp = fopen(fname, "rb+");
             if (!fp)
+            {
+                db_err_code = FILESYSTEM_ERROR;
                 return NOTOK;
+            }
         }
         else
         {
@@ -124,12 +132,14 @@ int set_freemap_bit(const char *relName, short pageNum, int value /*0 or 1*/)
     /* Seek back and write updated byte */
     if (fseek(fp, byteIndex, SEEK_SET) != 0)
     {
+        db_err_code = FILESYSTEM_ERROR;
         fclose(fp);
         return NOTOK;
     }
 
     if (fwrite(&byte, 1, 1, fp) != 1)
     {
+        db_err_code = FILESYSTEM_ERROR;
         fclose(fp);
         return NOTOK;
     }
@@ -180,7 +190,10 @@ int FindFreeSlot(const char *relName)
     fclose(fp);
 
     if (n == 0)
-        return -1;
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
+    }
 
     /* Scan for first non-zero byte */
     for (int byteIndex = 0; byteIndex < (int)n; byteIndex++)

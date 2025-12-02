@@ -13,7 +13,6 @@
 #include "../include/findrec.h"
 #include "../include/closerel.h"
 
-
 int OpenRel(const char *relName)
 {
     // Step 1: Check if already open
@@ -56,7 +55,11 @@ int OpenRel(const char *relName)
     Rid startRid = (Rid){-1, -1};
     int relCatRecSize = catcache[RELCAT_CACHE].relcat_rec.recLength;
     RelCatRec rc;
-    FindRec(RELCAT_CACHE, startRid, &startRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), (void *)relName, CMP_EQ);
+
+    if(FindRec(RELCAT_CACHE, startRid, &startRid, &rc, 's', RELNAME, offsetof(RelCatRec, relName), (void *)relName, CMP_EQ) == NOTOK)
+    {
+        return NOTOK;
+    }
 
     if(!isValidRid(startRid))
     {
@@ -65,9 +68,21 @@ int OpenRel(const char *relName)
     }
 
     found = true;
-    CloseRel(freeSlot);
+    if(CloseRel(freeSlot) == NOTOK)
+    {
+        return NOTOK;
+    }
+
+    int fd = open(rc.relName, O_RDWR);
+
+    if(fd == NOTOK)
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
+    }
+
     catcache[freeSlot].relcat_rec = rc;
-    catcache[freeSlot].relFile = open(rc.relName, O_RDWR);
+    catcache[freeSlot].relFile = fd;
     catcache[freeSlot].status = VALID_MASK;
     catcache[freeSlot].relcatRid = startRid;
     catcache[freeSlot].attrList = NULL; 

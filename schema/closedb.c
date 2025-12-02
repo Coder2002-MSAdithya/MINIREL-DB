@@ -38,7 +38,8 @@ int CloseDB(int argc, char **argv)
 {
     if(!db_open)
     {
-        return ErrorMsgs(DBNOTOPEN, print_flag);
+        db_err_code = DBNOTOPEN;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(CloseCats() == OK)
@@ -50,6 +51,7 @@ int CloseDB(int argc, char **argv)
     }
     else
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 }

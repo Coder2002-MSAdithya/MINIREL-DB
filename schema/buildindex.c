@@ -1,10 +1,12 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
+#include "../include/helpers.h"
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
 #include "../include/writerec.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 
 int BuildIndex(int argc, char **argv)
@@ -28,6 +30,7 @@ int BuildIndex(int argc, char **argv)
     if(strncmp(relName, RELCAT, RELNAME) == OK || 
     strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
+        printf("CANNOT create or drop indexes on catalog relation %s...\n", relName);
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -36,6 +39,8 @@ int BuildIndex(int argc, char **argv)
 
     if(!attrDesc)
     {
+        printf("Attribute '%s' does NOT exist in relation '%s' of the DB.\n", relName, attrName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, relName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -56,7 +61,10 @@ int BuildIndex(int argc, char **argv)
     }
 
     attrDesc->attr.hasIndex = 1;
-    WriteRec(ATTRCAT_CACHE, &(attrDesc->attr), attrDesc->attrCatRid);
+    if(WriteRec(ATTRCAT_CACHE, &(attrDesc->attr), attrDesc->attrCatRid) == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
 
     printf("Built index successfully on attribute %s of relation %s\n", 
     attrName, relName);

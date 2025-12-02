@@ -7,6 +7,7 @@
 #include "../include/deleterec.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 
 
@@ -27,12 +28,14 @@ int Delete(int argc, char **argv)
 
     if(strncmp(relName, RELCAT, RELNAME) == OK)
     {
+        printf("CANNOT delete record from relcat.\n");
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
+        printf("CANNOT delete record from attrcat.\n");
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -41,6 +44,8 @@ int Delete(int argc, char **argv)
 
     if(r == NOTOK)
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -61,22 +66,36 @@ int Delete(int argc, char **argv)
             void *recPtr = malloc(recSize);
             void *valuePtr = malloc(size);
 
+            if(!recPtr || !valuePtr)
+            {
+                db_err_code = MEM_ALLOC_ERROR;
+                return ErrorMsgs(db_err_code, print_flag);
+            }
+
             if(!isValidForType(type, size, value, valuePtr))
             {
+                printf("'%s' is an INVALID literal for TYPE %s.\n", 
+                value, type == 'i' ? "INTEGER" : "FLOAT");
                 db_err_code = INVALID_VALUE;
                 return ErrorMsgs(db_err_code, print_flag);
             }
 
             do
             {
-                FindRec(r, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator);
+                if(FindRec(r, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator) == NOTOK)
+                {
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
 
                 if(!isValidRid(recRid))
                 {
                     break;
                 }
 
-                DeleteRec(r, recRid);
+                if(DeleteRec(r, recRid) == NOTOK)
+                {
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
                 recsAffected++;
             } 
             while(true);
@@ -89,6 +108,8 @@ int Delete(int argc, char **argv)
 
     if(!found)
     {
+        printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", attrName, relName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, relName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

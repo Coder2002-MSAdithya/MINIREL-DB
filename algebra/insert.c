@@ -7,6 +7,7 @@
 #include "../include/getnextrec.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,12 +26,14 @@ int Insert(int argc, char **argv)
 
     if(strncmp(relName, RELCAT, RELNAME) == OK)
     {
+        printf("CANNOT insert records into relcat.\n");
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     if(strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
+        printf("CANNOT insert records into attrcat.\n");
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
@@ -39,12 +42,20 @@ int Insert(int argc, char **argv)
 
     if(r == NOTOK)
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(RELNOEXIST, print_flag && flag);
     }
 
     int recLength = catcache[r].relcat_rec.recLength;
-    void *newRecord = malloc(recLength);
+    void *newRecord = calloc(recLength, 1);
+
+    if(!newRecord)
+    {
+        db_err_code = MEM_ALLOC_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
 
     for(int i=2; i<argc; i+=2)
     {
@@ -72,6 +83,7 @@ int Insert(int argc, char **argv)
                     {
                         db_err_code = INVALID_VALUE;
                         free(newRecord);
+                        printf("'%s' is NOT a valid INTEGER literal.\n", value);
                         return ErrorMsgs(INVALID_VALUE, print_flag && flag);
                     }
 
@@ -89,6 +101,7 @@ int Insert(int argc, char **argv)
                     {
                         db_err_code = INVALID_VALUE;
                         free(newRecord);
+                        printf("'%s' is NOT a valid FLOAT literal.\n", value);
                         return ErrorMsgs(INVALID_VALUE, print_flag && flag);
                     }
 
@@ -111,8 +124,10 @@ int Insert(int argc, char **argv)
 
         if(!found)
         {
+            printf("Attribute '%s' does NOT exist in relation %s of DB.\n", argv[i], relName);
+            printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), argv[i], relName);
             db_err_code = ATTRNOEXIST;
-            return ErrorMsgs(ATTRNOEXIST, print_flag && flag);
+            return ErrorMsgs(db_err_code, print_flag && flag);
         }
     }
 
@@ -123,6 +138,7 @@ int Insert(int argc, char **argv)
         {
             if(strncmp(argv[i], argv[j], ATTRNAME) == OK)
             {
+                printf("Attribute %s is duplicate in the INSERT statement.\n", argv[i]);
                 db_err_code = DUP_ATTR_INSERT;
                 return ErrorMsgs(db_err_code, DUP_ATTR_INSERT);
             }
@@ -134,7 +150,10 @@ int Insert(int argc, char **argv)
     void *recPtr = malloc(recLength);
     do
     {
-        GetNextRec(r, recId, &recId, recPtr);
+        if(GetNextRec(r, recId, &recId, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recId))
         {

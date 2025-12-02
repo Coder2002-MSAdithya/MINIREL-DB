@@ -45,9 +45,8 @@ static int insertIntoPage(int relNum,
     int recSize   = entry->relcat_rec.recLength;
     int recsPerPg = entry->relcat_rec.recsPerPg;
 
-    if (ReadPage(relNum, pidx) == NOTOK)
+    if(ReadPage(relNum, pidx) == NOTOK)
     {
-        db_err_code = REL_OPEN_ERROR;
         return NOTOK;
     }
 
@@ -75,16 +74,21 @@ static int insertIntoPage(int relNum,
     {
         if (!(slotmap & (1UL << slot)))  /* free slot */
         {
+            entry->relcat_rec.numRecs += 1;
+            entry->status |= DIRTY_MASK;
+
+            if(WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid) == NOTOK)
+            {
+                entry->relcat_rec.numRecs -= 1;
+                return NOTOK;
+            }
+
             int offset = HEADER_SIZE + slot * recSize;
             memcpy(page + offset, recPtr, recSize);
 
             slotmap |= (1UL << slot);
             memcpy(page + MAGIC_SIZE, &slotmap, SLOTMAP);
             buffer[relNum].dirty = true;
-
-            entry->relcat_rec.numRecs += 1;
-            entry->status |= DIRTY_MASK;
-            WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
 
             if (becameFull)
                 *becameFull = (!wasFull && ((slotmap & fullMask) == fullMask));
@@ -191,10 +195,20 @@ int InsertRec(int relNum, void *recPtr)
     }
 
     /* -------- 3. No free slot: allocate a new page -------- */
-    FlushPage(relNum);
+    if(FlushPage(relNum) == NOTOK)
+    {
+        return NOTOK;
+    }
+
     buffer[relNum].pid   = numPages;
     buffer[relNum].dirty = true;
     memset(page, 0, PAGESIZE);
+
+    if(buffer[relNum].pid < 0)
+    {
+        db_err_code = REL_PAGE_LIMIT_REACHED;
+        return NOTOK;
+    }
 
     char c = (relNum == 0 ? '$' : (relNum == 1 ? '!' : '_'));
     unsigned long newMap = 1UL;  /* occupy slot 0 */
@@ -209,7 +223,13 @@ int InsertRec(int relNum, void *recPtr)
     entry->relcat_rec.numRecs += 1;
     entry->relcat_rec.numPgs  += 1;
     entry->status |= DIRTY_MASK;
-    WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
+
+    if(WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid) == NOTOK)
+    {
+        entry->relcat_rec.numRecs -= 1;
+        entry->relcat_rec.numPgs  -= 1;
+        return NOTOK;
+    }
 
     /* New page has free slots if recsPerPg > 1 */
     if (useFreeMap && recsPerPg > 1)

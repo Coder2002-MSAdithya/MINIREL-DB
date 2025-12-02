@@ -1,10 +1,12 @@
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
+#include "../include/helpers.h"
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
 #include "../include/writerec.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 
 int removeIndex(AttrDesc *attrPtr)
@@ -42,6 +44,7 @@ int DropIndex(int argc, char **argv)
     if(strncmp(relName, RELCAT, RELNAME) == OK || 
     strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
+        printf("CANNOT create or drop indexes on catalog relation %s...\n", relName);
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -52,12 +55,15 @@ int DropIndex(int argc, char **argv)
 
         if(!attrPtr)
         {
+            printf("Attribute '%s' does NOT exist in relation '%s' of the DB.\n", relName, attrName);
+            printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, relName);
             db_err_code = ATTRNOEXIST;
             return ErrorMsgs(db_err_code, print_flag);
         }
 
         if(!attrPtr->attr.hasIndex)
         {
+            printf("Index does NOT exist on attribute '%s' of relation '%s'.\n", attrName, relName);
             db_err_code = IDXNOEXIST;
             return ErrorMsgs(db_err_code, print_flag);
         }

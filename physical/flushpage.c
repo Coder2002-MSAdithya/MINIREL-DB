@@ -21,7 +21,8 @@ int FlushPage(int relNum)
 
     if (entry->relFile < 0)
     {
-        return ErrorMsgs(REL_OPEN_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
     }
 
     // Nothing to flush
@@ -34,13 +35,15 @@ int FlushPage(int relNum)
 
     if (lseek(entry->relFile, offset, SEEK_SET) < 0)
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
     }
 
     ssize_t bytesWritten = write(entry->relFile, buf->page, PAGESIZE);
     if (bytesWritten != PAGESIZE)
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
     }
 
     buf->dirty = 0;

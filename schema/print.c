@@ -6,6 +6,7 @@
 #include "../include/getnextrec.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <limits.h>
 #include <float.h>
@@ -26,23 +27,13 @@ int Print(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    if(argc < 2)
-    {
-        db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    if(argc > 2)
-    {
-        db_err_code = TOO_MANY_ARGS;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
     char *relName = argv[1];
     int r = OpenRel(relName);
 
     if(r == NOTOK)
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", relName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

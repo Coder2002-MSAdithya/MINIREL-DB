@@ -56,6 +56,7 @@
 #define NT_ATTRCAT 7
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define INVALID_RID ((Rid){-1, -1})
 
 /*************************************************************
@@ -130,6 +131,13 @@ typedef struct idxbuf
     int valid;
     AttrCatRec *attrCatRecPtr;
 } IdxBuf;
+
+typedef struct
+{
+    char *name;
+    float similarity;
+    int edit_distance;
+} Candidate;
 
 typedef struct Student
 {

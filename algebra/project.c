@@ -6,6 +6,7 @@
 #include "../include/findrel.h"
 #include "../include/getnextrec.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -122,7 +123,11 @@ int Project(int argc, char **argv)
 
     if(r == NOTOK)
     {
-        db_err_code = RELNOEXIST;
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", srcRelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), srcRelName, NULL);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -136,6 +141,8 @@ int Project(int argc, char **argv)
 
         if(!ptr)
         {
+            printf("Attribute '%s' does NOT exist in relation '%s' of the DB.\n", argv[c], srcRelName);
+            printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), argv[c], srcRelName);
             db_err_code = ATTRNOEXIST;
             return ErrorMsgs(db_err_code, print_flag);
         }
@@ -177,6 +184,7 @@ int Project(int argc, char **argv)
 
     if(s)
     {
+        printf("Relation '%s' already exists in the DB.\n", dstRelName);
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -192,14 +200,20 @@ int Project(int argc, char **argv)
     void *recPtr = malloc(recLength);
     do
     {
-        GetNextRec(r, recRid, &recRid, recPtr);
+        if(GetNextRec(r, recRid, &recRid, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recRid))
         {
             break;
         }
 
-        InsertProjectedRecFromLL(dstRelName, head, recPtr);
+        if(InsertProjectedRecFromLL(dstRelName, head, recPtr) != OK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     }
     while(true);
 

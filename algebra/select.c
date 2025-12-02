@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
-
 
 int Select(int argc, char **argv)
 {
@@ -34,12 +34,18 @@ int Select(int argc, char **argv)
 
     if(r1)
     {
+        printf("Relation '%s' already exists in the DB.\n", dstRelName);
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(r2 == NOTOK)
     {
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", srcRelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), srcRelName, NULL);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -58,6 +64,8 @@ int Select(int argc, char **argv)
 
     if(!attrFound)
     {
+        printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", attrName, srcRelName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName, srcRelName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -71,6 +79,12 @@ int Select(int argc, char **argv)
     
     /* Insert records into result relation that satisfy criteria */
     r1 = OpenRel(dstRelName);
+
+    if(r1 == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     Rid recRid = INVALID_RID;
     int offset = (foundField->attr).offset;
     int size = (foundField->attr).length;
@@ -78,8 +92,16 @@ int Select(int argc, char **argv)
     void *valuePtr = malloc(size);
     void *recPtr = malloc(recSize);
 
+    if(!valuePtr || !recPtr)
+    {
+        db_err_code = MEM_ALLOC_ERROR;
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+    }
+
     if(!isValidForType(type, size, value, valuePtr))
     {
+        printf("'%s' is an INVALID literal for TYPE %s.\n", 
+        value, type == 'i' ? "INTEGER" : "FLOAT");
         db_err_code = INVALID_VALUE;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -87,14 +109,20 @@ int Select(int argc, char **argv)
     /* Go through each record of srcRelName and filter */
     do
     {
-        FindRec(r2, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator);
+        if(FindRec(r2, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recRid))
         {
             break;
         }
 
-        InsertRec(r1, recPtr);
+        if(InsertRec(r1, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     } 
     while(true);
 
