@@ -56,7 +56,10 @@ int BuildIndex(int argc, char **argv)
     }
 
     attrDesc->attr.hasIndex = 1;
-    WriteRec(ATTRCAT_CACHE, &(attrDesc->attr), attrDesc->attrCatRid);
+    if(WriteRec(ATTRCAT_CACHE, &(attrDesc->attr), attrDesc->attrCatRid) == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
 
     printf("Built index successfully on attribute %s of relation %s\n", 
     attrName, relName);
