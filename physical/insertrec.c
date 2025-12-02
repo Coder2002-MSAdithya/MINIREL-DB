@@ -196,6 +196,12 @@ int InsertRec(int relNum, void *recPtr)
     buffer[relNum].dirty = true;
     memset(page, 0, PAGESIZE);
 
+    if(buffer[relNum].pid < 0)
+    {
+        db_err_code = REL_PAGE_LIMIT_REACHED;
+        return NOTOK;
+    }
+
     char c = (relNum == 0 ? '$' : (relNum == 1 ? '!' : '_'));
     unsigned long newMap = 1UL;  /* occupy slot 0 */
 
