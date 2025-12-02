@@ -12,6 +12,17 @@
 #include <string.h>
 #include <unistd.h>
 
+// Helper function to swap bytes for endianness conversion
+static void swap_bytes(char *data, size_t size)
+{
+    for (size_t i = 0; i < size / 2; i++)
+    {
+        char temp = data[i];
+        data[i] = data[size - 1 - i];
+        data[size - 1 - i] = temp;
+    }
+}
+
 int Load(int argc, char **argv)
 {
     if(!db_open)
@@ -49,11 +60,83 @@ int Load(int argc, char **argv)
         return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
     }
 
+    // Determine system endianness
+    int is_little_endian = 1;
+    unsigned int test = 1;
+    char *test_ptr = (char*)&test;
+    if (test_ptr[0] == 0)
+    {
+        is_little_endian = 0; // System is big-endian, no conversion needed
+    }
+
+    // Pre-compute offsets that need endianness conversion
+    int *int_offsets = NULL;
+    int *float_offsets = NULL;
+    int int_count = 0;
+    int float_count = 0;
+    
+    // First pass: count the number of int and float attributes
+    AttrDesc *ptr = catcache[r].attrList;
+    while (ptr)
+    {
+        if (ptr->attr.type == 'i')
+        {
+            int_count++;
+        }
+        else if (ptr->attr.type == 'f')
+        {
+            float_count++;
+        }
+        ptr = ptr->next;
+    }
+    
+    // Allocate arrays for offsets
+    if (int_count > 0)
+    {
+        int_offsets = malloc(int_count * sizeof(int));
+        if (!int_offsets)
+        {
+            free(recPtr);
+            CloseRel(r);
+            return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+        }
+    }
+    
+    if (float_count > 0)
+    {
+        float_offsets = malloc(float_count * sizeof(int));
+        if (!float_offsets)
+        {
+            free(int_offsets);
+            free(recPtr);
+            CloseRel(r);
+            return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+        }
+    }
+    
+    // Second pass: collect the offsets
+    ptr = catcache[r].attrList;
+    int int_idx = 0, float_idx = 0;
+    while (ptr)
+    {
+        if (ptr->attr.type == 'i')
+        {
+            int_offsets[int_idx++] = ptr->attr.offset;
+        }
+        else if (ptr->attr.type == 'f')
+        {
+            float_offsets[float_idx++] = ptr->attr.offset;
+        }
+        ptr = ptr->next;
+    }
+
     // Open the file for reading
     FILE *file = fopen(fileName, "rb");
     if (!file)
     {
         db_err_code = FILESYSTEM_ERROR;
+        free(int_offsets);
+        free(float_offsets);
         free(recPtr);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
@@ -67,6 +150,24 @@ int Load(int argc, char **argv)
     while (fread(recPtr, recSize, 1, file) == 1)
     {
         recordsRead++;
+
+        // Convert integers and floats from big-endian to little-endian if needed
+        if (is_little_endian)
+        {
+            // Convert integers
+            for (int i = 0; i < int_count; i++)
+            {
+                char *int_ptr = recPtr + int_offsets[i];
+                swap_bytes(int_ptr, sizeof(int));
+            }
+            
+            // Convert floats
+            for (int i = 0; i < float_count; i++)
+            {
+                char *float_ptr = recPtr + float_offsets[i];
+                swap_bytes(float_ptr, sizeof(float));
+            }
+        }
         
         // Insert the record into the relation
         insertResult = InsertRec(r, recPtr);
@@ -74,20 +175,21 @@ int Load(int argc, char **argv)
         if (insertResult == NOTOK)
         {
             // InsertRec failed, db_err_code should already be set by InsertRec
+            free(int_offsets);
+            free(float_offsets);
             free(recPtr);
             fclose(file);
             CloseRel(r);
             return ErrorMsgs(db_err_code, print_flag);
         }
-        
-        // Clear the buffer for the next record
-        memset(recPtr, 0, recSize);
     }
 
     // Check if we stopped because of read error (not EOF)
     if (!feof(file) && ferror(file))
     {
         db_err_code = FILESYSTEM_ERROR;
+        free(int_offsets);
+        free(float_offsets);
         free(recPtr);
         fclose(file);
         CloseRel(r);
@@ -96,6 +198,8 @@ int Load(int argc, char **argv)
 
     // Clean up
     fclose(file);
+    free(int_offsets);
+    free(float_offsets);
     free(recPtr);
     
     // Print success message if all records were loaded successfully
