@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
@@ -12,6 +13,7 @@
 #include "include/globals.h"
 #include "include/error.h"
 #include "include/getnextrec.h"
+#include "include/findrec.h"
 #define BYTES_PER_LINE 16
 
 int ceil_div(int a, int b)
@@ -658,7 +660,7 @@ static float jaro_winkler_similarity(const char *s1, const char *s2)
     return winkler;
 }
 
-void printCloseStrings(int catRelNum, int offset, char *typedVal)
+void printCloseStrings(int catRelNum, int offset, char *typedVal, char *filter)
 {
     Rid startRid = INVALID_RID;
     int recSize = catcache[catRelNum].relcat_rec.recLength;
@@ -681,9 +683,21 @@ void printCloseStrings(int catRelNum, int offset, char *typedVal)
     // Collect all schema object names and calculate similarity
     do
     {
-        if(GetNextRec(catRelNum, startRid, &startRid, recPtr) == NOTOK)
+        if(catRelNum == RELCAT_CACHE)
         {
-            break; // No more records
+
+            if(GetNextRec(catRelNum, startRid, &startRid, recPtr) == NOTOK)
+            {
+                break; // No more records
+            }
+        }
+        else
+        {
+            if(FindRec(catRelNum, startRid, &startRid, recPtr, 's', ATTRNAME, 
+            offsetof(AttrCatRec, attrName), filter, CMP_EQ) == NOTOK)
+            {
+                break;
+            }
         }
 
         if(!isValidRid(startRid))
