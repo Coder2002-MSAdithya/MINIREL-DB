@@ -158,6 +158,11 @@ int Join(int argc, char **argv)
     /* --- Step 4: Create the new joined relation schema --- */
     int status = CreateFromAttrList(dstRelName, resHead);
 
+    if(status != OK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     /* --- Step 5: Cleanup memory for the result schema list --- */
     AttrDesc *tmp;
     while (resHead)
@@ -204,7 +209,10 @@ int Join(int argc, char **argv)
     do
     {
         rid2 = INVALID_RID;
-        GetNextRec(s1, rid1, &rid1, recPtr1);
+        if(GetNextRec(s1, rid1, &rid1, recPtr1) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(rid1))
         {
@@ -213,7 +221,10 @@ int Join(int argc, char **argv)
 
         do
         {
-            GetNextRec(s2, rid2, &rid2, recPtr2);
+            if(GetNextRec(s2, rid2, &rid2, recPtr2) == NOTOK)
+            {
+                return ErrorMsgs(db_err_code, print_flag);
+            }
 
             if(!isValidRid(rid2))
             {
@@ -253,7 +264,11 @@ int Join(int argc, char **argv)
                     }
                 }
 
-                InsertRec(d, dstRecPtr);
+                if(InsertRec(d, dstRecPtr) == NOTOK)
+                {
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
+                
                 free(dstRecPtr);
             }
         }
