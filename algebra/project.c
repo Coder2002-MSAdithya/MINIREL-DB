@@ -210,7 +210,8 @@ int Project(int argc, char **argv)
             break;
         }
 
-        if(InsertProjectedRecFromLL(dstRelName, head, recPtr) != OK)
+        int sIns = InsertProjectedRecFromLL(dstRelName, head, recPtr);
+        if(sIns != OK && sIns != DUP_ROWS)
         {
             return ErrorMsgs(db_err_code, print_flag);
         }
