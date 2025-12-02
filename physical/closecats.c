@@ -22,15 +22,24 @@ int CloseCats()
     {
         if(catcache[i].status & VALID_MASK)
         {
-            CloseRel(i);
+            if(CloseRel(i) == NOTOK)
+            {
+                return NOTOK;
+            }
         }
     }
 
     /* Close relation attrcat */
-    CloseRel(ATTRCAT_CACHE);
+    if(CloseRel(ATTRCAT_CACHE) == NOTOK)
+    {
+        return NOTOK;
+    }
 
     /* Close relation relcat */
-    CloseRel(RELCAT_CACHE);
+    if(CloseRel(RELCAT_CACHE) == NOTOK)
+    {
+        return NOTOK;
+    }
 
     return OK;
 }
