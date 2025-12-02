@@ -67,11 +67,6 @@ int ReadPage(int relNum, short pid)
     // Update buffer metadata
     buf->pid = pid;
     buf->dirty = false;
-
-    if(debug_flag)
-    {
-        // printf("[DEBUG] Read page %d of relation '%s' into buffer slot %d\n", pid, entry->relcat_rec.relName, relNum);
-    }
     
     return OK;
 }
