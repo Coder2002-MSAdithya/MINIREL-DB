@@ -18,12 +18,6 @@ int Create(int argc, char *argv[])
 {
     bool flag = (strcmp(argv[0], "create") == OK);
     FILE *fp;
-
-    if(argc < 4)
-    {
-        db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag && flag);
-    }
     
     if(!db_open)
     {
@@ -159,7 +153,11 @@ int Create(int argc, char *argv[])
 
     RelCatRec rc = {"relName", recLength, recsPerPg, numAttrs, numRecs, numPgs};
     strncpy(rc.relName, relName, RELNAME);
-    InsertRec(RELCAT_CACHE, &rc);
+
+    if(InsertRec(RELCAT_CACHE, &rc) == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
 
     int offset = 0;
 
@@ -187,7 +185,11 @@ int Create(int argc, char *argv[])
 
         strncpy(ac.relName, relName, RELNAME);
         strncpy(ac.attrName, argv[j-1], ATTRNAME);
-        InsertRec(ATTRCAT_CACHE, &ac);
+
+        if(InsertRec(ATTRCAT_CACHE, &ac) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     }
 
     if(flag)
