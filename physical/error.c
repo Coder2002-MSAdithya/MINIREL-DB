@@ -115,6 +115,9 @@ int ErrorMsgs(int errorNum, bool printFlag)
                     printf("Error %d: One or more type(s) you have specified CANNOT be understood..", errorNum);
                     break;
             
+            case STR_LEN_INVALID:
+                    printf("Error %d: Length of a string attribute has to be between 0 and 50.\n", errorNum);
+            
             case CAT_CREATE_ERROR:
                 printf("Error %d: The catalog files could NOT be created.\n"
                 "Please try again after closing any processes that are using this directory.\n", errorNum);
@@ -123,6 +126,15 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case CAT_OPEN_ERROR:
                 printf("Error %d: Could NOT open catalogs for this database.\n"
                 "Maybe you have chosen an invalid directory.\n", errorNum);
+                break;
+            
+            case CAT_DELETE_ERROR:
+                printf("Error %d: Could NOT DELETE catalogs for the database\n"
+                , errorNum);
+                break;
+            
+            case CAT_ALREADY_EXISTS:
+                printf("Error %d: Catalogs already exist for the database here.\n", errorNum);
                 break;
 
             case MEM_ALLOC_ERROR:
@@ -184,6 +196,15 @@ int ErrorMsgs(int errorNum, bool printFlag)
                 printf("Error %d: File system error occurred.\n"
                        "→ Check OS-level file permissions, disk space, or path validity.\n",
                        errorNum);
+                break;
+            
+            case PAGE_MAGIC_ERROR:
+                printf("Error %d: Page does NOT have a valid start magic sequence.." 
+                "File may be corrupted.\n", errorNum);
+                break;
+            
+            case PAGE_OUT_OF_BOUNDS:
+                printf("Error %d: Trying to read page index NOT in the relation.\n", errorNum);
                 break;
 
             case UNKNOWN_ERROR:
