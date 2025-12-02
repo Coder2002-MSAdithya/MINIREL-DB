@@ -121,16 +121,20 @@ int ErrorMsgs(int errorNum, bool printFlag)
                 break;
             
             case CAT_OPEN_ERROR:
-                printf("Could NOT open catalogs for this database.\n"
-                "Maybe you have chosen an invalid directory.\n");
+                printf("Error %d: Could NOT open catalogs for this database.\n"
+                "Maybe you have chosen an invalid directory.\n", errorNum);
                 break;
 
             case MEM_ALLOC_ERROR:
-                    printf("Memory could NOT be allocated to perform this operation.\n");
+                    printf("Error %d: Memory could NOT be allocated to perform this operation.\n", errorNum);
                     break;
             
             case REC_TOO_LONG:
-                    printf("This relation CANNOT be created as its record would NOT fit within a page.\n");
+                    printf("Error %d: This relation CANNOT be created as its record would NOT fit within a page.\n", errorNum);
+                    break;
+            
+            case REL_PAGE_LIMIT_REACHED:
+                    printf("Error %d: ONLY 32768 pages supported per relation. CANNOT add new record\n", errorNum);
                     break;
 
             case DBNOTEXIST:
