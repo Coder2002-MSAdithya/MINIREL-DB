@@ -45,36 +45,33 @@
 
 int OpenDB(int argc, char **argv)
 {
-    if(argc < 2)
-    {
-        return ErrorMsgs(ARGC_INSUFFICIENT, print_flag);
-    }
-
     if(db_open)
     {
-        return ErrorMsgs(DBNOTCLOSED, print_flag);
+        db_err_code = DBNOTCLOSED;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     strncpy(DB_DIR, argv[1], MAX_PATH_LENGTH);
 
     if(!isValidPath(DB_DIR))
     {
-        return ErrorMsgs(DBPATHNOTVALID, print_flag);
+        db_err_code = DBPATHNOTVALID;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(chdir(DB_DIR) == NOTOK)
     {
         if(errno == ENOENT)
         {
-            return ErrorMsgs(DBNOTEXIST, print_flag);
+            db_err_code = DBNOTEXIST;
+            return ErrorMsgs(db_err_code, print_flag);
         }
         else
         {
-            return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+            db_err_code = FILESYSTEM_ERROR;
+            return ErrorMsgs(db_err_code, print_flag);
         }
     }
-
-    db_open = true;
 
     //OpenCats also initializes various global data structures
     if(OpenCats() == OK)
@@ -84,9 +81,10 @@ int OpenDB(int argc, char **argv)
     else
     {
         chdir(ORIG_DIR);
-        db_open = false;
         return ErrorMsgs(CAT_OPEN_ERROR, print_flag);
     }
+    
+    db_open = true;
 
     return OK;
 }
