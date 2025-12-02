@@ -12,7 +12,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-
 int Select(int argc, char **argv)
 {
     if(!db_open)
