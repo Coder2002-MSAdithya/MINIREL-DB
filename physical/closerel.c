@@ -18,7 +18,7 @@ int CloseRel(int relNum)
     CacheEntry *entry = &catcache[relNum];
 
     if (!(entry->status & VALID_MASK))
-        return NOTOK; // Not open
+        return OK; // Not open, so nothing to do
 
     // Step 1: If catalog info dirty, update relcat in the buffer
     if((entry->status) & DIRTY_MASK)
