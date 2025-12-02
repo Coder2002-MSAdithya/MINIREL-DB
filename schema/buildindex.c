@@ -5,6 +5,7 @@
 #include "../include/findrelattr.h"
 #include "../include/writerec.h"
 #include <stdio.h>
+#include <string.h>
 
 int BuildIndex(int argc, char **argv)
 {
@@ -24,7 +25,8 @@ int BuildIndex(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    if(strncmp(relName, RELCAT) == OK || strncmp(relName, ATTRCAT) == OK)
+    if(strncmp(relName, RELCAT, RELNAME) == OK || 
+    strncmp(relName, ATTRCAT, RELNAME) == OK)
     {
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);

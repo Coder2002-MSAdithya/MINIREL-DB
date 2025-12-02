@@ -6,27 +6,25 @@
 #include "../include/openrel.h"
 #include "../include/closerel.h"
 #include "../include/freemap.h"
+#include "../include/insertrec.h"
 #include <stdio.h>
-#include <stddef.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
 
+// Helper function to swap bytes for endianness conversion
+static void swap_bytes(char *data, size_t size)
+{
+    for (size_t i = 0; i < size / 2; i++)
+    {
+        char temp = data[i];
+        data[i] = data[size - 1 - i];
+        data[size - 1 - i] = temp;
+    }
+}
+
 int Load(int argc, char **argv)
 {
-    if (argc < 3)
-    {
-        db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    if (argc > 3)
-    {
-        db_err_code = TOO_MANY_ARGS;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
@@ -36,23 +34,11 @@ int Load(int argc, char **argv)
     char *relName = argv[1];
     char *fileName = argv[2];
 
+    // Try to open the relation to check if it exists
     int r = OpenRel(relName);
     if (r == NOTOK)
     {
         db_err_code = RELNOEXIST;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    Rid foundRid = INVALID_RID;
-    RelCatRec rc;
-
-    FindRec(RELCAT_CACHE, foundRid, &foundRid, &rc, 's', RELNAME,
-            offsetof(RelCatRec, relName), relName, CMP_EQ);
-
-    if (!isValidRid(foundRid))
-    {
-        db_err_code = RELNOEXIST;
-        CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -64,125 +50,161 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    int *numPgs = &(catcache[r].relcat_rec.numPgs);
-    int *numRecs = &(catcache[r].relcat_rec.numRecs);
+    int recSize = catcache[r].relcat_rec.recLength;
+    int recPerPg = catcache[r].relcat_rec.recsPerPg;
+    char *recPtr = malloc(recSize);
 
-    // Ensure relation is empty
-    if(*numPgs)
+    if(!recPtr)
     {
-        db_err_code = LOAD_NONEMPTY;
         CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
     }
 
-    // ------------------- FILE COPY SECTION -------------------
-
-    int srcFd = open(fileName, O_RDONLY);
-    if (srcFd < 0)
+    // Determine system endianness
+    int is_little_endian = 1;
+    unsigned int test = 1;
+    char *test_ptr = (char*)&test;
+    if (test_ptr[0] == 0)
     {
-        db_err_code = FILE_NO_EXIST;
-        CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
+        is_little_endian = 0; // System is big-endian, no conversion needed
     }
 
-    struct stat st;
-    if (fstat(srcFd, &st) < 0)
+    // Pre-compute offsets that need endianness conversion
+    int *int_offsets = NULL;
+    int *float_offsets = NULL;
+    int int_count = 0;
+    int float_count = 0;
+    
+    // First pass: count the number of int and float attributes
+    AttrDesc *ptr = catcache[r].attrList;
+    while (ptr)
     {
-        close(srcFd);
+        if (ptr->attr.type == 'i')
+        {
+            int_count++;
+        }
+        else if (ptr->attr.type == 'f')
+        {
+            float_count++;
+        }
+        ptr = ptr->next;
+    }
+    
+    // Allocate arrays for offsets
+    if (int_count > 0)
+    {
+        int_offsets = malloc(int_count * sizeof(int));
+        if (!int_offsets)
+        {
+            free(recPtr);
+            CloseRel(r);
+            return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+        }
+    }
+    
+    if (float_count > 0)
+    {
+        float_offsets = malloc(float_count * sizeof(int));
+        if (!float_offsets)
+        {
+            free(int_offsets);
+            free(recPtr);
+            CloseRel(r);
+            return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+        }
+    }
+    
+    // Second pass: collect the offsets
+    ptr = catcache[r].attrList;
+    int int_idx = 0, float_idx = 0;
+    while (ptr)
+    {
+        if (ptr->attr.type == 'i')
+        {
+            int_offsets[int_idx++] = ptr->attr.offset;
+        }
+        else if (ptr->attr.type == 'f')
+        {
+            float_offsets[float_idx++] = ptr->attr.offset;
+        }
+        ptr = ptr->next;
+    }
+
+    // Open the file for reading
+    FILE *file = fopen(fileName, "rb");
+    if (!file)
+    {
         db_err_code = FILESYSTEM_ERROR;
+        free(int_offsets);
+        free(float_offsets);
+        free(recPtr);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    off_t fileSize = st.st_size;
-    if (fileSize % PAGESIZE != 0)
+    // Read file fileName record by record each of size recSize
+    // and insert each record using InsertRec
+    int recordsRead = 0;
+    int insertResult = OK;
+    
+    while (fread(recPtr, recSize, 1, file) == 1)
     {
-        close(srcFd);
-        db_err_code = INVALID_FILE_SIZE;
-        CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
-    }
+        recordsRead++;
 
-    off_t numPages = fileSize / PAGESIZE;
-    unsigned char page[PAGESIZE];
-    int writeError = 0; // flag for rollback
-
-    for (off_t i = 0; i < numPages; i++)
-    {
-        ssize_t bytesRead = read(srcFd, page, PAGESIZE);
-        if (bytesRead != PAGESIZE)
+        // Convert integers and floats from big-endian to little-endian if needed
+        if (is_little_endian)
         {
-            writeError = 1;
-            db_err_code = FILESYSTEM_ERROR;
-            break;
-        }
-
-        // Validate the _MINIREL magic string at the beginning of the page
-        if (memcmp(page+1, GEN_MAGIC, MAGIC_SIZE-1))
-        {
-            writeError = 1;
-            db_err_code = PAGE_MAGIC_ERROR;
-            break;
-        }
-
-        // Write page to relation file
-        ssize_t bytesWritten = write(catcache[r].relFile, page, PAGESIZE);
-        if (bytesWritten != PAGESIZE)
-        {
-            writeError = 1;
-            db_err_code = FILESYSTEM_ERROR;
-            break;
-        }
-
-        // Update numPgs
-        (*numPgs)++;
-
-        // Extract 8-byte slotmap (bytes 8–15)
-        unsigned long slotmap = 0;
-        bool foundFreeSlot = false;
-        memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
-
-        // Count number of set bits in slotmap → numRecs
-        for(int b = 0; b < (sizeof(slotmap)<<3); b++)
-        {
-            if(slotmap & (1ULL << b))
+            // Convert integers
+            for (int i = 0; i < int_count; i++)
             {
-                (*numRecs)++;
+                char *int_ptr = recPtr + int_offsets[i];
+                swap_bytes(int_ptr, sizeof(int));
             }
-            else
+            
+            // Convert floats
+            for (int i = 0; i < float_count; i++)
             {
-                foundFreeSlot = true;
+                char *float_ptr = recPtr + float_offsets[i];
+                swap_bytes(float_ptr, sizeof(float));
             }
         }
-
-        if(foundFreeSlot)
-        AddToFreeMap(relName, i);
         
-        printf("Page %d - Records read till now : %d\n", (int)i, *numRecs);
+        // Insert the record into the relation
+        insertResult = InsertRec(r, recPtr);
+        
+        if (insertResult == NOTOK)
+        {
+            // InsertRec failed, db_err_code should already be set by InsertRec
+            free(int_offsets);
+            free(float_offsets);
+            free(recPtr);
+            fclose(file);
+            CloseRel(r);
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     }
 
-    close(srcFd);
-
-    if(writeError)
+    // Check if we stopped because of read error (not EOF)
+    if (!feof(file) && ferror(file))
     {
-        // Rollback — remove any written content
-        ftruncate(catcache[r].relFile, 0);
-        lseek(catcache[r].relFile, 0, SEEK_SET);
-
-        *numPgs = 0;
-        *numRecs = 0;
-
+        db_err_code = FILESYSTEM_ERROR;
+        free(int_offsets);
+        free(float_offsets);
+        free(recPtr);
+        fclose(file);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    // Mark relation as dirty
-    catcache[r].status |= DIRTY_MASK;
-
+    // Clean up
+    fclose(file);
+    free(int_offsets);
+    free(float_offsets);
+    free(recPtr);
+    
+    // Print success message if all records were loaded successfully
+    printf("%s successfully loaded with %d tuples.\n", relName, recordsRead);
     CloseRel(r);
-
-    printf("Loaded relation '%s' successfully: %d pages, %d records.\n",
-           relName, *numPgs, *numRecs);
 
     return OK;
 }
