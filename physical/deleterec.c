@@ -64,7 +64,11 @@ static int deleteFromPage(int relNum,
 
     entry->relcat_rec.numRecs -= 1;
     entry->status |= DIRTY_MASK;
-    WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
+    if(WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid) == NOTOK)
+    {
+        entry->relcat_rec.numRecs += 1;
+        return NOTOK;
+    }
 
     /* After deletion, page has free slot iff it is NOT full */
     if (hasFreeAfter)
