@@ -46,6 +46,11 @@ int Insert(int argc, char **argv)
     int recLength = catcache[r].relcat_rec.recLength;
     void *newRecord = malloc(recLength);
 
+    if(!newRecord)
+    {
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+    }
+
     for(int i=2; i<argc; i+=2)
     {
         bool found = false;
@@ -134,7 +139,10 @@ int Insert(int argc, char **argv)
     void *recPtr = malloc(recLength);
     do
     {
-        GetNextRec(r, recId, &recId, recPtr);
+        if(GetNextRec(r, recId, &recId, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recId))
         {
