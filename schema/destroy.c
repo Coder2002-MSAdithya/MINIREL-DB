@@ -22,6 +22,7 @@ int Destroy(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    bool flag = strcmp(argv[0], "destroy") == OK;
     char *relName = argv[1];
     void *relCatRecPtr  = malloc(sizeof(RelCatRec));
     void *attrCatRecPtr = malloc(sizeof(AttrCatRec));
@@ -32,7 +33,7 @@ int Destroy(int argc, char *argv[])
         free(relCatRecPtr);
         free(attrCatRecPtr);
         db_err_code = MEM_ALLOC_ERROR;
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     /* Protect system catalogs */
@@ -42,7 +43,7 @@ int Destroy(int argc, char *argv[])
         db_err_code = METADATA_SECURITY;
         free(relCatRecPtr);
         free(attrCatRecPtr);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     /* Find relation in RelCat */
@@ -55,7 +56,7 @@ int Destroy(int argc, char *argv[])
     {
         free(relCatRecPtr);
         free(attrCatRecPtr);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     if (!isValidRid(startRid))
@@ -63,7 +64,7 @@ int Destroy(int argc, char *argv[])
         db_err_code = RELNOEXIST;
         free(relCatRecPtr);
         free(attrCatRecPtr);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     /* Close relation if open */
@@ -79,7 +80,7 @@ int Destroy(int argc, char *argv[])
         db_err_code = FILESYSTEM_ERROR;
         free(relCatRecPtr);
         free(attrCatRecPtr);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     /* ---------- 2. Remove the freemap file ---------- */
@@ -91,7 +92,7 @@ int Destroy(int argc, char *argv[])
         db_err_code = FILESYSTEM_ERROR;
         free(relCatRecPtr);
         free(attrCatRecPtr);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     printf("Relation %s destroyed successfully.\n", relName);
@@ -101,7 +102,7 @@ int Destroy(int argc, char *argv[])
     /* Delete from RelCat */
     if(DeleteRec(RELCAT_CACHE, startRid) == NOTOK)
     {
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(db_err_code, print_flag && flag);
     }
 
     startRid = INVALID_RID;
@@ -119,14 +120,14 @@ int Destroy(int argc, char *argv[])
             db_err_code = UNKNOWN_ERROR;
             free(relCatRecPtr);
             free(attrCatRecPtr);
-            return ErrorMsgs(db_err_code, print_flag);
+            return ErrorMsgs(db_err_code, print_flag && flag);
         }
 
         if (isValidRid(startRid))
         {
             if(DeleteRec(ATTRCAT_CACHE, startRid) == NOTOK)
             {
-                return ErrorMsgs(db_err_code, print_flag);
+                return ErrorMsgs(db_err_code, print_flag && flag);
             }
         }
         else
