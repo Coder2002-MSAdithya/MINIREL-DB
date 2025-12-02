@@ -685,7 +685,6 @@ void printCloseStrings(int catRelNum, int offset, char *typedVal, char *filter)
     {
         if(catRelNum == RELCAT_CACHE)
         {
-
             if(GetNextRec(catRelNum, startRid, &startRid, recPtr) == NOTOK)
             {
                 break; // No more records
@@ -693,8 +692,8 @@ void printCloseStrings(int catRelNum, int offset, char *typedVal, char *filter)
         }
         else
         {
-            if(FindRec(catRelNum, startRid, &startRid, recPtr, 's', ATTRNAME, 
-            offsetof(AttrCatRec, attrName), filter, CMP_EQ) == NOTOK)
+            if(FindRec(catRelNum, startRid, &startRid, recPtr, 's', RELNAME, 
+            offsetof(AttrCatRec, relName), filter, CMP_EQ) == NOTOK)
             {
                 break;
             }
