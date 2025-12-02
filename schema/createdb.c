@@ -22,35 +22,34 @@
 
 int CreateDB(int argc, char **argv)
 {
-    if(argc < 2)
-    {
-        return ErrorMsgs(ARGC_INSUFFICIENT, false);
-    }
-
     char DB_PATH[MAX_PATH_LENGTH];
 
     strncpy(DB_PATH, argv[1], MAX_PATH_LENGTH);
 
     if(!isValidPath(DB_PATH))
     {
-        return ErrorMsgs(DBPATHNOTVALID, print_flag);
+        db_err_code = DBPATHNOTVALID;
+        return ErrorMsgs(db_err_code, print_flag);
     }
     
     if(mkdir(DB_PATH, 0777) == NOTOK)
     {
         if(errno == EEXIST)
         {
-            return ErrorMsgs(DBEXISTS, print_flag);
+            db_err_code = DBEXISTS;
+            return ErrorMsgs(db_err_code, print_flag);
         }
         else
         {
-            return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+            db_err_code = FILESYSTEM_ERROR;
+            return ErrorMsgs(db_err_code, print_flag);
         }
     }
     
     if(chdir(DB_PATH) == NOTOK)
     {
-        return ErrorMsgs(FILESYSTEM_ERROR, print_flag);
+        db_err_code = FILESYSTEM_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     int flag = CreateCats();
@@ -63,7 +62,8 @@ int CreateDB(int argc, char **argv)
     }
     else
     {
-        return ErrorMsgs(CAT_CREATE_ERROR, print_flag);
+        db_err_code = CAT_CREATE_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     return flag;
