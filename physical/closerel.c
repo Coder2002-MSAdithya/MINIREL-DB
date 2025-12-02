@@ -23,13 +23,19 @@ int CloseRel(int relNum)
     // Step 1: If catalog info dirty, update relcat in the buffer
     if((entry->status) & DIRTY_MASK)
     {
-        WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid);
+        if(WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid) == NOTOK)
+        {
+            return NOTOK;
+        }
     }
         
     // Step 2: Flush dirty page if any
     if(buffer[relNum].dirty)
     {
-        FlushPage(relNum);
+        if(FlushPage(relNum) == NOTOK)
+        {
+            return NOTOK;
+        }
     }
 
     //Step 3: Invalidate cache entry
