@@ -22,18 +22,6 @@ int Destroy(int argc, char *argv[])
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    if (argc < 2)
-    {
-        db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    if (argc > 2)
-    {
-        db_err_code = TOO_MANY_ARGS;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
     char *relName = argv[1];
     void *relCatRecPtr  = malloc(sizeof(RelCatRec));
     void *attrCatRecPtr = malloc(sizeof(AttrCatRec));
@@ -111,7 +99,11 @@ int Destroy(int argc, char *argv[])
     /* ---------- 3. Now update catalogs ---------- */
 
     /* Delete from RelCat */
-    DeleteRec(RELCAT_CACHE, startRid);
+    if(DeleteRec(RELCAT_CACHE, startRid) == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     startRid = INVALID_RID;
 
     /* Delete all AttrCat entries for this relation */
@@ -132,7 +124,10 @@ int Destroy(int argc, char *argv[])
 
         if (isValidRid(startRid))
         {
-            DeleteRec(ATTRCAT_CACHE, startRid);
+            if(DeleteRec(ATTRCAT_CACHE, startRid) == NOTOK)
+            {
+                return ErrorMsgs(db_err_code, print_flag);
+            }
         }
         else
         {
