@@ -44,11 +44,6 @@
 
 int DestroyDB(int argc, char **argv)
 {
-    if(argc < 2)
-    {
-        return ErrorMsgs(ARGC_INSUFFICIENT, print_flag);
-    }
-
     if(db_open && !strcmp(DB_DIR, argv[1]))
     {
         char *argv2[] = {"closedb"};
@@ -57,7 +52,8 @@ int DestroyDB(int argc, char **argv)
 
     if(!opendir(argv[1]))
     {
-        return ErrorMsgs(DBNOTEXIST, print_flag);
+        db_err_code = DBNOTEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(remove_all_entry(argv[1]) == OK)
@@ -66,7 +62,8 @@ int DestroyDB(int argc, char **argv)
     }
     else
     {
-        return ErrorMsgs(DBDESTROYERROR, print_flag);
+        db_err_code = DBDESTROYERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     return OK;
