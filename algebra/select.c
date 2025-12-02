@@ -70,12 +70,24 @@ int Select(int argc, char **argv)
     
     /* Insert records into result relation that satisfy criteria */
     r1 = OpenRel(dstRelName);
+
+    if(r1 == NOTOK)
+    {
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
     Rid recRid = INVALID_RID;
     int offset = (foundField->attr).offset;
     int size = (foundField->attr).length;
     char type = (foundField->attr).type;
     void *valuePtr = malloc(size);
     void *recPtr = malloc(recSize);
+
+    if(!valuePtr || !recPtr)
+    {
+        db_err_code = MEM_ALLOC_ERROR;
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+    }
 
     if(!isValidForType(type, size, value, valuePtr))
     {
@@ -86,14 +98,20 @@ int Select(int argc, char **argv)
     /* Go through each record of srcRelName and filter */
     do
     {
-        FindRec(r2, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator);
+        if(FindRec(r2, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
 
         if(!isValidRid(recRid))
         {
             break;
         }
 
-        InsertRec(r1, recPtr);
+        if(InsertRec(r1, recPtr) == NOTOK)
+        {
+            return ErrorMsgs(db_err_code, print_flag);
+        }
     } 
     while(true);
 
