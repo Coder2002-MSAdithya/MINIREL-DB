@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
+#include <limits.h>
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -19,8 +21,8 @@ AttrDesc* BuildAttrList(AttrCatRec **attrArray, int numAttrs)
         if(!node)
         {
             db_err_code = MEM_ALLOC_ERROR;
-            FreeLinkedList(&head, offsetof(AttrDesc, next));
-            return NOTOK;
+            FreeLinkedList((void **)&head, offsetof(AttrDesc, next));
+            return NULL;
         }
         node->attr=*attrArray[i];
         node->next=NULL;
