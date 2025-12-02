@@ -48,7 +48,8 @@ int Insert(int argc, char **argv)
 
     if(!newRecord)
     {
-        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
+        db_err_code = MEM_ALLOC_ERROR;
+        return ErrorMsgs(db_err_code, print_flag);
     }
 
     for(int i=2; i<argc; i+=2)
