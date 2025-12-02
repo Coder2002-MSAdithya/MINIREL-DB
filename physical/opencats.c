@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "../include/defs.h"
@@ -15,6 +16,12 @@ AttrDesc* BuildAttrList(AttrCatRec **attrArray, int numAttrs)
     for(int i=0;i<numAttrs;i++)
     {
         AttrDesc *node=malloc(sizeof(AttrDesc));
+        if(!node)
+        {
+            db_err_code = MEM_ALLOC_ERROR;
+            FreeLinkedList(&head, offsetof(AttrDesc, next));
+            return NOTOK;
+        }
         node->attr=*attrArray[i];
         node->next=NULL;
 
@@ -38,6 +45,12 @@ int OpenCats()
     int rel_fd = open(RELCAT, O_RDWR);
     int attr_fd = open(ATTRCAT, O_RDWR);
 
+    if(rel_fd == NOTOK || attr_fd == NOTOK)
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
+    }
+
     // Page variable
     char page[PAGESIZE];
 
@@ -45,7 +58,11 @@ int OpenCats()
     RelCatRec Relcat_rc, Relcat_ac;
 
     // Read the first page of relcat into page buffer
-    read(rel_fd, page, PAGESIZE);
+    if(read(rel_fd, page, PAGESIZE) == NOTOK)
+    {
+        db_err_code = FILESYSTEM_ERROR;
+        return NOTOK;
+    }
 
     // The first record of relcat relation stores relcat's info
     memcpy(&Relcat_rc, page+HEADER_SIZE, sizeof(RelCatRec));
