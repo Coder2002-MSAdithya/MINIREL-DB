@@ -100,6 +100,8 @@ int Select(int argc, char **argv)
 
     if(!isValidForType(type, size, value, valuePtr))
     {
+        printf("'%s' is an INVALID literal for TYPE %s.\n", 
+        value, type == 'i' ? "INTEGER" : "FLOAT");
         db_err_code = INVALID_VALUE;
         return ErrorMsgs(db_err_code, print_flag);
     }
