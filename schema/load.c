@@ -6,27 +6,14 @@
 #include "../include/openrel.h"
 #include "../include/closerel.h"
 #include "../include/freemap.h"
+#include "../include/insertrec.h"
 #include <stdio.h>
-#include <stddef.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
 
 int Load(int argc, char **argv)
 {
-    if (argc < 3)
-    {
-        db_err_code = ARGC_INSUFFICIENT;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    if (argc > 3)
-    {
-        db_err_code = TOO_MANY_ARGS;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
     if(!db_open)
     {
         db_err_code = DBNOTOPEN;
@@ -36,23 +23,11 @@ int Load(int argc, char **argv)
     char *relName = argv[1];
     char *fileName = argv[2];
 
+    // Try to open the relation to check if it exists
     int r = OpenRel(relName);
     if (r == NOTOK)
     {
         db_err_code = RELNOEXIST;
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    Rid foundRid = INVALID_RID;
-    RelCatRec rc;
-
-    FindRec(RELCAT_CACHE, foundRid, &foundRid, &rc, 's', RELNAME,
-            offsetof(RelCatRec, relName), relName, CMP_EQ);
-
-    if (!isValidRid(foundRid))
-    {
-        db_err_code = RELNOEXIST;
-        CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -64,125 +39,68 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    int *numPgs = &(catcache[r].relcat_rec.numPgs);
-    int *numRecs = &(catcache[r].relcat_rec.numRecs);
+    int recSize = catcache[r].relcat_rec.recLength;
+    int recPerPg = catcache[r].relcat_rec.recsPerPg;
+    char *recPtr = malloc(recSize);
 
-    // Ensure relation is empty
-    if(*numPgs)
+    if(!recPtr)
     {
-        db_err_code = LOAD_NONEMPTY;
         CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
+        return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
     }
 
-    // ------------------- FILE COPY SECTION -------------------
-
-    int srcFd = open(fileName, O_RDONLY);
-    if (srcFd < 0)
+    // Open the file for reading
+    FILE *file = fopen(fileName, "rb");
+    if (!file)
     {
-        db_err_code = FILE_NO_EXIST;
-        CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    struct stat st;
-    if (fstat(srcFd, &st) < 0)
-    {
-        close(srcFd);
         db_err_code = FILESYSTEM_ERROR;
+        free(recPtr);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    off_t fileSize = st.st_size;
-    if (fileSize % PAGESIZE != 0)
+    // Read file fileName record by record each of size recSize
+    // and insert each record using InsertRec
+    int recordsRead = 0;
+    int insertResult = OK;
+    
+    while (fread(recPtr, recSize, 1, file) == 1)
     {
-        close(srcFd);
-        db_err_code = INVALID_FILE_SIZE;
-        CloseRel(r);
-        return ErrorMsgs(db_err_code, print_flag);
-    }
-
-    off_t numPages = fileSize / PAGESIZE;
-    unsigned char page[PAGESIZE];
-    int writeError = 0; // flag for rollback
-
-    for (off_t i = 0; i < numPages; i++)
-    {
-        ssize_t bytesRead = read(srcFd, page, PAGESIZE);
-        if (bytesRead != PAGESIZE)
-        {
-            writeError = 1;
-            db_err_code = FILESYSTEM_ERROR;
-            break;
-        }
-
-        // Validate the _MINIREL magic string at the beginning of the page
-        if (memcmp(page+1, GEN_MAGIC, MAGIC_SIZE-1))
-        {
-            writeError = 1;
-            db_err_code = PAGE_MAGIC_ERROR;
-            break;
-        }
-
-        // Write page to relation file
-        ssize_t bytesWritten = write(catcache[r].relFile, page, PAGESIZE);
-        if (bytesWritten != PAGESIZE)
-        {
-            writeError = 1;
-            db_err_code = FILESYSTEM_ERROR;
-            break;
-        }
-
-        // Update numPgs
-        (*numPgs)++;
-
-        // Extract 8-byte slotmap (bytes 8–15)
-        unsigned long slotmap = 0;
-        bool foundFreeSlot = false;
-        memcpy(&slotmap, page + MAGIC_SIZE, sizeof(slotmap));
-
-        // Count number of set bits in slotmap → numRecs
-        for(int b = 0; b < (sizeof(slotmap)<<3); b++)
-        {
-            if(slotmap & (1ULL << b))
-            {
-                (*numRecs)++;
-            }
-            else
-            {
-                foundFreeSlot = true;
-            }
-        }
-
-        if(foundFreeSlot)
-        AddToFreeMap(relName, i);
+        recordsRead++;
         
-        printf("Page %d - Records read till now : %d\n", (int)i, *numRecs);
+        // Insert the record into the relation
+        insertResult = InsertRec(r, recPtr);
+        
+        if (insertResult == NOTOK)
+        {
+            // InsertRec failed, db_err_code should already be set by InsertRec
+            free(recPtr);
+            fclose(file);
+            CloseRel(r);
+            return ErrorMsgs(db_err_code, print_flag);
+        }
+        
+        // Clear the buffer for the next record
+        memset(recPtr, 0, recSize);
     }
 
-    close(srcFd);
-
-    if(writeError)
+    // Check if we stopped because of read error (not EOF)
+    if (!feof(file) && ferror(file))
     {
-        // Rollback — remove any written content
-        ftruncate(catcache[r].relFile, 0);
-        lseek(catcache[r].relFile, 0, SEEK_SET);
-
-        *numPgs = 0;
-        *numRecs = 0;
-
+        db_err_code = FILESYSTEM_ERROR;
+        free(recPtr);
+        fclose(file);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    // Mark relation as dirty
-    catcache[r].status |= DIRTY_MASK;
-
+    // Clean up
+    fclose(file);
+    free(recPtr);
+    
+    // Print success message if all records were loaded successfully
+    printf("%s successfully loaded with %d tuples.\n", relName, recordsRead);
     CloseRel(r);
-
-    printf("Loaded relation '%s' successfully: %d pages, %d records.\n",
-           relName, *numPgs, *numRecs);
 
     return OK;
 }
