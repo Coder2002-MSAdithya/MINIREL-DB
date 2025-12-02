@@ -61,6 +61,12 @@ int Delete(int argc, char **argv)
             void *recPtr = malloc(recSize);
             void *valuePtr = malloc(size);
 
+            if(!recPtr || !valuePtr)
+            {
+                db_err_code = MEM_ALLOC_ERROR;
+                return ErrorMsgs(db_err_code, print_flag);
+            }
+
             if(!isValidForType(type, size, value, valuePtr))
             {
                 db_err_code = INVALID_VALUE;
@@ -69,14 +75,20 @@ int Delete(int argc, char **argv)
 
             do
             {
-                FindRec(r, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator);
+                if(FindRec(r, recRid, &recRid, recPtr, type, size, offset, valuePtr, operator) == NOTOK)
+                {
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
 
                 if(!isValidRid(recRid))
                 {
                     break;
                 }
 
-                DeleteRec(r, recRid);
+                if(DeleteRec(r, recRid) == NOTOK)
+                {
+                    return ErrorMsgs(db_err_code, print_flag);
+                }
                 recsAffected++;
             } 
             while(true);
