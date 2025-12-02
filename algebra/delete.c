@@ -28,7 +28,7 @@ int Delete(int argc, char **argv)
 
     if(strncmp(relName, RELCAT, RELNAME) == OK)
     {
-        printf("CANNOT delete record fron relcat.\n");
+        printf("CANNOT delete record from relcat.\n");
         db_err_code = METADATA_SECURITY;
         return ErrorMsgs(db_err_code, print_flag);
     }
