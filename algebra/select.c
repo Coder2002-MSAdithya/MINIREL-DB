@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 int Select(int argc, char **argv)
@@ -33,12 +34,18 @@ int Select(int argc, char **argv)
 
     if(r1)
     {
+        printf("Relation '%s' already exists in the DB.\n", dstRelName);
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
 
     if(r2 == NOTOK)
     {
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", srcRelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), srcRelName);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -57,6 +64,8 @@ int Select(int argc, char **argv)
 
     if(!attrFound)
     {
+        printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", attrName, srcRelName);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }

@@ -8,6 +8,7 @@
 #include "../include/getnextrec.h"
 #include "../include/insertrec.h"
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 
 void copy_attribute(void *srcRec, void *dstRec, AttrDesc **srcAttrDesc, AttrDesc **dstAttrDesc) 
@@ -44,8 +45,18 @@ int Join(int argc, char **argv)
     int s1 = OpenRel(src1RelName);
     int s2 = OpenRel(src2RelName);
 
-    if (s1 == NOTOK || s2 == NOTOK)
+    if (s1 == NOTOK)
     {
+        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName);
+        db_err_code = RELNOEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    if (s2 == NOTOK)
+    {
+        printf("Relation '%s' does NOT exist in the DB.\n", src2RelName);
+        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src2RelName);
         db_err_code = RELNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -53,6 +64,7 @@ int Join(int argc, char **argv)
     int d = FindRel(dstRelName);
     if (d)
     {
+        printf("Relation '%s' already exists in the DB.\n", dstRelName);
         db_err_code = RELEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -60,8 +72,18 @@ int Join(int argc, char **argv)
     AttrDesc *ad1 = FindRelAttr(s1, attrName1);
     AttrDesc *ad2 = FindRelAttr(s2, attrName2);
 
-    if (!ad1 || !ad2)
+    if (!ad1)
     {
+        printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", src1RelName, attrName1);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName1);
+        db_err_code = ATTRNOEXIST;
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    if (!ad2)
+    {
+        printf("Attribute '%s' NOT present in relation '%s' of the DB.\n", src2RelName, attrName2);
+        printCloseStrings(ATTRCAT_CACHE, offsetof(AttrCatRec, attrName), attrName2);
         db_err_code = ATTRNOEXIST;
         return ErrorMsgs(db_err_code, print_flag);
     }
@@ -71,6 +93,7 @@ int Join(int argc, char **argv)
 
     if (t1 != t2)
     {
+        printf("Type '%s' of '%s.%s' incompatible with '%s' of '%s.%s'.\n", t1, src1RelName, attrName1, t2, src2RelName, attrName2);
         db_err_code = INCOMPATIBLE_TYPES;
         return ErrorMsgs(db_err_code, print_flag);
     }
