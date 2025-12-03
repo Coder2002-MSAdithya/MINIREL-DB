@@ -103,7 +103,7 @@ int OpenCats()
     // Load relcat entry into cache[0]
     catcache[0].relcat_rec = Relcat_rc;
     catcache[0].relFile = rel_fd;
-    catcache[0].status = (PINNED_MASK | VALID_MASK); // last three bits are 1 (for metadata), 1 (for valid) and 0 (for clean)
+    catcache[0].status = (PINNED_MASK | VALID_MASK); // last three bits are 1 (for protected), 1 (for valid) and 0 (for clean)
     /* Record for attrcat is in slot 0 of the page 0 (O based indexing of pages and slots)*/
     catcache[0].relcatRid.pid = 0;
     catcache[0].relcatRid.slotnum = 0;
