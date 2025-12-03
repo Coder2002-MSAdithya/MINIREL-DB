@@ -40,12 +40,6 @@ extern AttrCatRec AttrCat_arelName;
 extern AttrCatRec AttrCat_hasIndex;
 extern AttrCatRec AttrCat_nPages;
 extern AttrCatRec AttrCat_nKeys;
-extern RelCatRec adv_rc, nn_rc, prof_rc, stud_rc;
-extern AttrCatRec profs_name, profs_id, profs_des, profs_sal;
-extern AttrCatRec stud_id, stud_name, stud_stp;
-
-extern Student students[49];
-extern Professor professors[11];
 #endif
 
 int Create (int argc, char **argv);
@@ -60,7 +54,5 @@ int Delete (int argc, char **argv);
 int Project (int argc, char **argv);
 int Select (int argc, char **argv);
 int Join (int argc, char **argv);
-
-
 int FlushPage(int relNum);
 int FindRelNum(const char *relName);
