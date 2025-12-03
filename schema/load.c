@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -45,10 +46,24 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    // Check whether every component of the path is alphanumeric
+    if(!isValidPath(fileName))
+    {
+        db_err_code = PATH_NOT_VALID;
+        return ErrorMsgs(PATH_NOT_VALID, print_flag);
+    }
+
     // Check if source file exists
     if(access(fileName, F_OK))
     {
-        db_err_code = FILE_NO_EXIST;
+        if(errno == ENOENT)
+        {
+            db_err_code = FILE_NO_EXIST;
+        }
+        else
+        {
+            db_err_code = FILESYSTEM_ERROR;
+        }
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
     }
