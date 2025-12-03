@@ -187,7 +187,7 @@ int Create(int argc, char *argv[])
         else if(format[0] == 's')
         {
             int N = atoi(format + 1);
-            ac = (AttrCatRec){offset, N, "s", "attrName", "relName", false, 0, 0};
+            ac = (AttrCatRec){offset, (N + 1), "s", "attrName", "relName", false, 0, 0};
             offset += (N + 1);
         }
 
