@@ -96,6 +96,11 @@ int ErrorMsgs(int errorNum, bool printFlag)
                        errorNum);
                 break;
             
+            case ATTR_SET_INVALID:
+                printf("Error %d: ONE or more attribute values missing for insertion.\n"
+                , errorNum);
+                break;
+            
             case DUP_ATTR_INSERT:
                 printf("Error %d: Duplicate assignment of fields in insert query NOT allowed\n", errorNum);
             
