@@ -193,7 +193,7 @@ int remove_contents(const char *dirpath)
 
 void print_page_hex(const char *buf) 
 {
-    for (int line = 0; line < PAGESIZE / BYTES_PER_LINE; ++line) {
+    for (int line = 0; line < 32 / BYTES_PER_LINE; ++line) {
         int base = line * BYTES_PER_LINE;
         /* print line number (decimal, zero-padded to 2 digits) */
         printf("%02X: ", line);
@@ -299,6 +299,19 @@ Rid IncRid(Rid rid, int recsPerPg)
     }
 
     return INVALID_RID;
+}
+
+AttrDesc *getAttrDesc(int relNum, const char *attrName)
+{
+    AttrDesc *ptr = catcache[relNum].attrList;
+    for(;ptr;ptr=ptr->next)
+    {
+        if(strncmp((ptr->attr).attrName, attrName, ATTRNAME) == OK)
+        {
+            return ptr;
+        }
+    }
+    return NULL;
 }
 
 bool isValidRid(Rid rid)

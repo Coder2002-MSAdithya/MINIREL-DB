@@ -11,19 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-AttrDesc *getAttrDesc(int relNum, const char *attrName)
-{
-    AttrDesc *ptr = catcache[relNum].attrList;
-    for(;ptr;ptr=ptr->next)
-    {
-        if(strncmp((ptr->attr).attrName, attrName, ATTRNAME) == OK)
-        {
-            return ptr;
-        }
-    }
-    return NULL;
-}
-
 int InsertProjectedRecFromLL(char *dstRelName, AttrDesc *head, void *recPtr)
 {
     if (!dstRelName || !head || !recPtr)
