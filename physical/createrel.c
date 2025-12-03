@@ -11,6 +11,13 @@ int CreateRel(char *relName, int relNum)
 {
     RelCatRec new_rc = catcache[relNum].relcat_rec;
     new_rc.numPgs = new_rc.numRecs = 0;
+
+    if(strlen(relName) >= RELNAME)
+    {
+        db_err_code = REL_LENGTH_EXCEEDED;
+        return NOTOK;
+    }
+
     AttrDesc *ptr = catcache[relNum].attrList;
     strncpy(new_rc.relName, relName, RELNAME);
 
