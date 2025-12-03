@@ -24,7 +24,7 @@
 
 #define DIRTY_MASK          1 /*LSB of status field of cache entry represents dirty*/
 #define VALID_MASK          2 /*2nd least significant bit of status field represents valid bit*/
-#define PINNED_MASK         4 /*3rd least significant bit represents whether it's a catalog relation*/
+#define PINNED_MASK         4 /*3rd least significant bit represents whether it's to be protected from being closed */
 
 #define	OK			0	/* return codes */
 #define NOTOK		-1
