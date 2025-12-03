@@ -50,7 +50,7 @@ int InsertProjectedRecFromLL(char *dstRelName, AttrDesc *head, void *recPtr)
     {
         insertArgv[argIndex++] = strdup((ptr->attr).attrName);
 
-        char type = (ptr->attr).type;
+        char type = (ptr->attr).type[0];
         int length = (ptr->attr).length;
         int offset = (ptr->attr).offset;
         char *valStr = NULL;

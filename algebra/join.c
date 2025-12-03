@@ -15,7 +15,7 @@ void copy_attribute(void *srcRec, void *dstRec, AttrDesc **srcAttrDesc, AttrDesc
 {
     int dOffset = (*dstAttrDesc)->attr.offset;
     int sOffset = (*srcAttrDesc)->attr.offset;
-    int sType = (*srcAttrDesc)->attr.type;
+    int sType = (*srcAttrDesc)->attr.type[0];
     int sSize = (*srcAttrDesc)->attr.length;
     
     writeAttrToRec((char *)dstRec, 
@@ -88,8 +88,8 @@ int Join(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    char t1 = (ad1->attr).type;
-    char t2 = (ad2->attr).type;
+    char t1 = (ad1->attr).type[0];
+    char t2 = (ad2->attr).type[0];
 
     if (t1 != t2)
     {

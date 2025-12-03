@@ -64,7 +64,7 @@ int Print(int argc, char **argv)
     {
         int nameLen = (int)strlen(p->attr.attrName);
         int dataLen;
-        switch(p->attr.type)
+        switch(p->attr.type[0])
         {
             case 'i': 
                 // Calculate maximum int string length (including sign)
@@ -140,7 +140,7 @@ int Print(int argc, char **argv)
             AttrCatRec *ac = &(p->attr);
             char *attrPtr = (char *)recPtr + ac->offset;
 
-            switch(ac->type)
+            switch(ac->type[0])
             {
                 case 'i': {
                     int ival;
