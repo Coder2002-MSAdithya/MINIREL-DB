@@ -202,7 +202,7 @@ int Insert(int argc, char **argv)
                 /* If NOT equal, then set matchingTupleFound = false */
                 char *s1 = (char *)recPtr + offset;
                 char *s2 = (char *)newRecord + offset;
-                if(compareVals(s1, s2, 's', size, CMP_EQ))
+                if(!compareVals(s1, s2, 's', size, CMP_EQ))
                 {
                     matchingTupleFound = false;
                     break;
