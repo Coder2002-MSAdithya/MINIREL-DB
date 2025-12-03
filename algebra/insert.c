@@ -39,6 +39,7 @@ int Insert(int argc, char **argv)
     }
 
     int r = OpenRel(relName);
+    int numAttrs = catcache[r].relcat_rec.numAttrs;
 
     if(r == NOTOK)
     {
@@ -143,6 +144,13 @@ int Insert(int argc, char **argv)
                 return ErrorMsgs(db_err_code, DUP_ATTR_INSERT);
             }
         }
+    }
+
+    /* We also need to check whether attribute set is correct */
+    int numInsAttrs = (argc - 2) >> 1;
+    if(numInsAttrs != numAttrs)
+    {
+        return ErrorMsgs(ATTR_SET_INVALID, print_flag);
     }
 
     /*We need to check for duplicate tuples also*/
