@@ -68,7 +68,7 @@ int Insert(int argc, char **argv)
             {
                 found = true;
                 char *value = argv[i+1];
-                char type = (ptr->attr).type;
+                char type = (ptr->attr).type[0];
                 int offset = (ptr->attr).offset;
                 int size = (ptr->attr).length;
 
@@ -165,7 +165,7 @@ int Insert(int argc, char **argv)
 
         for(;ptr;ptr=ptr->next)
         {
-            char type = (ptr->attr).type;
+            char type = (ptr->attr).type[0];
             int offset = (ptr->attr).offset;
             int size = (ptr->attr).length;
 

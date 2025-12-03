@@ -20,6 +20,7 @@
 #define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
 #define CMD_LENGTH          2048    /* Length of a command string */
 #define MAX_N               50      /* Max length of a string field */
+#define TYPE_COL_SIZE       2
 
 #define DIRTY_MASK          1 /*LSB of status field of cache entry represents dirty*/
 #define VALID_MASK          2 /*2nd least significant bit of status field represents valid bit*/
@@ -94,7 +95,7 @@ typedef struct attrcat_rec
 {
     int offset;                 	// offset of attribute within record
     int length;                 	// length of attribute
-    char type;                      // 'i', 'f', 's'
+    char type[TYPE_COL_SIZE];       // "i", "f", "s"
     char attrName[ATTRNAME]; 		// attribute name
     char relName[RELNAME];          // relation name it belongs to
     int hasIndex;

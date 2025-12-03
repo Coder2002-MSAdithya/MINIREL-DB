@@ -88,7 +88,7 @@ int Select(int argc, char **argv)
     Rid recRid = INVALID_RID;
     int offset = (foundField->attr).offset;
     int size = (foundField->attr).length;
-    char type = (foundField->attr).type;
+    char type = (foundField->attr).type[0];
     void *valuePtr = malloc(size);
     void *recPtr = malloc(recSize);
 

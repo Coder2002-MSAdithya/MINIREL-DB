@@ -436,7 +436,7 @@ int CreateFromAttrList(const char *dstRelName, AttrDesc *head)
 
         // Build attribute format string
         char format[5];
-        switch (p->attr.type)
+        switch (p->attr.type[0])
         {
             case 'i':
                 strcpy(format, "i");

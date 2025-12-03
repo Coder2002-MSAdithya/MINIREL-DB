@@ -33,15 +33,15 @@ RelCatRec prof_rc = {
 };
 
 //attrcat records for columns of Profs
-AttrCatRec profs_name = {offsetof(Professor, name), 30, 's', "name", "Profs", 0, 0, 0};
-AttrCatRec profs_id = {offsetof(Professor, id), sizeof(int), 'i', "id", "Profs", 0, 0, 0};
-AttrCatRec profs_sal = {offsetof(Professor, salary), sizeof(float), 'f', "salary", "Profs", 0, 0, 0};
-AttrCatRec profs_des = {offsetof(Professor, designation), 30, 's', "designation", "Profs", 0, 0, 0};
+AttrCatRec profs_name = {offsetof(Professor, name), 30, "s", "name", "Profs", 0, 0, 0};
+AttrCatRec profs_id = {offsetof(Professor, id), sizeof(int), "i", "id", "Profs", 0, 0, 0};
+AttrCatRec profs_sal = {offsetof(Professor, salary), sizeof(float), "f", "salary", "Profs", 0, 0, 0};
+AttrCatRec profs_des = {offsetof(Professor, designation), 30, "s", "designation", "Profs", 0, 0, 0};
 
 //attrcat records for columns of Students
-AttrCatRec stud_name = {offsetof(Student, name), 40, 's', "name", "Students", 0, 0, 0};
-AttrCatRec stud_id = {offsetof(Student, id), sizeof(int), 'i', "id", "Students", 0, 0, 0};
-AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), 'f', "stipend", "Students", 0, 0, 0};
+AttrCatRec stud_name = {offsetof(Student, name), 40, "s", "name", "Students", 0, 0, 0};
+AttrCatRec stud_id = {offsetof(Student, id), sizeof(int), "i", "id", "Students", 0, 0, 0};
+AttrCatRec stud_stp = {offsetof(Student, stipend), sizeof(float), "f", "stipend", "Students", 0, 0, 0};
 
 int CreateRelCat()
 {

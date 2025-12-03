@@ -82,11 +82,11 @@ int Load(int argc, char **argv)
     AttrDesc *ptr = catcache[r].attrList;
     while (ptr)
     {
-        if (ptr->attr.type == 'i')
+        if (ptr->attr.type[0] == 'i')
         {
             int_count++;
         }
-        else if (ptr->attr.type == 'f')
+        else if (ptr->attr.type[0] == 'f')
         {
             float_count++;
         }
@@ -122,11 +122,11 @@ int Load(int argc, char **argv)
     int int_idx = 0, float_idx = 0;
     while (ptr)
     {
-        if (ptr->attr.type == 'i')
+        if (ptr->attr.type[0] == 'i')
         {
             int_offsets[int_idx++] = ptr->attr.offset;
         }
-        else if (ptr->attr.type == 'f')
+        else if (ptr->attr.type[0] == 'f')
         {
             float_offsets[float_idx++] = ptr->attr.offset;
         }

@@ -60,7 +60,7 @@ int Delete(int argc, char **argv)
         {
             found = true;
             Rid recRid = INVALID_RID;
-            char type = (ptr->attr).type;
+            char type = (ptr->attr).type[0];
             int offset = (ptr->attr).offset;
             int size = (ptr->attr).length;
             void *recPtr = malloc(recSize);
