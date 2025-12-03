@@ -48,6 +48,7 @@ int ErrorMsgs(int errorNum, bool printFlag);
 #define DBPATHNOTVALID 506 /* The path to the database is NOT valid */
 #define DBPREFIXNOTFOUND 507 /* A prefix to the path does NOT exist */
 #define DBDESTROYERROR  508 /* DB directory could not be deleted */
+#define PATH_NOT_VALID  509 /* Path to load file is INVALID */
 #define FILESYSTEM_ERROR   801 /* OS gives an error */
 #define FILE_NO_EXIST   802 /* The file does NOT exist */
 #define LOAD_NONEMPTY   803 /* Attempt to load data into a non-empty relation */

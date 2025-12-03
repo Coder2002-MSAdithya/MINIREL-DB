@@ -188,6 +188,11 @@ int ErrorMsgs(int errorNum, bool printFlag)
                         "Only paths containing alphabets and digits other than / are allowed.\n", errorNum);
                     break;
             
+            case PATH_NOT_VALID:
+                    printf("Error %d: The path you have provided to load a file contains illegal characters"
+                        "Only paths containing alphabets and digits other than / are allowed.\n", errorNum);
+                    break;
+            
             case DBDESTROYERROR:
                     printf("Deletion of DB directory NOT successful..\n");
                     break;
