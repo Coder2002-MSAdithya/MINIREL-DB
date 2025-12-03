@@ -8,12 +8,12 @@
 #include "../include/globals.h"
 #include "../include/helpers.h"
 
-
 int FlushPage(int relNum)
 {
     if (relNum < 0 || relNum >= MAXOPEN)
     {
-        return ErrorMsgs(INVALID_RELNUM, print_flag);
+        db_err_code = NOTOK;
+        return NOTOK;
     }
 
     Buffer *buf = &buffer[relNum];
@@ -47,11 +47,6 @@ int FlushPage(int relNum)
     }
 
     buf->dirty = 0;
-
-    if (debug_flag)
-    {
-        // printf("[DEBUG] Flushed dirty page %d of relation '%s' to disk\n", buf->pid, entry->relcat_rec.relName);
-    }
 
     return OK;
 }
