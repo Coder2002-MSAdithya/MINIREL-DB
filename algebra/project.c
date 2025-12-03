@@ -5,6 +5,7 @@
 #include "../include/openrel.h"
 #include "../include/findrel.h"
 #include "../include/getnextrec.h"
+#include "../include/createfromattrlist.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>

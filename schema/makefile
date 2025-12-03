@@ -11,7 +11,7 @@ CFLAGS = -g $(DFLAG) -I$(INCLUDE)
 
 SRCS = \
 	createdb.c opendb.c closedb.c destroydb.c quit.c \
-	create.c destroy.c load.c print.c sort.c buildindex.c dropindex.c
+	create.c createfromattrlist.c destroy.c load.c print.c sort.c buildindex.c dropindex.c
 
 OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 

@@ -7,6 +7,7 @@
 #include "../include/findrelattr.h"
 #include "../include/getnextrec.h"
 #include "../include/insertrec.h"
+#include "../include/createfromattrlist.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
