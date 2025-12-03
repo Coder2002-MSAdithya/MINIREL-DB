@@ -15,7 +15,7 @@
 #define HEADER_SIZE	        16	    /* number of bytes in header */
 #define	MAXRECORD	        (PAGESIZE - HEADER_SIZE)	/* PAGESIZE minus number of bytes taken up for header */
 #define RELNAME		        20	    /* max length of a relation name */
-#define MAXOPEN		        20      /* max number of files that can be open at the same time */
+#define MAXOPEN		        6      /* max number of files that can be open at the same time */
 #define ATTRNAME	        20      /* max length of an attribute name */
 #define MAX_PATH_LENGTH		1024    /*max length of a path passed as command line arg */
 #define CMD_LENGTH          2048    /* Length of a command string */
@@ -52,9 +52,6 @@
 #define ATTRCAT_NUMATTRS 8
 
 #define NUM_CATS         2
-
-#define NT_RELCAT 2
-#define NT_ATTRCAT 7
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -139,21 +136,6 @@ typedef struct
     float similarity;
     int edit_distance;
 } Candidate;
-
-typedef struct Student
-{
-    char name[40];
-    int id;
-    float stipend;
-} Student;
-
-typedef struct Professor
-{
-    char name[30];
-    int id;
-    float salary;
-    char designation[30];
-} Professor;
 
 #endif
 
