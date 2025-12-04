@@ -104,7 +104,7 @@ int OpenRel(const char *relName)
 
     if(freeSlot == -1)
     {
-        db_err_code == BUFFER_FULL;
+        db_err_code = BUFFER_FULL;
         return NOTOK;
     }
 
