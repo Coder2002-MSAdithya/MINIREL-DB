@@ -70,6 +70,7 @@ int OpenRel(const char *relName)
     
     if (relNum != NOTOK)
     {
+        printf("Slot %d chosen for relation %s.\n", relNum, relName);
         catcache[relNum].timestamp = (uint32_t)time(NULL);
         return relNum;  // Already open
     }
@@ -128,8 +129,7 @@ int OpenRel(const char *relName)
         return NOTOK;
     }
 
-    printf("Victim slot %d chosen for relation %s of DB.\n", freeSlot, relNum);
-    PinRel(freeSlot);
+    printf("Victim slot %d chosen for relation %s of DB.\n", freeSlot, relName);
 
     int fd = open(rc.relName, O_RDWR);
 
@@ -141,7 +141,7 @@ int OpenRel(const char *relName)
 
     catcache[freeSlot].relcat_rec = rc;
     catcache[freeSlot].relFile = fd;
-    catcache[freeSlot].status = VALID_MASK;
+    catcache[freeSlot].status = (VALID_MASK | PINNED_MASK);
     catcache[freeSlot].relcatRid = startRid;
     catcache[freeSlot].attrList = NULL; 
 

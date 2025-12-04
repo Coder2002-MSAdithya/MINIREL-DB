@@ -56,7 +56,7 @@ int FlushPage(int relNum)
         return NOTOK;
     }
 
-    OpenRel(relNum);
+    // OpenRel(catcache[relNum].relcat_rec.relName);
 
     Buffer *buf = &buffer[relNum];
     CacheEntry *entry = &catcache[relNum];

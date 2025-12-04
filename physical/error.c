@@ -178,7 +178,7 @@ int ErrorMsgs(int errorNum, bool printFlag)
                     break;
             
             case BUFFER_FULL:
-                    printf("Error %d: Buffer of relation catalog cache is full. CANNOT open any more relations.\n");
+                    printf("Error %d: Buffer of relation catalog cache is full. CANNOT open any more relations.\n", errorNum);
                     break;
 
             case DBNOTEXIST:

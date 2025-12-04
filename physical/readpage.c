@@ -61,7 +61,7 @@ int ReadPage(int relNum, short pid)
         return NOTOK;
     }
 
-    OpenRel(relNum);
+    // OpenRel(catcache[relNum].relcat_rec.relName);
 
     Buffer *buf = &buffer[relNum];
     CacheEntry *entry = &catcache[relNum];
