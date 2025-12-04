@@ -1,0 +1,58 @@
+createdb EC2;
+opendb EC2;
+create Users ( UserId = i, Name = s20, Email = s30, Age = i, Balance = f );
+insert into Users ( UserId = 1, Name = "Alice", Email = "alice@example.com
+", Age = 28, Balance = 1250.50 );
+insert into Users ( UserId = 2, Name = "Bob", Email = "bob@example.com
+", Age = 34, Balance = 980.75 );
+insert into Users ( UserId = 3, Name = "Charlie", Email = "charlie@example.com
+", Age = 22, Balance = 300.00 );
+print Users;
+select into BigSpenders from Users where ( Balance >= 1000.00 );
+print BigSpenders;
+project into UserContacts from Users ( Name, Email );
+print UserContacts;
+create Products ( ProductId = i, Name = s25, Category = s15, Price = f, Stock = i );
+insert into Products ( ProductId = 1, Name = "Laptop", Category = "Electronics", Price = 89999.99, Stock = 10 );
+insert into Products ( ProductId = 2, Name = "Shoes", Category = "Fashion", Price = 2999.99, Stock = 50 );
+insert into Products ( ProductId = 3, Name = "Book", Category = "Stationery", Price = 499.99, Stock = 100 );
+print Products;
+select into Electronics from Products where ( Category = "Electronics" );
+print Electronics;
+create Orders ( OrderId = i, UserId = i, Total = f, Status = s10 );
+insert into Orders ( OrderId = 1, UserId = 1, Total = 1250.50, Status = "PLACED" );
+insert into Orders ( OrderId = 2, UserId = 2, Total = 2999.99, Status = "SHIPPED" );
+print Orders;
+join into UserOrders ( Users.UserId, Orders.UserId );
+print UserOrders;
+create OrderItems ( ItemId = i, OrderId = i, ProductId = i, Quantity = i, Price = f );
+insert into OrderItems ( ItemId = 1, OrderId = 1, ProductId = 3, Quantity = 2, Price = 499.99 );
+insert into OrderItems ( ItemId = 2, OrderId = 2, ProductId = 2, Quantity = 1, Price = 2999.99 );
+print OrderItems;
+join into OrderWithItems ( Orders.OrderId, OrderItems.OrderId );
+print OrderWithItems;
+delete from Users where ( UserId = 3 );
+print Users;
+delete from OrderItems where ( Quantity > 1 );
+print OrderItems;
+project into OrderSummaries from Orders ( OrderId, Total );
+print OrderSummaries;
+create Suppliers ( SupplierId = i, Name = s30, Contact = s20 );
+insert into Suppliers ( SupplierId = 1, Name = "SupplyOne", Contact = "supplyone@example.com
+" );
+print Suppliers;
+create Inventory ( ProductId = i, SupplierId = i, Qty = i, Warehouse = s20 );
+insert into Inventory ( ProductId = 1, SupplierId = 1, Qty = 8, Warehouse = "W1" );
+insert into Inventory ( ProductId = 2, SupplierId = 1, Qty = 45, Warehouse = "W2" );
+print Inventory;
+join into ProductInventory ( Products.ProductId, Inventory.ProductId );
+print ProductInventory;
+select into LowStock from Inventory where ( Qty < 10 );
+print LowStock;
+delete from Products where ( Stock < 20 );
+print Products;
+insert into Products ( ProductId = 4, Name = "Mouse", Category = "Electronics", Price = 999.99, Stock = 60 );
+print Products;
+project into CompactProducts from Products ( ProductId, Name, Price );
+print CompactProducts;
+quit;

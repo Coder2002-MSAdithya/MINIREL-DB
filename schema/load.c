@@ -1,5 +1,4 @@
 /************************INCLUDES*******************************/
-
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -9,6 +8,7 @@
 #include "../include/closerel.h"
 #include "../include/freemap.h"
 #include "../include/insertrec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <sys/stat.h>
@@ -331,7 +331,7 @@ int Load(int argc, char **argv)
     
     // Print success message if all records were loaded successfully
     printf("%s successfully loaded with %d tuples.\n", relName, recordsRead);
-    CloseRel(r);
+    UnPinRel(r);
 
     return OK;
 }
