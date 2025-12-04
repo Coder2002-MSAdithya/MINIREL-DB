@@ -7,6 +7,7 @@
 #include "../include/helpers.h"
 #include "../include/insertrec.h"
 #include "../include/getnextrec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -320,12 +321,14 @@ int Insert(int argc, char **argv)
         if(flag)
         printf("Inserted record successfully into %s\n", relName);
         free(newRecord);
+        UnPinRel(r);
         return OK;
     }
     else
     {
         free(newRecord);
         db_err_code = REC_INS_ERR;
+        UnPinRel(r);
         return ErrorMsgs(db_err_code, print_flag && flag);
     }
 }

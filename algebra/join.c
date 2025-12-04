@@ -10,6 +10,7 @@
 #include "../include/getnextrec.h"
 #include "../include/insertrec.h"
 #include "../include/createfromattrlist.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -584,6 +585,9 @@ int Join(int argc, char **argv)
     } /* outer */
 
     free(recPtr1); free(recPtr2);
+    UnPinRel(s1);
+    UnPinRel(s2);
+    UnPinRel(d);
     printf("Join of relations %s and %s into %s successfully performed.\n",
            src1RelName, src2RelName, dstRelName);
     return OK;

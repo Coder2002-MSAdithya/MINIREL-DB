@@ -7,6 +7,7 @@
 #include "../include/openrel.h"
 #include "../include/findrec.h"
 #include "../include/deleterec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -185,6 +186,7 @@ int Delete(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    UnPinRel(r);
     printf("%d records successfully deleted from relation %s\n", recsAffected, relName);
 
     return OK;

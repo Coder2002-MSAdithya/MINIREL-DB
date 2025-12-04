@@ -9,6 +9,7 @@
 #include "../include/findrec.h"
 #include "../include/insertrec.h"
 #include "../include/createrel.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -203,6 +204,9 @@ int Select(int argc, char **argv)
         }
     } 
     while(true);
+
+    UnPinRel(r1);
+    UnPinRel(r2);
 
     printf("Created relation %s successfully and placed filtered tuples of %s\n", 
     dstRelName, srcRelName);

@@ -8,6 +8,7 @@
 #include "../include/findrel.h"
 #include "../include/getnextrec.h"
 #include "../include/createfromattrlist.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -346,6 +347,7 @@ int Project(int argc, char **argv)
     }
     while(true);
 
+    UnPinRel(r);
     printf("Projected relation %s into %s successfully.\n", srcRelName, dstRelName);
 
     return OK;
