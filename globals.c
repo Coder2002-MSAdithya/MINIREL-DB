@@ -1,3 +1,23 @@
+/*---------------------------------------------------------------------
+
+FILE: globals.c
+PURPOSE:
+    Defines all global runtime state for the MINIREL DBMS, including:
+        • Catalog cache (catcache[])
+        • Buffer pool for files (buffer[])
+        • Buffer pool for index pages (idx_buffer[])
+        • Global DB directory state
+        • Runtime flags
+        • Error code storage
+        • Precomputed catalog record layout descriptors
+
+    These globals are imported across almost all MINIREL modules.
+
+-----------------------------------------------------------------------*/
+
+
+/************************INCLUDES*******************************/
+
 #include "include/globals.h"
 #include "include/helpers.h"
 #include "include/defs.h"

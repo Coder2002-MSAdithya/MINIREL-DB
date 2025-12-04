@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stddef.h>
 #include "../include/globals.h"

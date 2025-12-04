@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <string.h>
 #include "../include/defs.h"
 #include "../include/globals.h"
