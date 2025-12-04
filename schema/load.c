@@ -147,9 +147,11 @@ int Load(int argc, char **argv)
     int r = OpenRel(relName);
     if (r == NOTOK)
     {
-        printf("Relation '%s' does NOT exist in the DB.\n", relName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
-        db_err_code = RELNOEXIST;
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", relName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), relName, NULL);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
