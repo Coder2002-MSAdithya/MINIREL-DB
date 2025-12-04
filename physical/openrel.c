@@ -13,6 +13,52 @@
 #include "../include/findrec.h"
 #include "../include/closerel.h"
 
+
+/*------------------------------------------------------------
+
+FUNCTION OpenRel (relName)
+
+PARAMETER DESCRIPTION:
+    relName  → Name of the relation whose heap file and catalog information must be loaded into an open-cache slot.
+
+FUNCTION DESCRIPTION:
+    This routine is responsible for making a relation available for tuple-level operations. 
+    It ensures the relation’s metadata (RelCatRec + its AttrCatRec linked list) are loaded into an available catcache slot, and its file is opened for R/W.
+    If the relation is already open, its timestamp is refreshed and the corresponding relation number is returned.
+    If the cache is full, the least-recently-used relation (determined via timestamps) is closed and reused.
+
+ALGORITHM:
+    1) Check if the relation is already open using FindRelNum().
+        If yes, update timestamp and return cached relNum.
+    2) Search for a free cache slot among slots [2..MAXOPEN-1]. Slots 0 and 1 are for catalog relations.)
+    3) If no free slot exists, select a victim slot using an LRU policy: the slot with the smallest timestamp.
+    4) Ensure the victim slot is closed via CloseRel().
+    5) Lookup the relation in the relcat using FindRec().
+        If not present, return RELNOEXIST.
+    6) Open the associated file via open().
+    7) Copy the retrieved RelCatRec into the selected cache slot and set:
+        - relFile descriptor,
+        - status = VALID_MASK,
+        - relcatRid for future catalog writes,
+        - timestamp for LRU bookkeeping.
+    8) Build the linked list of attribute descriptors for this relation by repeatedly scanning attrcat using FindRec() on attrCat.relName = relName, and allocate AttrDesc nodes.
+    9) Return the cache slot index.
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    RELNOEXIST         – relation not in relcat
+    FILESYSTEM_ERROR   – File could not be opened
+    MEM_ALLOC_ERROR    – failed to allocate AttrDesc node
+
+GLOBAL VARIABLES MODIFIED:
+    catcache[]         – new cache entry created/updated
+    db_err_code        – set on error
+    buffer[]           – indirectly affected when CloseRel evicts pages
+
+------------------------------------------------------------*/
+
 int OpenRel(const char *relName)
 {
     // Step 1: Check if already open

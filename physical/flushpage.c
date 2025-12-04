@@ -9,6 +9,42 @@
 #include "../include/helpers.h"
 
 
+/*------------------------------------------------------------
+
+FUNCTION FlushPage (relNum)
+
+PARAMETER DESCRIPTION:
+    relNum → index into the catcache[]
+
+FUNCTION DESCRIPtION:
+    The routine writes the dirty page currently held in buffer[relNum] back to disk. 
+    If no dirty bit is set, the routine returns immediately. 
+    If the relation file descriptor is invalid, or if any filesystem operation fails, an error is reported.
+
+ALGORITHM:   
+    1) Validates relNum.
+    2) Checks whether the relation's file descriptor is valid.
+    3) Returns OK immediately if the page is not dirty.
+    4) Computes the correct byte offset = pid * PAGESIZE.
+    5) Seeks to the offset and writes PAGESIZE bytes.
+    6) Clears the dirty flag upon successful write.
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    INVALID_RELNUM
+    FILESYSTEM_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    buffer[relNum].dirty
+    db_err_code (on errors)
+
+IMPLEMENTATION NOTES:
+    • FlushPage() is invoked automatically by ReadPage() when switching to a new page, and by CloseRel() when closing the relation.
+
+------------------------------------------------------------*/
+
 int FlushPage(int relNum)
 {
     if (relNum < 0 || relNum >= MAXOPEN)

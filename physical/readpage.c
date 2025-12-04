@@ -9,6 +9,46 @@
 #include "../include/helpers.h"
 
 
+/*------------------------------------------------------------
+
+FUNCTION ReadPage (relNum, pid)
+
+PARAMETER DESCRIPTION:
+    relNum → integer index into the catcache[]
+    pid    → page identifier (0 ≤ pid < number of pages in relation)
+
+FUNCTION DESCRIPTION:
+    This routine loads page pid of relation relNum into that relation’s buffer slot (buffer[relNum]). 
+    If the page already resides in the buffer, no disk access is performed.
+    If the current page in the buffer is dirty, it is first flushed to disk via FlushPage(). 
+    After ensuring consistency, ReadPage positions the file pointer to the correct location and reads exactly PAGESIZE bytes into buffer[relNum].page.
+
+ALGORITHM:
+    1) Validate relNum and pid against legal bounds.
+    2) Verify that the relation file descriptor is valid.
+    3) If the requested page is already buffered, return OK.
+    4) If the buffer contains a dirty page, flush it.
+    5) Compute the byte offset pid*PAGESIZE.
+    6) Seek to the offset and read PAGESIZE bytes into memory.
+    7) Update buffer metadata (pid, dirty flag).
+    8) Return OK upon success, NOTOK otherwise.
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    INVALID_RELNUM
+    PAGE_OUT_OF_BOUNDS
+    REL_OPEN_ERROR
+    FILESYSTEM_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    buffer[relNum].pid
+    buffer[relNum].dirty
+    db_err_code (on errors)
+
+------------------------------------------------------------*/
+
 int ReadPage(int relNum, short pid)
 {
     // Validate relation number

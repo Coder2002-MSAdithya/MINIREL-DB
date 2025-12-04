@@ -5,6 +5,43 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/*------------------------------------------------------------
+
+FUNCTION CreateFromAttrList(dstRelName, head)
+
+PARAMETER DESCRIPTION:
+    dstRelName – new relation name to create
+    head       – linked list of AttrDesc describing schema
+
+FUNCTION DESCRIPTION:
+    Utility for SELECT, PROJECT, JOIN. 
+    Builds a synthetic argv[] equivalent to:
+        create dstRelName attr1 type1 attr2 type2 ... and calls the regular Create() routine.
+
+ALGORITHM:
+    1) Count attributes.
+    2) Allocate argv array of size 2+2*k, where k is number of attributes.
+    3) Set:
+        argv[0] = "_create"
+        argv[1] = dstRelName
+        argv[i] = attrName, 
+        argv[i+1] = typeString
+    4) Call Create().
+    5) Free argv.
+
+BUGS:
+    None known.
+
+ERRORS REPORTED:
+    None.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+
+------------------------------------------------------------*/
+
+
 int CreateFromAttrList(const char *dstRelName, AttrDesc *head)
 {
     if (!dstRelName || !head)

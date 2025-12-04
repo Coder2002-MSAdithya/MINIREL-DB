@@ -11,14 +11,68 @@
 #include <unistd.h>
 #include <errno.h>
 
-/**
- * Creates a new database. It creates the relation and attribute catalogs and loads them with
- * the appropriate initial information.
- *
- * @param argc
- * @param argv
- * @return OK or NOTOK
- */
+
+/*------------------------------------------------------------
+
+FUNCTION CreateDB (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc  → number of command-line arguments.
+    argv  → pointer to an array of argument strings.
+
+SPECIFICATIONS:
+    argv[0] = "createdb"
+    argv[1] = name (or path) of the database directory to create
+    argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    The routine creates a new database directory in the filesystem, initializes it, creates the system catalogs (relation catalog and attribute catalog), and populates them with their initial entries.
+    Rules and requirements:
+        • The specified path must be a valid filesystem path.
+        • The database directory must not already exist.
+        • The routine must create the directory and switch into it.
+        • Catalog files must be created and initialized correctly.
+        • Any failure in directory creation, path validation, or catalog creation must generate an appropriate error.
+    A database is considered successfully created only if:
+        (1) Directory creation succeeds.
+        (2) Switching into the directory succeeds.
+        (3) CreateCats() completes without error.
+
+ALGORITHM:
+    1) Extract the database path from argv[1].
+    2) Validate the path using isValidPath():
+        if invalid → return DBPATHNOTVALID.
+    3) Attempt to create the directory using mkdir():
+        if directory already exists → return DBEXISTS.
+        if any other filesystem error → return FILESYSTEM_ERROR.
+    4) Change directory (chdir) into the newly created DB directory:
+        if this fails → return FILESYSTEM_ERROR.
+    5) Call CreateCats() to build the relation and attribute catalogs:
+        if catalog creation fails → return CAT_CREATE_ERROR.
+    6) Return to the original working directory.
+    7) If all operations succeed, print a success message.
+    8) Return OK.
+
+BUGS:
+    None known.
+
+ERRORS REPORTED:
+      DBPATHNOTVALID     - The provided database path is invalid.
+      DBEXISTS           - A database directory with the same name already exists.
+      FILESYSTEM_ERROR   - mkdir() or chdir() failed due to OS-level issues.
+      CAT_CREATE_ERROR   - Catalog creation failed internally.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+    ORIG_DIR (indirectly through chdir())
+    print_flag (used by ErrorMsgs)
+
+IMPLEMENTATION NOTES:
+    • CreateCats() is responsible for constructing relcat and attrcat files.
+    • On error, error messages are produced through ErrorMsgs().
+    • After creating the DB, the working directory is restored to ORIG_DIR.
+
+------------------------------------------------------------*/
 
 int CreateDB(int argc, char **argv)
 {

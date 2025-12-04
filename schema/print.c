@@ -11,6 +11,67 @@
 #include <limits.h>
 #include <float.h>
 
+
+/*------------------------------------------------------------
+
+FUNCTION Print (argc, argv)
+
+PARAMETER DESCRIPTION:
+       argc → total number of arguments.
+       argv → array of argument strings.
+
+SPECIFICATIONS:
+    argv[0] = "print"
+    argv[1] = relation name
+    argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    This routine implements a formatted table-style display of all tuples stored in a given relation. 
+    It prints a well-aligned header, column separators, and every record  in the relation using attribute-appropriate formatting (integers, floating-point values, and strings).
+    For floating-point attributes, the routine automatically chooses a readable representation: fixed-point when appropriate and scientific notation when the numeric range or precision requires it. 
+    String attributes are trimmed of trailing spaces and NULL characters.
+    This is strictly a read-only operator.
+
+ALGORITHM:
+    1) Ensure a database is currently open.
+    2) Verify that the given relation exists and call OpenRel().
+    3) Count number of attributes in the relation.
+    4) Allocate an array of column widths.
+    5) Determine each column’s width:
+        a) Width = max(attribute-name length, maximum printable data width) + padding.
+        b) For integers, compute max printable width using INT_MIN.
+        c) For floats, compute maximum width across:
+            • normal fixed-decimal printing
+            • scientific notation for FLT_MAX and –FLT_MAX
+        d) For strings, width is the attribute’s defined length.
+    6) Print header and separators.
+    7) Repeatedly call GetNextRec() to scan every tuple:
+        a) For each attribute:
+            • Read data at offset
+            • Convert to printable string (via helper routines)
+            • Print left/right-aligned depending on type
+        b) Maintain row count.
+    8) Print final separator and summary line showing number of rows.
+    9) Free all dynamic memory and return OK.
+
+BUGS:
+    None known.
+
+ERRORS REPORTED:
+    DBNOTOPEN        – Database was not opened.
+    RELNOEXIST       – Relation not present in catalog.
+    MEM_ALLOC_ERROR  – Failure during memory allocation.
+
+GLOBAL VARIABLES MODIFIED:
+       db_err_code  – Set upon encountering an error.
+
+IMPLEMENTATION NOTES (IF ANY):
+    • Uses GetNextRec for record-by-record sequential scanning.
+    • Uses dynamic formatting helpers:
+        formatIntValue(), formatFloatValue(), formatStringValue(
+
+------------------------------------------------------------*/
+
 /* assume all required headers, types, and globals (db_open, db_err_code, etc.) are defined */
 static void printSeparator(AttrDesc *attrList, int *colWidths);
 static void printHeader(AttrDesc *attrList, int *colWidths);

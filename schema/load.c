@@ -14,7 +14,39 @@
 #include <string.h>
 #include <unistd.h>
 
-// Helper function to swap bytes for endianness conversion
+
+/*------------------------------------------------------------
+
+FUNCTION swap_bytes (data, size)
+
+PARAMETER DESCRIPTION:
+    data : Pointer to a byte-buffer containing a single value.
+    size : Number of bytes making up that value (typically sizeof(int) = 4 or sizeof(float) = 4).
+
+FUNCTION DESCRIPTION:
+    This routine reverses the byte order of the object stored at *data. 
+    It is used to convert values from little-endian format to big-endian format (or vice-versa).
+
+ALGORITHM:
+    1) Loop i from 0 to [(size/2)-1].
+    2) For each i, swap data[i] with data[size-1-i].
+    3) After the loop, the buffer pointed to by 'data' has reversed byte ordering.
+
+ERRORS REPORTED:
+    None. The caller must ensure:
+        - 'data' is not NULL.
+        - 'size' is the correct width of the object being swapped.
+
+GLOBAL VARIABLES MODIFIED:
+       None.
+
+IMPLEMENTATION NOTES:
+    - This is a low-level helper and does NOT perform alignment checks.
+    - Must be used consistently when reading binary files that were produced on systems of different endian architectures.
+    - Only needed on little-endian systems when data arrives in big-endian form.
+
+------------------------------------------------------------*/
+
 static void swap_bytes(char *data, size_t size)
 {
     for (size_t i = 0; i < size / 2; i++)
@@ -24,6 +56,79 @@ static void swap_bytes(char *data, size_t size)
         data[size - 1 - i] = temp;
     }
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION Load (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc : Number of arguments in the command.
+    argv : Argument vector:
+    
+SPECIFICATIONS:
+    argv[0] = "load"
+    argv[1] = relation name
+    argv[2] = filename containing raw records
+    argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    The LOAD command bulk-loads binary tuples from an external file directly into an existing MINIREL relation. 
+    Each tuple in the external file must already be laid out in the exact binary format of the target relation schema (i.e., attribute offsets, sizes, and total record length must match).
+    The routine:
+        - Verifies that the database is open.
+        - Opens the target relation and confirms it exists.
+        - Validates the filepath syntax and checks existence of the external file.
+        - Determines the system's endian architecture.
+        - Precomputes offsets of INT and FLOAT attributes for on-the-fly byte-swapping.
+        - Reads one record at a time from the source file.
+        - Performs endian conversion for INT and FLOAT attributes (external file is assumed big-endian; host system may be little-endian).
+        - Inserts each tuple using InsertRec(), thereby updating the relation file and freemap.
+        - Stops on any failed INSERT and reports the appropriate error.
+    Upon successful completion, all tuples in the external file appear in the relation (unless InsertRec rejected some tuple due to duplicate keys or other constraints).
+
+ALGORITHM:
+    1) Verify db_open; else report DBNOTOPEN.
+    2) Attempt OpenRel(relName); if fails, print catalog-based error.
+    3) Validate fileName with isValidPath(); reject illegal characters.
+    4) Check file existence via access(); otherwise FILE_NO_EXIST or FILESYSTEM_ERROR.
+    5) Lookup record size and attribute descriptors from catcache.
+    6) Allocate record buffer recPtr.
+    7) Detect host endianness.
+    8) Traverse attribute list twice:
+        a) First pass → count number of INT and FLOAT attributes.
+        b) Second pass → record their byte offsets inside the tuple.
+    9) fopen() the external file in "rb" mode.
+    10) Repeatedly fread() tuples of size recSize:
+        a) If system is little-endian, swap bytes of all INT/FLOAT fields.
+        b) Call InsertRec() to append tuple into the file.
+        c) Stop immediately if InsertRec() returns NOTOK.
+    11) Check for incomplete read or file error → FILESYSTEM_ERROR.
+    12) Free all allocated buffers and close file.
+    13) CloseRel() the target relation.
+    14) Print success message indicating number of tuples loaded.
+
+ERRORS REPORTED:
+    DBNOTOPEN        – No open database.
+    RELNOEXIST       – Target relation not found.
+    PATH_NOT_VALID   – External filename contains illegal characters.
+    FILE_NO_EXIST    – External file does not exist.
+    FILESYSTEM_ERROR – OS-level I/O failure while opening or reading file.
+    MEM_ALLOC_ERROR  – Failed to allocate record buffer or offset arrays.
+    REC_INS_ERR      – InsertRec() failure for a particular tuple.
+    Any InsertRec()-level error (e.g., DUP_ROWS, REL_PAGE_LIMIT_REACHED) is also propagated.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+    Relation file and freemap files (via InsertRec)
+    Catalog entry for numRecs via InsertRec()
+
+IMPLEMENTATION NOTES:
+    - MINIREL assumes the load file is a raw binary file produced in big-endian attribute layout; this routine converts to host byte order automatically.
+    - Load files must strictly follow the schema layout.
+    - The function does not allow loading into non-existent or schema-mismatched relations; InsertRec() enforces per-tuple constraints such as duplicate prevention.
+
+------------------------------------------------------------*/
 
 int Load(int argc, char **argv)
 {
