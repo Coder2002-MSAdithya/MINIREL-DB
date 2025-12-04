@@ -277,17 +277,21 @@ int Join(int argc, char **argv)
 
     if (s1 == NOTOK)
     {
-        printf("Relation '%s' does NOT exist in the DB.\n", src1RelName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName, NULL);
-        db_err_code = RELNOEXIST;
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", src1RelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src1RelName, NULL);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
     if (s2 == NOTOK)
     {
-        printf("Relation '%s' does NOT exist in the DB.\n", src2RelName);
-        printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src2RelName, NULL);
-        db_err_code = RELNOEXIST;
+        if(db_err_code == RELNOEXIST)
+        {
+            printf("Relation '%s' does NOT exist in the DB.\n", src2RelName);
+            printCloseStrings(RELCAT_CACHE, offsetof(RelCatRec, relName), src2RelName, NULL);
+        }
         return ErrorMsgs(db_err_code, print_flag);
     }
 
@@ -483,7 +487,7 @@ int Join(int argc, char **argv)
 
     /* Step 4: open dest and insert joined rows (same as before) */
     d = OpenRel(dstRelName);
-    if (d == NOTOK) { db_err_code = RELNOEXIST; return ErrorMsgs(db_err_code, print_flag); }
+    if (d == NOTOK) { return ErrorMsgs(db_err_code, print_flag); }
 
     if(d == s1 || d == s2 || s1 == s2)
     {
