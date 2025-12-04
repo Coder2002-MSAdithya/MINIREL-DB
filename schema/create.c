@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,94 @@
 #include "../include/findrec.h"
 #include "../include/findrel.h"
 #include "../include/freemap.h"   // <-- for build_fmap_filename
+
+
+/*------------------------------------------------------------
+
+FUNCTION Create (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc : Number of command-line arguments.
+    argv : Argument vector where:
+
+SPECIFICATIONS:
+    argv[0] = "create"
+    argv[1] = relation name
+    argv[2] = attribute name 1
+    argv[3] = attribute format 1   ("i", "f", or "sN")
+    argv[4] = attribute name 2
+    argv[5] = attribute format 2
+    ...
+    argv[argc-2] = attribute name K
+    argv[argc-1] = attribute format K
+    argv[argc]   = NIL
+
+FUNCTION DESCRIPTION:
+    The CREATE command defines a new base relation and writes corresponding entries into the relation catalog (relcat) and attribute catalog (attrcat). 
+    It:
+        - Validates that the database is open.
+        - Ensures the relation name is legal and does not already exist.
+        - Validates attribute names and checks for duplicates.
+        - Validates attribute type formats:
+            • "i" → integer (4 bytes)
+            • "f" → float   (4 bytes)
+            • "sN" → string of length N (N+1 bytes stored)
+        - Computes the total record length to ensure the record fits within a MINIREL data page.
+        - Creates an empty file for the relation.
+        - Creates a corresponding freemap file "<relName>.fmap".
+        - Inserts a new tuple in relcat describing the relation.
+        - Inserts a tuple into attrcat for each attribute.
+    Upon success, an empty file exists with a complete schema recorded in the catalogs.
+
+ALGORITHM:
+    1) Check db_open; if false, report DBNOTOPEN.
+    2) Validate relation name length < RELNAME.
+    3) Validate all attribute names:
+        a) Name length < ATTRNAME.
+        b) No duplicates across attributes.
+    4) For each attribute type:
+        a) Validate allowed formats ("i", "f", "sN").
+        b) For string formats, validate numeric N and ensure N <= MAX_N.
+        c) Accumulate total record length.
+    5) Ensure record length ≤ (PAGESIZE–HEADER_SIZE).
+    6) Check relation does not already exist via FindRel().
+    7) Create an empty file.
+    8) Create a freemap file "<relName>.fmap".
+    9) Compute recsPerPg = min( (#slots fitting in page), number of bits in slotmap ).
+    10) Insert a RelCatRec into relcat using InsertRec().
+    11) For each attribute:
+        a) Construct an AttrCatRec with correct offset, type, length.
+        b) Insert into attrcat via InsertRec().
+    12) Print success message if invoked by the user.
+
+BUGS:
+    None known.
+
+ERRORS REPORTED:
+    DBNOTOPEN          – No database currently open.
+    REL_LENGTH_EXCEEDED– Relation name exceeds maximum length.
+    ATTR_NAME_EXCEEDED – Attribute name too long.
+    DUP_ATTR           – Duplicate attribute names in schema.
+    INVALID_FORMAT     – Illegal attribute type format.
+    STR_LEN_INVALID    – String length invalid or exceeds limits.
+    RELEXIST           – Relation already exists in catalogs.
+    REC_TOO_LONG       – Record does not fit a single page.
+    FILESYSTEM_ERROR   – Unable to create file.
+    MEM_ALLOC_ERROR    – From InsertRec() or catalog operations.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+    Catalog contents:
+        • relcat updated with a new relation entry.
+        • attrcat updated with K attribute entries.
+
+IMPLEMENTATION NOTES:
+    - The freemap file is created empty; all bits = 0 until InsertRec() begins populating pages.
+    - This function does not open the relation; it only creates metadata and empty files.
+    - The caller must ensure the CREATE command syntax is correct.
+    - Relation file is created empty; no pages exist until the first INSERT.
+
+------------------------------------------------------------*/
 
 int Create(int argc, char *argv[])
 {

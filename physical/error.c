@@ -1,15 +1,38 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include "../include/error.h"
 
-/*
- * ErrorMsgs
- * ----------
- * errorNum  : Error message number (see errors.h for codes).
- * printFlag : If non-zero, prints out the corresponding error message.
- *
- * Returns the same errorNum for use in `return ErrorMsgs(...)` calls.
- */
+
+/*--------------------------------------------------------------
+
+FUNCTION ErrorMsgs (errorNum, printFlag):
+
+PARAMETER DESCRIPTION:
+    errorNum  → Integer error code representing the type of error.
+    printFlag → Boolean flag indicating whether the error message should be printed (non-zero = print, 0 = silent).
+
+FUNCTION DESCRIPTION:
+    This routine centralizes all system-level and command-level error reporting in MINIREL. 
+    Given an error code, it prints the corresponding descriptive message only if printFlag is true.
+    Regardless of printing, it returns the same error code to allow usage such as:
+        return ErrorMsgs(db_err_code, print_flag);
+
+ALGORITHM:
+    1) If printFlag is false, return errorNum immediately.
+    2) Switch on errorNum:
+        - For each known MINIREL error code, print a descriptive, user-friendly message explaining:
+            • what went wrong,
+            • why it likely happened,
+            • what the user should do next.
+    3) If errorNum does not match any known code, print a generic “unrecognized error code” message.
+    4) Return errorNum.
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+---------------------------------------------------------------*/
 
 int ErrorMsgs(int errorNum, bool printFlag)
 {

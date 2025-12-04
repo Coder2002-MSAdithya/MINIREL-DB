@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,6 +24,38 @@ int ceil_div(int a, int b)
 }
 
 double dmax(double a, double b) { return (a > b) ? a : b; }
+
+
+/*------------------------------------------------------------
+
+FUNCTION isValidPath(path)
+
+PARAMETER DESCRIPTION:
+    path  – user-supplied filesystem path for DB create/load.
+
+FUNCTION DESCRIPTION:
+    Checks whether the given path contains ONLY valid directory components as per MINIREL's rules:
+        • Components separated by '/'.
+        • Each component must begin with an alphabetic character.
+        • Remaining characters must be alphanumeric.
+    Empty paths and paths with illegal characters are rejected.
+
+ALGORITHM:
+    1) Reject NULL or empty strings.
+    2) Loop through each directory component:
+        - Skip repeated '/'
+        - First character must be alphabetic
+        - Remaining chars must be alphanumeric
+    3) Accept trailing '/'.
+    4) Return true if all components valid.
+
+ERRORS REPORTED:
+    None directly (caller sets db_err_code).
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+------------------------------------------------------------*/
 
 bool isValidPath(const char *path)
 {
@@ -57,6 +91,46 @@ bool isValidPath(const char *path)
 
     return true;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION remove_all_entry(path):
+
+PARAMETER DESCRIPTION:
+    path – file or directory path to be deleted recursively.
+
+FUNCTION DESCRIPTION:
+    Recursively removes:
+        • all files within a directory,
+        • all sub-directories,
+        • and finally the directory itself.
+    For regular files, removes the file directly.
+
+ALGORITHM:
+    1) lstat(path):
+        • If ENOENT → treat as success.
+    2) If directory:
+        a) opendir()
+        b) For each entry except "." and "..":
+            call remove_all_entry(child)
+        c) rmdir(path)
+    3) Else (file, symlink, device):
+        unlink(path)
+    4) Return 0 if success, else -1.
+
+ERRORS REPORTED:
+    Failure of lstate, opendir, rmdir, unlink etc.
+    Printed directly using perror-style messages.
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+IMPLEMENTATION NOTES:
+    – Used by DestroyDB() for recursively deleting DB folders.
+    – Correctly handles directories, symlinks, and unexpected file types.
+
+------------------------------------------------------------*/
 
 int remove_all_entry(const char *path)
 {
@@ -133,11 +207,35 @@ int remove_all_entry(const char *path)
     }
 }
 
-/*
- * remove_contents(dirpath)
- *   Removes all entries inside dirpath but does not remove dirpath itself.
- *   Returns 0 if everything removed successfully, non-zero if any error occurred.
- */
+
+/*------------------------------------------------------------
+
+FUNCTION remove_contents(dirpath)
+
+PARAMETER DESCRIPTION:
+    dirpath – existing directory whose contents only must be removed.
+
+FUNCTION DESCRIPTION:
+       Deletes everything inside a directory but does not delete the directory itself, unlike remove_all_entry().
+
+ALGORITHM:
+    1) lstat() → must be a directory.
+    2) opendir().
+    3) For each child entry except "." and "..": remove_all_entry(child)
+    4) Do not remove dirpath itself.
+    5) Return 0 for success, non-zero for failure.
+
+ERRORS REPORTED:
+       Failure of lstate, opendir etc printed to stderr.
+
+GLOBAL VARIABLES MODIFIED:
+       None.
+
+IMPLEMENTATION NOTES:
+       – Useful for cleaning up DB folder while preserving its root.
+
+------------------------------------------------------------*/
+
 int remove_contents(const char *dirpath)
 {
     struct stat st;
@@ -191,6 +289,32 @@ int remove_contents(const char *dirpath)
 }
 
 
+/*------------------------------------------------------------
+
+FUNCTION print_page_hex(buf)
+
+PARAMETER DESCRIPTION:
+    buf – pointer to a 4096-byte MINIREL page.
+
+FUNCTION DESCRIPTION:
+    Debug utility that prints a full page in hex dump format.
+    Each line:
+        • begins with an offset
+        • prints BYTES_PER_LINE contiguous bytes
+
+ALGORITHM:
+    For each 16-byte block:
+        print line index
+        print byte values in hex
+
+ERRORS REPORTED:
+       None.
+
+GLOBAL VARIABLES MODIFIED:
+       None.
+
+------------------------------------------------------------*/
+
 void print_page_hex(const char *buf) 
 {
     for (int line = 0; line < 32 / BYTES_PER_LINE; ++line) {
@@ -205,6 +329,44 @@ void print_page_hex(const char *buf)
         putchar('\n');
     }
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION writeRecsToFile(filename, recs, numRecs, recordSize, magicChar):
+
+PARAMETER DESCRIPTION:
+    filename   – name of heap file to create
+    recs       – pointer to array of records
+    numRecs    – number of records to write
+    recordSize – size of each record
+    magicChar  – page type identifier ('$','!','_')
+
+FUNCTION DESCRIPTION:
+    Creates a new file and writes all records into it, using MINIREL’s page format:
+        [magic][GEN_MAGIC][slotmap][records...]
+    Records are packed into pages until full, then new pages created.
+
+ALGORITHM:
+    1) fopen(filename, "wb")
+    2) For each page:
+        a) clear page buffer
+        b) write magic word (magicChar + GEN_MAGIC)
+        c) reset slotmap to zero
+        d) fill records into fixed-size slots
+        e) mark bits in slotmap
+        f) fwrite(page)
+    3) Stop when all records consumed.
+    4) Return OK on successful write.
+
+ERRORS REPORTED:
+    CAT_CREATE_ERROR
+    FILESYSTEM_ERROR
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code on failure.
+
+------------------------------------------------------------*/
 
 int writeRecsToFile(const char *filename, void *recs, int numRecs, int recordSize, char magicChar)
 {
@@ -262,6 +424,41 @@ int writeRecsToFile(const char *filename, void *recs, int numRecs, int recordSiz
     return OK;
 }
 
+
+/*------------------------------------------------------------
+
+FUNCTION float_cmp(a, b, rel_eps, abs_eps):
+
+PARAMETER DESCRIPTION:
+    a, b     – floating-point values to compare
+    rel_eps  – relative tolerance
+    abs_eps  – absolute tolerance
+
+FUNCTION DESCRIPTION:
+    Provides robust float comparison:
+        • Handles NaN, Inf
+        • Uses tolerance-based equality
+        • Returns:
+            -1  if a < b
+             0  if |a−b| <= tolerance (equal)
+             1  if a > b
+             2  if either is NaN
+
+ALGORITHM:
+    1) Check NaN → return 2.
+    2) Check infinity → exact comparison.
+    3) Compute allowed tolerance.
+    4) If |a–b| <= tol → equal.
+    5) Else sign of (a–b) determines ordering.
+
+ERRORS REPORTED:
+    None.
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+------------------------------------------------------------*/
+
 int float_cmp(double a, double b, double rel_eps, double abs_eps)
 {
     if (isnan(a) || isnan(b)) return 2;
@@ -278,6 +475,36 @@ int float_cmp(double a, double b, double rel_eps, double abs_eps)
         return 0;
     return (diff > 0) ? 1 : -1;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION IncRid(rid, recsPerPg):
+
+PARAMETER DESCRIPTION:
+    rid        – a <pid, slotnum> tuple ID
+    recsPerPg  – number of record slots per page
+
+FUNCTION DESCRIPTION:
+    Computes the next record ID in sequential scan order.
+
+ALGORITHM:
+    1) If rid invalid → return first RID: (0,0)
+    2) Increment slot:
+        rid.slotnum++
+    3) Wrap around:
+        if slotnum == recsPerPg:
+            slotnum = 0
+            pid++
+    4) Return updated rid.
+
+ERRORS REPORTED:
+    None.
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+------------------------------------------------------------*/
 
 Rid IncRid(Rid rid, int recsPerPg)
 {
@@ -301,6 +528,46 @@ Rid IncRid(Rid rid, int recsPerPg)
     return INVALID_RID;
 }
 
+
+/*------------------------------------------------------------
+
+FUNCTION getAttrDesc (relNum, attrName)
+
+PARAMETER DESCRIPTION:
+    relNum   → relation number in the catalog cache (index into catcache[] representing an open relation).
+    attrName → name of the attribute whose descriptor is to be retrieved.
+
+FUNCTION DESCRIPTION:
+    Searches the linked list of attribute descriptors stored in catcache[relNum].attrList, looking for an attribute whose AttrCatRec.attrName matches attrName.
+    If found, returns a pointer to the AttrDesc node.
+    If not found, returns NULL.
+    This routine is used extensively by higher-level operators such as Project, Select, Insert, and Join to look up the offset, type, and length of attributes.
+
+ALGORITHM:
+    1) Fetch the pointer to the attribute list for relation relNum.
+    2) Iterate through the linked list:
+        a) Compare each node’s attr.attrName with attrName.
+        b) If equal, return the pointer to that node.
+    3) If the end of the list is reached, return NULL.
+
+BUGS:
+    • Case-sensitivity follows strcmp rules; MINIREL does not normalize attribute names.
+    • Assumes relNum is valid and relation is open; does not check for invalid relNum or invalid cache entry.
+    • Does not handle prefix matches; requires full match.
+
+ERRORS REPORTED:
+    • None.  Returns NULL silently on failure. Caller must handle all error reporting.
+
+GLOBAL VARIABLES MODIFIED:
+    • None.
+
+IMPLEMENTATION NOTES:
+    • Returning the pointer directly allows callers to access both the catalog record (offset, type, length, hasIndex) and the next node in the linked list.
+    • The routine does not allocate or free memory.
+    • Used by Project, Join, Insert, and Select to validate attribute names and to determine how to interpret record data.
+
+------------------------------------------------------------*/
+
 AttrDesc *getAttrDesc(int relNum, const char *attrName)
 {
     AttrDesc *ptr = catcache[relNum].attrList;
@@ -314,10 +581,46 @@ AttrDesc *getAttrDesc(int relNum, const char *attrName)
     return NULL;
 }
 
+
+/*------------------------------------------------------------
+
+FUNCTION isValidRid(rid)
+
+FUNCTION DESCRIPTION:
+    Determines whether a RID structure holds a non-negative pid and slotnum.
+    Returns:
+        true  – pid >= 0 AND slotnum >= 0
+        false – otherwise
+
+------------------------------------------------------------*/
+
 bool isValidRid(Rid rid)
 {
     return (rid.pid >= 0 && rid.slotnum >= 0);
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION FreeLinkedList(headPtr, nextOff):
+
+PARAMETER DESCRIPTION:
+    headPtr – pointer to the pointer storing the head of list
+    nextOff – offsetof(NodeType, next)
+
+FUNCTION DESCRIPTION:
+    Generic linked-list deallocator that frees nodes of ANY struct whose “next” pointer is at offset nextOff.
+
+ALGORITHM:
+    1) If headPtr NULL → return NOTOK.
+    2) Walk the list:
+        - read next pointer using offset arithmetic
+        - free current node
+        - continue
+    3) Set *headPtr to NULL.
+    4) Return OK when list freed.
+
+------------------------------------------------------------*/
 
 int FreeLinkedList(void **headPtr, size_t nextOff)
 {
@@ -341,6 +644,24 @@ int FreeLinkedList(void **headPtr, size_t nextOff)
     return OK;
 }
 
+
+/*------------------------------------------------------------
+
+FUNCTION isValidInteger(str):
+
+DESCRIPTION:
+    Returns true iff str is a valid integer literal:
+        optional sign, then digits only.
+
+RETURNS:
+    true  – valid literal + conversion stored
+    false – invalid literal for the type
+
+ERRORS REPORTED:
+    None directly (caller sets INVALID_VALUE).
+
+------------------------------------------------------------*/
+
 bool isValidInteger(char *str)
 {
     if(*str == '-' || *str == '+')
@@ -358,6 +679,24 @@ bool isValidInteger(char *str)
 
     return true;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION isValidFloat(str):
+
+DESCRIPTION:
+    Returns true iff str is a valid float literal:
+        optional sign, digits, optional single dot.
+
+RETURNS:
+    true  – valid literal + conversion stored
+    false – invalid literal for the type
+
+ERRORS REPORTED:
+       None directly (caller sets INVALID_VALUE).
+
+------------------------------------------------------------*/
 
 bool isValidFloat(char *str)
 {
@@ -386,6 +725,23 @@ bool isValidFloat(char *str)
 
     return true;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION isValidForType(type, size, value, dstValuePtr):
+
+DESCRIPTION:
+    Validates a string literal for type (i,f,s) and converts it into the binary representation stored at dstValuePtr.
+
+RETURNS:
+    true  – valid literal + conversion stored
+    false – invalid literal for the type
+
+ERRORS REPORTED:
+    None directly (caller sets INVALID_VALUE).
+
+------------------------------------------------------------*/
 
 bool isValidForType(char type, int size, void *value, void *dstValuePtr)
 {
@@ -417,6 +773,24 @@ bool isValidForType(char type, int size, void *value, void *dstValuePtr)
     return true;
 }
 
+
+/*------------------------------------------------------------
+
+FUNCTION compareVals(valPtr1, valPtr2, type, size, cmpOp):
+
+FUNCTION DESCRIPTION:
+    Compares two attribute values of type i,f,s for equality.
+    Supports CMP_EQ only (used in duplicate detection, tuple comparison).
+        • int     → integer equality
+        • float   → tolerance-based equality via float_cmp()
+        • string  → strncmp() for fixed-length attribute
+
+RETURNS:
+    true  – equal
+    false – not equal
+
+------------------------------------------------------------*/
+
 bool compareVals(void *valPtr1, void *valPtr2, char type, int size, int cmpOp)
 {
     if(type == 'i')
@@ -432,6 +806,19 @@ bool compareVals(void *valPtr1, void *valPtr2, char type, int size, int cmpOp)
         return strncmp(valPtr1, valPtr2, size) == 0;
     }
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION writeAttrToRec(dstRecPtr, valuePtr, type, size, offset):
+
+FUNCTION DESCRIPTION:
+    Writes a single attribute into the destination record at the specified byte offset.
+        • type 'i' → copy 4 bytes
+        • type 'f' → copy 4 bytes
+        • type 's' → copy size bytes and null-terminate
+
+----------------------------------------------------------------*/
 
 void writeAttrToRec(void *dstRecPtr, void *valuePtr, int type, int size, int offset)
 {
@@ -450,7 +837,19 @@ void writeAttrToRec(void *dstRecPtr, void *valuePtr, int type, int size, int off
     }
 }
 
-// Helper function to calculate Levenshtein distance (edit distance)
+
+/*------------------------------------------------------------
+
+FUNCTION levenshtein_distance(s1, s2)
+
+DESCRIPTION:
+    Computes edit distance between two strings (insert/delete/substitute).
+
+RETURNS:
+    An integer >= 0.
+
+------------------------------------------------------------*/
+
 static int levenshtein_distance(const char *s1, const char *s2)
 {
     int len1 = strlen(s1);
@@ -502,7 +901,15 @@ static int levenshtein_distance(const char *s1, const char *s2)
     return result;
 }
 
-// Helper function to calculate Jaro-Winkler similarity (good for short strings like names)
+/*------------------------------------------------------------
+
+FUNCTION jaro_winkler_similarity(s1, s2)
+
+DESCRIPTION:
+    Computes similarity score ∈ [0,1] emphasizing common prefix matches. 
+
+------------------------------------------------------------*/
+
 static float jaro_winkler_similarity(const char *s1, const char *s2)
 {
     int len1 = strlen(s1);
@@ -606,6 +1013,29 @@ static float jaro_winkler_similarity(const char *s1, const char *s2)
     
     return winkler;
 }
+
+/*------------------------------------------------------------
+
+FUNCTION printCloseStrings(catRelNum, offset, typedVal, filter):
+
+DESCRIPTION:
+    Suggests closest schema names when user mistypes a relation or attribute. 
+    Uses:
+        • Levenshtein edit distance
+        • Jaro-Winkler similarity
+        • substring heuristics
+    Prints up to 5 nearest suggestions.
+
+ALGORITHM:
+    1) Scan all catalog entries (relation or attribute).
+    2) Compute similarity metrics.
+    3) Collect candidates.
+    4) Sort by:
+        - higher similarity first
+        - lower edit distance for ties
+    5) Print suggestions.
+
+------------------------------------------------------------*/
 
 void printCloseStrings(int catRelNum, int offset, char *typedVal, char *filter)
 {

@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,60 @@
 #include "../include/deleterec.h"
 #include "../include/findrec.h"
 #include "../include/freemap.h"   // for build_fmap_filename
+
+
+/*------------------------------------------------------------
+
+FUNCTION Destroy (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command-line arguments.
+    argv → array of pointers to character strings.
+
+SPECIFICATIONS:
+    argv[0] = "destroy"
+    argv[1] = relation name
+    argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    The DESTROY command permanently removes a relation from the database.
+    The relation file and the corresponding freemap file of the relation are deleted from the file system. 
+    After that, the system catalogs are updated by removing the relation entry from RELCAT and all of its attribute entries from ATTRCAT.
+    The routine ensures that catalog relations themselves cannot be destroyed. 
+    It also ensures that the relation exists before attempting destruction.
+
+ALGORITHM:
+    1) Check that a database is currently open.
+    2) Reject attempts to destroy RELCAT or ATTRCAT.
+    3) Look up the relation name in RELCAT using FindRec().
+        • If not found, report relation does not exist.
+    4) If the relation is open, close it using CloseRel().
+    5) Remove the relation file from the file system.
+    6) Construct and remove the freemap file for the relation.
+    7) Delete the relation's catalog entry from RELCAT.
+    8) Repeatedly search for and delete all catalog entries in ATTRCAT corresponding to this relation.
+    9) Report successful destruction.
+
+BUGS:
+    None known.
+
+ERRORS REPORTED:
+    DBNOTOPEN        – Database not opened.
+    METADATA_SECURITY– Attempt to destroy RELCAT or ATTRCAT.
+    RELNOEXIST       – Relation not recorded in RELCAT.
+    FILESYSTEM_ERROR – Failure deleting files.
+    MEM_ALLOC_ERROR  – Error allocating working buffers.
+    UNKNOWN_ERROR    – Catalog corruption or unexpected state.
+
+GLOBAL VARIABLES MODIFIED:
+       db_err_code       – Set on error.
+       Catalog state     – RELCAT and ATTRCAT entries removed.
+
+IMPLEMENTATION NOTES:
+    • Destruction of files must precede catalog updates.
+
+------------------------------------------------------------*/
+
 
 int Destroy(int argc, char *argv[])
 {

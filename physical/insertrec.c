@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,33 +14,64 @@
 
 #define INS_NO_FREE_SLOT  2  /* internal code: page has no free slot */
 
-/*
- * insertIntoPage:
- *   Try to insert recPtr into page pidx of relation relNum.
- *
- *   Parameters:
- *     relNum       - relation number
- *     pidx         - page index
- *     recPtr       - pointer to record data
- *     becameFull   - (out) set to true if page was not full but becomes full
- *     hasFreeAfter - (out) set to true if page has at least one free slot after insert
- *
- *   Returns:
- *     OK              -> inserted successfully
- *     INS_NO_FREE_SLOT-> page had no free slots
- *     NOTOK           -> error (db_err_code set)
- *
- *   This function ONLY:
- *     - works within buffer[relNum].page
- *     - updates slotmap, page contents
- *     - updates relcat_rec.numRecs and writes relcat
- *   It does NOT touch freemap; the caller handles that.
- */
-static int insertIntoPage(int relNum,
-                          short pidx,
-                          void *recPtr,
-                          bool *becameFull,
-                          bool *hasFreeAfter)
+
+/*------------------------------------------------------------
+
+FUNCTION insertIntoPage (relNum, pidx, recPtr, becameFull, hasFreeAfter)
+
+PARAMETER DESCRIPTION:
+    relNum       → relation number in the open-relation cache.
+    pidx         → page index within the relation.
+    recPtr       → pointer to the record to be inserted.
+    becameFull   → set to TRUE iff the page was not previously full but becomes full after insert.
+    hasFreeAfter → set to TRUE iff, after insertion, the page still contains at least one free slot.
+
+FUNCTION DESCRIPTION:
+    This routine attempts to insert a single record into a specific page of a relation. 
+    It performs no relation-level scanning; it works strictly on the already-known target page.
+    It updates:
+        - page slotmap,
+        - page contents,
+        - the relation’s numRecs field in relcat.
+    It does not update the freemap. The caller must handle freemap maintenance.
+
+RETURNS:
+       OK               → record successfully inserted.
+       INS_NO_FREE_SLOT → page contains no empty slot.
+       NOTOK            → error encountered (db_err_code set).
+
+ALGORITHM:
+    1) Read the target page into the buffer using ReadPage().
+    2) Validate page magic bytes.
+    3) Load the slotmap and compute the mask of valid bits.
+    4) Identify whether the page was previously full.
+    5) Scan for the first free slot.
+    6) When found:
+        a) Increment numRecs for the relation.
+        b) Update the relcat entry via WriteRec().
+        c) Copy the new record into the slot’s data region.
+        d) Set the bit in the slotmap; mark buffer page dirty.
+        e) Set becameFull and hasFreeAfter as appropriate.
+        f) Return OK.
+    7) If no free slot, return INS_NO_FREE_SLOT.
+
+GLOBAL VARIABLES MODIFIED:
+    catcache[relNum].relcat_rec.numRecs
+    catcache[relNum].status 
+    buffer[relNum].page
+    buffer[relNum].dirty
+    db_err_code on failure.
+
+ERRORS REPORTED:
+    PAGE_MAGIC_ERROR
+
+IMPLEMENTATION NOTES:
+    This function assumes the caller has already determined that the page is a valid page for insertion. 
+    No freemap updates occur inside this helper.
+
+--------------------------------------------------------------*/
+
+static int insertIntoPage(int relNum, short pidx, void *recPtr, bool *becameFull, bool *hasFreeAfter)
 {
     CacheEntry *entry = &catcache[relNum];
     char *page        = buffer[relNum].page;
@@ -108,6 +141,73 @@ static int insertIntoPage(int relNum,
     
     return INS_NO_FREE_SLOT;
 }
+
+
+/*------------------------------------------------------------
+
+FUNCTION InsertRec (relNum, recPtr)
+
+PARAMETER DESCRIPTION:
+    relNum → index of the open relation in catcache.
+    recPtr → pointer to the record to be inserted.
+
+FUNCTION DESCRIPTION:
+    Implements the core file insertion routine.
+    Attempts to place the incoming tuple in:
+        1) a free page identified via freemap (if available),
+        2) otherwise a linear scan of all existing pages,
+        3) otherwise a newly allocated page.
+    Works with fixed-length records. Maintains:
+        - relation page count,
+        - tuple count,
+        - slotmaps,
+        - page flushes,
+        - freemap bitmap.
+
+RETURNS:
+    OK    → record inserted successfully.
+    NOTOK → error (db_err_code set appropriately).
+
+ALGORITHM:
+    1) Validate relation is open and entry is marked VALID_MASK.
+    2) Retrieve relation metadata: recsPerPg, numPages, relation name, etc.
+    3) If freemap file available for the relation.
+        a) Obtain a page number from FindFreeSlot().
+        b) Attempt insertion into that page via insertIntoPage().
+        c) If successful:
+            - update freemap: remove page if it became full, or ensure page remains marked free if still not full.
+            - return OK.
+        d) If page was stale (INS_NO_FREE_SLOT), clear it in freemap.
+    4) Else scan all existing pages sequentially.
+        - For each page pidx: call insertIntoPage().
+        - If OK: update freemap accordingly, return OK.
+    5) If all pages full, allocate a new page:
+        a) Flush current buffer page (FlushPage()).
+        b) Initialize a new empty page with: page-type marker, magic bytes, slotmap containing only slot 0 occupied.
+        c) Copy record into slot 0.
+        d) Update relation metadata: numRecs++, numPgs++, WriteRec() the relcat entry.
+        e) If using freemap and recsPerPg > 1: Add the new page to freemap.
+    6) Return OK.
+
+BUGS:
+    None found.
+
+GLOBAL VARIABLES MODIFIED:
+    catcache[relNum].relcat_rec.numRecs
+    catcache[relNum].relcat_rec.numPgs
+    catcache[relNum].status (DIRTY_MASK)
+    buffer[relNum].page
+    buffer[relNum].pid
+    buffer[relNum].dirty
+
+ERRORS REPORTED:
+    INVALID_RELNUM
+    PAGE_MAGIC_ERROR
+    FILESYSTEM_ERROR
+    REL_PAGE_LIMIT_REACHED
+    REL_OPEN_ERROR
+
+--------------------------------------------------------------*/
 
 int InsertRec(int relNum, void *recPtr)
 {

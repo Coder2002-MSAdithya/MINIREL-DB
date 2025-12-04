@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +9,46 @@
 #include "../include/defs.h"     /* for OK, NOTOK, RELNAME, etc. */
 #include "../include/error.h"    /* for FILESYSTEM_ERROR, MEM_ALLOC_ERROR, etc. */
 #include "../include/globals.h"  /* For db_err_code catcache etc*/
+
+
+/*------------------------------------------------------------
+
+FUNCTION  build_fmap_filename(relName, fname, buflen):
+
+PARAMETER DESCRIPTION:
+    relName → Name of the relation.
+    fname   → Output buffer where "<relName>.fmap" will be written.
+    buflen  → Size of output buffer.
+
+FUNCTION DESCRIPTION:
+    Constructs the filename used to store the freemap bitmap for a relation.
+    The freemap file always follows the naming rule:
+            "<relName>.fmap"
+
+ALGORITHM:
+    1) Use snprintf() to concatenate relName and ".fmap".
+    2) Ensure the output fits into the provided buffer (snprintf guarantees null-termination as long as buflen > 0).
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+ERRORS REPORTED:
+    None.
+
+IMPLEMENTATION NOTES:
+    - Caller must provide a sufficiently large buffer (>= RELNAME + 6).
+    - The function is used by:
+        • FreeMapExists()
+        • CreateFreeMap()
+        • AddToFreeMap()
+        • DeleteFromFreeMap()
+        • FindFreeSlot()
+    - Keeping filename logic in one helper avoids duplication and ensures consistency.
+
+BUGS
+       None known.
+
+------------------------------------------------------------*/
 
 /*
  * We use a fixed-size bitmap indexed by pageNum (short, 0..32767).
@@ -21,15 +63,39 @@ void build_fmap_filename(const char *relName, char *fname, size_t buflen)
     snprintf(fname, buflen, "%s.fmap", relName);
 }
 
-/*
- * FreeMapExists:
- *   Returns:
- *      1  → freemap file exists
- *      0  → freemap file does NOT exist
- *     -1 → error accessing filesystem (rare)
- *
- * Called by InsertRec/DeleteRec to decide whether to use freemap or fallback scan.
- */
+
+/*------------------------------------------------------------
+
+FUNCTION  FreeMapExists(relName):
+
+PARAMETER DESCRIPTION:
+    relName → Name of the relation whose freemap file is being queried.
+
+FUNCTION DESCRIPTION:
+    A freemap is an auxiliary bitmap file "<relName>.fmap" that tracks which pages of the heap file contain free slots.  
+    This routine checks whether the freemap file exists and returns:
+         1  → freemap exists  
+         0  → freemap does NOT exist  
+        -1  → unexpected filesystem error
+       It does NOT modify any global catalog state.
+
+ALGORITHM
+    1) Construct the filename "<relName>.fmap".
+    2) Try opening the file in read-binary mode.
+    3) If fopen() succeeds, close it and return 1, if it fails due to ENOENT, retuen 0, otherwise return -1.
+
+GLOBAL VARIABLES MODIFIED:
+    errno
+
+ERRORS REPORTED:
+    None.
+
+BUGS:
+    None known.
+
+------------------------------------------------------------*/
+
+
 int FreeMapExists(const char *relName)
 {
     char fname[RELNAME + 6];
@@ -49,7 +115,37 @@ int FreeMapExists(const char *relName)
     return 1;
 }
 
-/* Create or reset an empty free-map file: all bits = 0 (no free pages). */
+
+/*------------------------------------------------------------
+
+FUNCTION  CreateFreeMap(relName):
+
+PARAMETER DESCRIPTION:
+    relName → Name of the relation for which the freemap file "<relName>.fmap" must be created or reset.
+
+FUNCTION DESCRIPTION:
+    Creates a freemap file of fixed size (4096 bytes) with all bits = 0, meaning all pages are “not free / not yet allocated”.
+    Called when:
+        - A new relation is created.
+        - set_freemap_bit() discovers that no freemap exists.
+
+ALGORITHM:
+    1) Construct freemap filename.
+    2) Open file in write-binary mode ("wb").
+    3) Write FREEMAP_BYTES of zero bytes.
+    4) Close file and return OK.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code → set to FILESYSTEM_ERROR on write/open failure.
+
+ERRORS REPORTED:
+    FILESYSTEM_ERROR
+
+BUGS
+    None known.
+
+------------------------------------------------------------*/
+
 int CreateFreeMap(const char *relName)
 {
     char fname[RELNAME + 6];
@@ -76,7 +172,44 @@ int CreateFreeMap(const char *relName)
     return OK;
 }
 
-/* Helper: set or clear a single bit in the bitmap file. */
+
+/*------------------------------------------------------------
+
+FUNCTION  set_freemap_bit(relName, pageNum, value):
+
+PARAMETER DESCRIPTION:
+    relName → Relation name
+    pageNum → Page number whose freemap bit must be set/cleared
+    value   → 1 to mark page as having free space, 0 to mark as full
+
+FUNCTION DESCRIPTION:
+    Low-level helper routine that performs a single-bit update in the freemap file. 
+    One byte is read, modified, and re-written.
+
+ALGORITHM:
+    1) Validate that pageNum ∈ [0, MAX_FREEMAP_PAGES).
+    2) Build filename "<relName>.fmap".
+    3) Try opening file in "rb+" mode.
+            If ENOENT → create freemap via CreateFreeMap() and reopen.
+    4) Seek to corresponding byte = pageNum/8.
+    5) Read the byte (assume 0 if EOF).
+    6) Modify the bit:
+            value == 1 → set bit  
+            value == 0 → clear bit
+    7) Seek back and write modified byte.
+    8) Close file and return OK.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code → set to FILESYSTEM_ERROR on fseek/fwrite failure.
+
+ERRORS REPORTED:
+    FILESYSTEM_ERROR
+
+BUGS:
+    None known.
+
+------------------------------------------------------------*/
+
 int set_freemap_bit(const char *relName, short pageNum, int value /*0 or 1*/)
 {
     if (pageNum < 0 || pageNum >= MAX_FREEMAP_PAGES)
@@ -148,34 +281,84 @@ int set_freemap_bit(const char *relName, short pageNum, int value /*0 or 1*/)
     return OK;
 }
 
-/*
- * AddToFreeMap:
- *   Mark pageNum as having at least one free slot.
- *   O(1): single-byte read–modify–write.
- */
+
+/*------------------------------------------------------------
+
+FUNCTION  AddToFreeMap(relName, pageNum):
+
+PARAMETER DESCRIPTION:
+    relName → name of the relation
+    pageNum → page that just gained at least one free slot
+
+FUNCTION DESCRIPTION:
+    Marks a page as having free space by setting its freemap bit to 1.
+    O(1): single-byte read–modify–write.
+    Returns OK or NOTOK depending upon the success of set_freemap_bit function.
+
+------------------------------------------------------------*/
+
 int AddToFreeMap(const char *relName, short pageNum)
 {
     return set_freemap_bit(relName, pageNum, 1);
 }
 
-/*
- * DeleteFromFreeMap:
- *   Mark pageNum as "no longer free" (full).
- *   O(1): single-byte read–modify–write.
- */
+
+/*------------------------------------------------------------
+
+FUNCTION  DeleteFromFreeMap(relName, pageNum)
+
+PARAMETER DESCRIPTION
+    relName → name of the relation
+    pageNum → page that became full (no free slots)
+
+FUNCTION DESCRIPTION:
+       Clears the freemap bit for this page (sets bit to 0) to indicate that it is no longer free..
+       O(1): single-byte read–modify–write.
+       Returns OK or NOTOK depending upon success of set_freemap_bit function.
+
+------------------------------------------------------------*/
+
 int DeleteFromFreeMap(const char *relName, short pageNum)
 {
     return set_freemap_bit(relName, pageNum, 0);
 }
 
-/*
- * FindFreeSlot:
- *   Return the page number of ANY page with bit=1 (i.e., has free slot),
- *   or -1 if none exist or file missing.
- *
- *   This is O(#pages / 8) = O(FREEMAP_BYTES). With MAX_FREEMAP_PAGES fixed,
- *   this is bounded (4096 bytes) and very fast.
- */
+
+/*------------------------------------------------------------
+
+FUNCTION  FindFreeSlot(relName):
+
+PARAMETER DESCRIPTION:
+       relName → Name of the relation whose freemap must be scanned.
+
+FUNCTION DESCRIPTION:
+    Scans the bitmap file "<relName>.fmap" to find ANY page whose bit=1.
+    That page has free slots available for insertion.   
+    Return the page number of ANY page with bit=1 (i.e., has free slot), or -1 if none exist or file missing.
+    This is O(#pages/8) = O(FREEMAP_BYTES). With MAX_FREEMAP_PAGES fixed, this is bounded (4096 bytes) and very fast.
+
+ALGORITHM:
+    1) Build freemap filename and attempt to open in "rb".
+        If open fails → return -1.
+    2) Read full bitmap (FREEMAP_BYTES).
+        If fread() returns 0 → set db_err_code and return NOTOK.
+    3) For each byte:
+        If byte != 0:
+            Scan each of the 8 bits:
+                If bit == 1 → compute pageNum and return it.
+    4) If no bits found, return -1.
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code → set to FILESYSTEM_ERROR on read failure.
+
+ERRORS REPORTED:
+    FILESYSTEM_ERROR
+
+BUGS:
+    None known.
+
+------------------------------------------------------------*/
+
 int FindFreeSlot(const char *relName)
 {
     char fname[RELNAME + 6];

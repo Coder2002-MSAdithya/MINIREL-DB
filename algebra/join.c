@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -11,6 +13,60 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+
+
+/*------------------------------------------------------------
+
+FUNCTION copy_attribute (srcRec, dstRec, srcAttrDesc, dstAttrDesc)
+
+PARAMETER DESCRIPTION:
+    srcRec         → Pointer to source record buffer (raw tuple bytes)
+    dstRec         → Pointer to destination record buffer (raw tuple bytes)
+    srcAttrDesc    → Pointer to pointer to current attribute descriptor in the source relation’s attribute linked list (AttrDesc **)
+    dstAttrDesc    → Pointer to pointer to current attribute descriptor in the destination relation’s attribute list (AttrDesc **)
+
+FUNCTION DESCRIPTION:
+    This routine is used internally by JOIN to copy one attribute at a time from a tuple of the source relation into the correct location inside a tuple of the destination (joined) relation.
+    The routine:
+       • Reads the source attribute metadata (offset, type, length).
+       • Computes source field location: srcRec+offset.
+       • Computes destination attribute offset.
+       • Invokes writeAttrToRec() to correctly copy the value.
+       • Advances both pointer-to-AttrDesc parameters to their respective next attributes, enabling simple loop-based copying.
+    Supported attribute types:
+       • INTEGER ('i')
+       • FLOAT   ('f')
+       • STRING  ('s')
+    Attribute sizes and layouts must be respected as stored in the attribute catalog of each relation.
+
+ALGORITHM:
+    1) Extract from *srcAttrDesc:
+        - source offset
+        - source type
+        - source attribute length
+    2) Extract from *dstAttrDesc the destination offset.
+    3) Compute source attribute address:
+        srcPtr = (char *)srcRec + source_offset
+    4) Call writeAttrToRec() with: (dstRec, srcPtr, type, length, destination_offset) so that correct formatting, truncation, padding, and casting is performed as needed.
+    5) Advance both attribute descriptor pointers:
+           *srcAttrDesc = (*srcAttrDesc)->next
+           *dstAttrDesc = (*dstAttrDesc)->next
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    • No direct errors generated.
+
+GLOBAL VARIABLES MODIFIED:
+    None.
+
+IMPLEMENTATION NOTES :
+    • Created to simplify JOIN construction; avoids repetitive offset computation code in the Join loop.
+    • Works one attribute at a time; JOIN repeatedly invokes it to build a full destination tuple.
+    • Maintains alignment and padding rules consistent with MINIREL’s physical record layout.
+
+------------------------------------------------------------*/
 
 void copy_attribute(void *srcRec, void *dstRec, AttrDesc **srcAttrDesc, AttrDesc **dstAttrDesc) 
 {
@@ -28,6 +84,7 @@ void copy_attribute(void *srcRec, void *dstRec, AttrDesc **srcAttrDesc, AttrDesc
     *dstAttrDesc = (*dstAttrDesc)->next;
     *srcAttrDesc = (*srcAttrDesc)->next;
 }
+
 
 /* Helper: normalize into buffer and print hex bytes for debugging */
 static void normalize_str(const char *src, char *dst /* size ATTRNAME */)
@@ -121,7 +178,86 @@ static bool nameCollidesExcludingSelf(const char *name, AttrDesc *resHead, int s
     return (nameCollidesDetailedWithMatch(name, resHead, s1, s2, ad2, exclude_s2, NULL) != 0);
 }
 
-/* ----- Corrected Join routine (diagnostic build) ----- */
+
+/*------------------------------------------------------------
+
+FUNCTION Join (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command-line arguments.
+    argv → pointer to array of argument strings.
+    Specifications:
+        argv[0] = "join"
+        argv[1] = name of destination relation to be created
+        argv[2] = name of first source relation (R1)
+        argv[3] = join attribute of R1
+        argv[4] = name of second source relation (R2)
+        argv[5] = join attribute of R2
+        argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    The routine performs an equi-join of two relations R1 and R2 on the specified attributes, producing a new relation with schema:
+        (all attributes of R1)  ⨝  (all attributes of R2 except the join attribute)
+    Rules and requirements:
+        • Both relations must exist.
+        • Join attributes must exist in their respective relations.
+        • Join attributes must have the same type.
+        • Destination relation must NOT already exist.
+        • Result relation schema is built by combining schemas of R1 and R2.
+        • Attribute name conflicts (excluding the join attribute) from R2 are resolved by renaming to attr_R2.
+        • All matching tuple pairs (t1, t2) with t1.attrName1 == t2.attrName2 are inserted into the new relation.
+
+ALGORITHM:
+    1) Validate database state (DB must be open).
+    2) Parse argument strings:
+        dstRelName, src1RelName, attrName1, src2RelName, attrName2.
+    3) Open both source relations R1 and R2.
+        If either fails, report RELNOEXIST.
+    4) Confirm that destination relation does NOT already exist.
+    5) Look up attribute descriptors:
+        attrName1 in R1,
+        attrName2 in R2.
+        If either does NOT exist, report ATTRNOEXIST.
+    6) Verify that join attributes have identical types.
+        If not, report INCOMPATIBLE_TYPES.
+    7) Build the result schema:
+        a) Copy attribute descriptors of R1 entirely.
+        b) Copy attributes of R2 except join attribute.
+        c) If an attribute name from R2 duplicates one in R1, rename as "<attr>_<src2RelName>".
+    8) Using the combined attribute list, call CreateFromAttrList() to create the destination relation.
+    9) Re-open the created destination relation.
+    10) For each record r1 in R1:
+            For each record r2 in R2:
+                Compare join fields:
+                    if equal → create joined tuple and insert into destination relation.
+    11) Perform attribute-wise copying using copy_attribute() to ensure correct offsets, types, and physical layout.
+    12) Print success message.
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    DBNOTOPEN           → database is closed
+    RELNOEXIST          → either source relation does not exist
+    RELEXIST            → destination relation already exists
+    ATTRNOEXIST         → join attribute not found
+    INCOMPATIBLE_TYPES  → join attributes' types differ
+    MEM_ALLOC_ERROR     → memory allocation failure
+    OTHER errors raised by: OpenRel(), FindRec(), InsertRec(), CreateFromAttrList(), compareVals(), etc.
+
+GLOBAL VARIABLES MODIFIED:
+      db_err_code
+      catcache[] entries (via schema creation and relation opening)
+
+IMPLEMENTATION NOTES:
+    • Uses nested loop join.
+    • Performs safe attribute renaming for R2 to avoid collisions.
+    • copy_attribute() abstracts offset calculations during record assembly.
+    • Destination schema creation must precede record insertion.
+    • The join inserts records in physical order encountered.
+
+------------------------------------------------------------*/
+
 int Join(int argc, char **argv)
 {
     if (!db_open)

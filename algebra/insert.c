@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include "../include/defs.h"
 #include "../include/globals.h"
 #include "../include/error.h"
@@ -10,6 +12,87 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+/*------------------------------------------------------------
+
+FUNCTION Insert (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command arguments.
+    argv → array of argument strings.
+    Specifications:
+        argv[0] = "insert" or "_insert"
+        argv[1] = relation name
+        argv[2] = attribute name 1
+        argv[3] = attribute value 1
+        ...
+        argv[argc-2] = attribute name N
+        argv[argc-1] = attribute value N
+        argv[argc]   = NIL
+
+FUNCTION DESCRIPTION:
+    Implements insert operation.
+    The routine constructs a binary record from ASCII literals, validating each attribute-value pair according to the schema.
+    The process includes:
+        • Rejecting inserts into catalog relations (relcat, attrcat)
+        • Ensuring the target relation exists
+        • Ensuring ALL attributes of the relation are supplied
+        • Validating literals:
+            - integer → must pass isValidInteger(), stored via memcpy
+            - float   → must pass isValidFloat(), stored via memcpy
+            - string  → copied up to attribute length, NULL-terminated
+        • Checking for repeated attribute names
+        • Checking for duplicate tuples via full sequential scan
+        • Invoking InsertRec() to place the tuple into the file.
+    The relation catalog (catcache[r].attrList) supplies offsets, lengths, and type information for each attribute.
+
+ALGORITHM:
+    1) Verify that a database is open.
+    2) Disallow inserts on RELCAT and ATTRCAT (metadata-protected).
+    3) Open the target relation with OpenRel().
+    4) Allocate a zero-filled record buffer sized to recLength.
+    5) For each (attrName, value) pair:
+        a) Locate attribute descriptor in attrList.
+        b) Validate literal matches required type.
+        c) Convert → store at attribute offset.
+    6) Check that no attribute name appears twice.
+    7) Check attribute completeness:
+        (#supplied attributes) == (#schema attributes)
+    8) Duplicate detection:
+        a) Scan relation using GetNextRec().
+        b) Compare ALL attributes (compareVals or direct checks).
+        c) If exact match found → reject with DUP_ROWS.
+    9) If unique, call InsertRec() to insert the tuple.
+    10) Print success if called interactively (“insert” vs “_insert”).
+
+BUGS:
+    None found.
+
+ERRORS REPORTED:
+    DBNOTOPEN         – no database currently open
+    METADATA_SECURITY – attempted modification of catalog tables
+    RELNOEXIST        – relation does not exist
+    ATTRNOEXIST       – attribute not found in schema
+    INVALID_VALUE     – literal invalid for declared type
+    DUP_ATTR_INSERT   – same attribute repeated in command
+    ATTR_SET_INVALID  – missing or extra attributes
+    DUP_ROWS          – duplicate tuple detected
+    MEM_ALLOC_ERROR   – memory allocation failed
+    REC_INS_ERR       – InsertRec() failed
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code       – global error state
+    buffer[]          – via InsertRec (page updates)
+    catcache[]        – via InsertRec (numRecs metadata)
+
+IMPLEMENTATION NOTES:
+    - Uses isValidInteger(), isValidFloat(), isValidForType(), compareVals(), GetNextRec(), and InsertRec().
+    - InsertRec() performs slot allocation, page writes, freemap updates, and relcat metadata increments.
+    - "_insert" form suppresses user-facing print messages.
+
+------------------------------------------------------------*/
+
 
 /* Here we assume that the right number of arguments are being passed */
 int Insert(int argc, char **argv)

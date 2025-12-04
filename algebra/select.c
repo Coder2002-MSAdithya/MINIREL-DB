@@ -1,3 +1,5 @@
+/************************INCLUDES*******************************/
+
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -12,6 +14,82 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+
+/*------------------------------------------------------------
+
+FUNCTION Select (argc, argv)
+
+PARAMETER DESCRIPTION:
+    argc → number of command arguments
+    argv → argument vector
+    Specifications:
+        argv[0] = "select"
+        argv[1] = destination relation name (new relation)
+        argv[2] = source relation name
+        argv[3] = attribute name in source relation
+        argv[4] = comparison operator (integer-encoded)
+        argv[5] = literal value
+        argv[argc] = NIL
+
+FUNCTION DESCRIPTION:
+    Implements the relational selection operator σ.
+    This routine creates a new relation (dstRelName) having exactly the same schema as the source relation (srcRelName). 
+    It then scans every record of the source relation, evaluates the selection predicate:
+        srcRel[attrName] <op> literal
+    and inserts each matching tuple into the destination relation.
+    Attribute-type validation, literal conversion, and comparison are performed according to the attribute’s format stored in the catalog (integer, float, string).
+    The routine fails if:
+        • source relation does not exist,
+        • destination relation already exists,
+        • attribute does not exist,
+        • the literal is not valid for the attribute type.
+
+ALGORITHM:
+    1) Ensure that a database is open; otherwise signal error.
+    2) Extract arguments: dstRelName, srcRelName, attrName, operator code, literal value.
+    3) Check that destination relation does not already exist.
+    4) Open source relation via OpenRel():
+        if it does not exist → RELNOEXIST.
+    5) Search the source relation’s attribute list for attrName:
+        if not found → ATTRNOEXIST.
+    6) Determine the attribute's offset, length, and type.
+    7) Create a new relation (dstRelName) using CreateRel() with the same schema as the source relation.
+    8) Open the new destination relation using OpenRel().
+    9) Convert the literal value into typed form using isValidForType(); allocate storage for casted value.
+        if invalid → INVALID_VALUE.
+    10) Sequentially scan the source relation:
+        a) Call FindRec() to locate the next matching tuple.
+        b) If foundRid is INVALID_RID → end of scan.
+        c) If a matching tuple is found, insert it into the destination relation using InsertRec().
+    11) Print success message.
+    12) Return OK.
+
+BUGS:
+    • Does not prevent selection into the same relation name if both src and dst are identical (handled earlier by FindRel()).
+    • Does not check for duplicate tuples in the destination, which is acceptable for MINIREL’s select semantics.
+
+ERRORS REPORTED:
+       DBNOTOPEN
+       RELEXIST (destination already exists)
+       RELNOEXIST (source does not exist)
+       ATTRNOEXIST
+       INVALID_VALUE (literal incompatible with attribute type)
+       MEM_ALLOC_ERROR
+       REC_INS_ERR (via InsertRec)
+       UNKNOWN_ERROR (via FindRec)
+
+GLOBAL VARIABLES MODIFIED:
+    db_err_code
+    Catalog entries for dstRelName (through CreateRel)
+    Physical heap pages for dstRelName (InsertRec)
+
+IMPLEMENTATION NOTES:
+    • The operator argument is expected to be an integer code corresponding to comparison constants (CMP_EQ, CMP_LT, etc.).
+    • Select creates a full relation copy structurally identical to the source relation; projection is a separate operator.
+    • Uses FindRec iteratively to locate each successive match, enabling efficient cursor-style traversal.
+
+------------------------------------------------------------*/
 
 int Select(int argc, char **argv)
 {
