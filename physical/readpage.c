@@ -9,6 +9,7 @@
 #include "../include/error.h"
 #include "../include/globals.h"
 #include "../include/helpers.h"
+#include "../include/openrel.h"
 
 
 /*------------------------------------------------------------
@@ -59,6 +60,8 @@ int ReadPage(int relNum, short pid)
         db_err_code = INVALID_RELNUM;
         return NOTOK;
     }
+
+    OpenRel(relNum);
 
     Buffer *buf = &buffer[relNum];
     CacheEntry *entry = &catcache[relNum];

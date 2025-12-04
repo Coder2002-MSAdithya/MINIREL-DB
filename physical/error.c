@@ -176,6 +176,10 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case REL_PAGE_LIMIT_REACHED:
                     printf("Error %d: ONLY 32768 pages supported per relation. CANNOT add new record\n", errorNum);
                     break;
+            
+            case BUFFER_FULL:
+                    printf("Error %d: Buffer of relation catalog cache is full. CANNOT open any more relations.\n");
+                    break;
 
             case DBNOTEXIST:
                 printf("Error %d: Database does not exist.\n"

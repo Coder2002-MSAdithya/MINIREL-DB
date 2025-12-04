@@ -14,7 +14,8 @@
 #include "../include/helpers.h"
 #include "../include/findrec.h"
 #include "../include/closerel.h"
-
+#include "../include/pinrel.h"
+#include "../include/unpinrel.h"
 
 /*------------------------------------------------------------
 
@@ -92,12 +93,18 @@ int OpenRel(const char *relName)
         {
             uint32_t ts = catcache[i].timestamp;
 
-            if(ts < minTimeStamp)
+            if(ts < minTimeStamp && !(catcache[i].status & PINNED_MASK))
             {
                 minTimeStamp = catcache[i].timestamp;
                 freeSlot = i;
             }
         }
+    }
+
+    if(freeSlot == -1)
+    {
+        db_err_code == BUFFER_FULL;
+        return NOTOK;
     }
 
     Rid startRid = (Rid){-1, -1};
@@ -120,6 +127,9 @@ int OpenRel(const char *relName)
     {
         return NOTOK;
     }
+
+    printf("Victim slot %d chosen for relation %s of DB.\n", freeSlot, relNum);
+    PinRel(freeSlot);
 
     int fd = open(rc.relName, O_RDWR);
 
