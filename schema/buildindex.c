@@ -7,6 +7,7 @@
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
 #include "../include/writerec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -124,6 +125,7 @@ int BuildIndex(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    UnPinRel(r);
     printf("Built index successfully on attribute %s of relation %s\n", 
     attrName, relName);
 

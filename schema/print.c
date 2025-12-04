@@ -6,6 +6,7 @@
 #include "../include/helpers.h"
 #include "../include/openrel.h"
 #include "../include/getnextrec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -270,6 +271,8 @@ int Print(int argc, char **argv)
 
     free(recPtr);
     free(colWidths);
+    UnPinRel(r);
+    
     return OK;
 }
 

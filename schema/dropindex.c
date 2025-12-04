@@ -7,6 +7,7 @@
 #include "../include/openrel.h"
 #include "../include/findrelattr.h"
 #include "../include/writerec.h"
+#include "../include/unpinrel.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -177,6 +178,7 @@ int DropIndex(int argc, char **argv)
             removeIndex(attrPtr);
         }
 
+        UnPinRel(r);
         printf("Destroyed index successfully on all attributes of relation %s\n", 
         relName);
     }
