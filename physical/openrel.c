@@ -129,8 +129,6 @@ int OpenRel(const char *relName)
         return NOTOK;
     }
 
-    printf("Victim slot %d chosen for relation %s of DB.\n", freeSlot, relName);
-
     int fd = open(rc.relName, O_RDWR);
 
     if(fd == NOTOK)

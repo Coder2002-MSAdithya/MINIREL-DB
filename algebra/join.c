@@ -1,5 +1,4 @@
 /************************INCLUDES*******************************/
-
 #include "../include/defs.h"
 #include "../include/error.h"
 #include "../include/globals.h"
@@ -397,16 +396,10 @@ int Join(int argc, char **argv)
             /* No collision: keep original name */
             strncpy(newNode->attr.attrName, p->attr.attrName, ATTRNAME - 1);
             newNode->attr.attrName[ATTRNAME - 1] = '\0';
-            // printf("[JOIN-DEBUG] Keeping name '%s' unchanged (no collision detected).\n", newNode->attr.attrName);
         }
         else
         {
             const char *src_label = (collSrc == 1) ? "resHead" : (collSrc == 2) ? "s1" : "s2";
-            // printf("[JOIN-DEBUG] Collision detected for incoming attr '%s' with source %s (existing='%s').\n",
-            //        p_name_norm, src_label, matching_name);
-
-            // hex_dump("incoming", p->attr.attrName);
-            // hex_dump("existing", matching_name);
 
             /* Collision: create base (preserve original bytes if they fit) */
             char base[ATTRNAME];
@@ -424,13 +417,6 @@ int Join(int argc, char **argv)
                 truncated_base = true;
             }
 
-            if (truncated_base)
-            {
-                // printf("[JOIN-DEBUG] Truncated attribute name '%s' -> base '%s' to reserve %d suffix digits.\n",
-                //        p->attr.attrName, base, reserve_digits);
-                // hex_dump("base", base);
-            }
-
             char candidate[ATTRNAME];
             int suffix = 0;
             bool assigned = false;
@@ -446,8 +432,6 @@ int Join(int argc, char **argv)
                 {
                     strncpy(newNode->attr.attrName, candidate, ATTRNAME - 1);
                     newNode->attr.attrName[ATTRNAME - 1] = '\0';
-                    // printf("[JOIN-DEBUG] Renamed attribute '%s' -> '%s' (suffix=%d)\n",
-                    //        p->attr.attrName, newNode->attr.attrName, suffix);
                     assigned = true;
                     break;
                 }
@@ -456,8 +440,6 @@ int Join(int argc, char **argv)
 
             if (!assigned)
             {
-                // printf("[JOIN-DEBUG] Exhausted suffix attempts for '%s' (reserve_digits=%d). Aborting join.\n",
-                //        p->attr.attrName, reserve_digits);
                 AttrDesc *tmp;
                 while (resHead) { tmp = resHead; resHead = resHead->next; free(tmp); }
                 free(newNode);
@@ -489,11 +471,6 @@ int Join(int argc, char **argv)
     /* Step 4: open dest and insert joined rows (same as before) */
     d = OpenRel(dstRelName);
     if (d == NOTOK) { return ErrorMsgs(db_err_code, print_flag); }
-
-    if(d == s1 || d == s2 || s1 == s2)
-    {
-        printf("[JOIN_DEBUG] There is a problem with JOIN.\n");
-    }
 
     int dstRecSize = catcache[d].relcat_rec.recLength;
     void *recPtr1 = malloc(catcache[s1].relcat_rec.recLength);
