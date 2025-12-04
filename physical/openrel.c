@@ -70,7 +70,7 @@ int OpenRel(const char *relName)
     
     if (relNum != NOTOK)
     {
-        printf("Slot %d chosen for relation %s.\n", relNum, relName);
+        PinRel(relNum);
         catcache[relNum].timestamp = (uint32_t)time(NULL);
         return relNum;  // Already open
     }
