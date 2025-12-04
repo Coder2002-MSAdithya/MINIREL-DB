@@ -193,7 +193,7 @@ int remove_contents(const char *dirpath)
 
 void print_page_hex(const char *buf) 
 {
-    for (int line = 0; line < PAGESIZE / BYTES_PER_LINE; ++line) {
+    for (int line = 0; line < 32 / BYTES_PER_LINE; ++line) {
         int base = line * BYTES_PER_LINE;
         /* print line number (decimal, zero-padded to 2 digits) */
         printf("%02X: ", line);
@@ -299,6 +299,59 @@ Rid IncRid(Rid rid, int recsPerPg)
     }
 
     return INVALID_RID;
+}
+
+
+/*------------------------------------------------------------
+
+FUNCTION getAttrDesc (relNum, attrName)
+
+PARAMETER DESCRIPTION:
+    relNum   → relation number in the catalog cache (index into catcache[] representing an open relation).
+    attrName → name of the attribute whose descriptor is to be retrieved.
+
+FUNCTION DESCRIPTION:
+    Searches the linked list of attribute descriptors stored in catcache[relNum].attrList, looking for an attribute whose AttrCatRec.attrName matches attrName.
+    If found, returns a pointer to the AttrDesc node.
+    If not found, returns NULL.
+    This routine is used extensively by higher-level operators such as Project, Select, Insert, and Join to look up the offset, type, and length of attributes.
+
+ALGORITHM:
+    1) Fetch the pointer to the attribute list for relation relNum.
+    2) Iterate through the linked list:
+        a) Compare each node’s attr.attrName with attrName.
+        b) If equal, return the pointer to that node.
+    3) If the end of the list is reached, return NULL.
+
+BUGS:
+    • Case-sensitivity follows strcmp rules; MINIREL does not normalize attribute names.
+    • Assumes relNum is valid and relation is open; does not check for invalid relNum or invalid cache entry.
+    • Does not handle prefix matches; requires full match.
+
+ERRORS REPORTED:
+    • None.  Returns NULL silently on failure. Caller must handle all error reporting.
+
+GLOBAL VARIABLES MODIFIED:
+    • None.
+
+IMPLEMENTATION NOTES:
+    • Returning the pointer directly allows callers to access both the catalog record (offset, type, length, hasIndex) and the next node in the linked list.
+    • The routine does not allocate or free memory.
+    • Used by Project, Join, Insert, and Select to validate attribute names and to determine how to interpret record data.
+
+------------------------------------------------------------*/
+
+AttrDesc *getAttrDesc(int relNum, const char *attrName)
+{
+    AttrDesc *ptr = catcache[relNum].attrList;
+    for(;ptr;ptr=ptr->next)
+    {
+        if(strncmp((ptr->attr).attrName, attrName, ATTRNAME) == OK)
+        {
+            return ptr;
+        }
+    }
+    return NULL;
 }
 
 bool isValidRid(Rid rid)

@@ -19,7 +19,7 @@ const int attrcat_recLength = (int)sizeof(AttrCatRec);
 const int relcat_recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / relcat_recLength, SLOTMAP<<3);
 const int attrcat_recsPerPg = MIN((PAGESIZE - HEADER_SIZE) / attrcat_recLength, SLOTMAP<<3);
 const int attrCat_numRecs = RELCAT_NUMATTRS + ATTRCAT_NUMATTRS;
-const int relCat_numPgs = ((NUM_CATS + NT_RELCAT + relcat_recsPerPg - 1) / relcat_recsPerPg);
+const int relCat_numPgs = ((NUM_CATS + relcat_recsPerPg - 1) / relcat_recsPerPg);
 const int attrCat_numPgs = ((attrCat_numRecs + attrcat_recsPerPg - 1) / attrcat_recsPerPg);
 
 //relcat record for relcat

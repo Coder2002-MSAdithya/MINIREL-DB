@@ -4,6 +4,7 @@
 #include <string.h>
 #include "../include/defs.h"
 #include "../include/globals.h"
+#include "../include/helpers.h"
 #include "../include/error.h"
 #include "../include/readpage.h"
 #include "../include/writerec.h"
@@ -93,7 +94,7 @@ static int insertIntoPage(int relNum, short pidx, void *recPtr, bool *becameFull
 
     /* Compute mask of all valid slots */
     unsigned long fullMask;
-    if (recsPerPg >= (int)(8 * sizeof(unsigned long)))
+    if (recsPerPg >= (int)(sizeof(unsigned long) << 3))
         fullMask = ~0UL;
     else
         fullMask = (1UL << recsPerPg) - 1;
@@ -107,19 +108,19 @@ static int insertIntoPage(int relNum, short pidx, void *recPtr, bool *becameFull
         {
             entry->relcat_rec.numRecs += 1;
             entry->status |= DIRTY_MASK;
+            
+            int offset = HEADER_SIZE + slot * recSize;
+            memcpy(page + offset, recPtr, recSize);
+            
+            slotmap |= (1UL << slot);
+            memcpy(page + MAGIC_SIZE, &slotmap, SLOTMAP);
+            buffer[relNum].dirty = true;
 
             if(WriteRec(RELCAT_CACHE, &(entry->relcat_rec), entry->relcatRid) == NOTOK)
             {
                 entry->relcat_rec.numRecs -= 1;
                 return NOTOK;
             }
-
-            int offset = HEADER_SIZE + slot * recSize;
-            memcpy(page + offset, recPtr, recSize);
-
-            slotmap |= (1UL << slot);
-            memcpy(page + MAGIC_SIZE, &slotmap, SLOTMAP);
-            buffer[relNum].dirty = true;
 
             if (becameFull)
                 *becameFull = (!wasFull && ((slotmap & fullMask) == fullMask));
@@ -135,6 +136,7 @@ static int insertIntoPage(int relNum, short pidx, void *recPtr, bool *becameFull
         *becameFull = false;
     if (hasFreeAfter)
         *hasFreeAfter = false;
+    
     return INS_NO_FREE_SLOT;
 }
 
@@ -283,6 +285,7 @@ int InsertRec(int relNum, void *recPtr)
                     AddToFreeMap(relName, pidx);
                 }
             }
+
             return OK;
         }
 
