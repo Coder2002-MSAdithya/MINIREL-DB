@@ -126,6 +126,7 @@ int ErrorMsgs(int errorNum, bool printFlag)
             
             case DUP_ATTR_INSERT:
                 printf("Error %d: Duplicate assignment of fields in insert query NOT allowed\n", errorNum);
+                break;
             
             case DUP_ROWS:
                     printf("Error %d: CANNOT have duplicate tuples in relation..\n", errorNum);
@@ -145,6 +146,7 @@ int ErrorMsgs(int errorNum, bool printFlag)
             
             case STR_LEN_INVALID:
                     printf("Error %d: Length of a string attribute has to be between 0 and 50.\n", errorNum);
+                    break;
             
             case CAT_CREATE_ERROR:
                 printf("Error %d: The catalog files could NOT be created.\n"
@@ -190,6 +192,7 @@ int ErrorMsgs(int errorNum, bool printFlag)
             case DBPREFIXNOTFOUND:
                     printf("Error %d: Prefix to your Database path does NOT exist.\n"
                     "Implementation ONLY supports ONE level of directory creation", errorNum);
+                    break;
 
             case DBEXISTS:
                 printf("Error %d: Database already exists.\n"
