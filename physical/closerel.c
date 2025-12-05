@@ -86,8 +86,11 @@ int CloseRel(int relNum)
     //Step 4: Free the linked list of attribute descriptors
     FreeLinkedList((void **)&(entry->attrList), offsetof(AttrDesc, next));
 
-    // Step 4: Close file
+    // Step 5: Close file
     close(entry->relFile);
+
+    //Step 6: Invalidate the buffer pool of the relation
+    buffer[relNum].pid = -1;
 
     return OK;
 }

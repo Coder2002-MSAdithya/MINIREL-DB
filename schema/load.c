@@ -131,7 +131,6 @@ IMPLEMENTATION NOTES:
     - The function does not allow loading into non-existent or schema-mismatched relations; InsertRec() enforces per-tuple constraints such as duplicate prevention.
 
 ------------------------------------------------------------*/
-
 int Load(int argc, char **argv)
 {
     if(!db_open)
@@ -193,7 +192,7 @@ int Load(int argc, char **argv)
     char *test_ptr = (char*)&test;
     if (test_ptr[0] == 0)
     {
-        is_little_endian = 0; // System is big-endian, no conversion needed
+        is_little_endian = 0; // system is big-endian
     }
 
     // Pre-compute offsets that need endianness conversion
@@ -201,22 +200,28 @@ int Load(int argc, char **argv)
     int *float_offsets = NULL;
     int int_count = 0;
     int float_count = 0;
-    
-    // First pass: count the number of int and float attributes
+    int string_count = 0;
+
+    // First pass: count the number of int, float and string attributes
     AttrDesc *ptr = catcache[r].attrList;
     while (ptr)
     {
-        if (ptr->attr.type[0] == 'i')
+        char t = ptr->attr.type[0];
+        if (t == 'i')
         {
             int_count++;
         }
-        else if (ptr->attr.type[0] == 'f')
+        else if (t == 'f')
         {
             float_count++;
         }
+        else if (t == 's')  // string attribute (length includes trailing NUL)
+        {
+            string_count++;
+        }
         ptr = ptr->next;
     }
-    
+
     // Allocate arrays for offsets
     if (int_count > 0)
     {
@@ -228,7 +233,7 @@ int Load(int argc, char **argv)
             return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
         }
     }
-    
+
     if (float_count > 0)
     {
         float_offsets = malloc(float_count * sizeof(int));
@@ -240,22 +245,26 @@ int Load(int argc, char **argv)
             return ErrorMsgs(MEM_ALLOC_ERROR, print_flag);
         }
     }
-    
+
     // Second pass: collect the offsets
     ptr = catcache[r].attrList;
     int int_idx = 0, float_idx = 0;
     while (ptr)
     {
-        if (ptr->attr.type[0] == 'i')
+        char t = ptr->attr.type[0];
+        if (t == 'i')
         {
             int_offsets[int_idx++] = ptr->attr.offset;
         }
-        else if (ptr->attr.type[0] == 'f')
+        else if (t == 'f')
         {
             float_offsets[float_idx++] = ptr->attr.offset;
         }
         ptr = ptr->next;
     }
+
+    // Compute on-disk record size: each string attribute on disk lacks the trailing NUL
+    int fileRecSize = recSize - string_count; // subtract 1 byte per string attribute
 
     // Open the file for reading
     FILE *file = fopen(fileName, "rb");
@@ -269,14 +278,60 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
-    // Read file fileName record by record each of size recSize
-    // and insert each record using InsertRec
+    // Temporary buffer for on-disk record
+    char *fileBuf = malloc(fileRecSize);
+    if (!fileBuf)
+    {
+        db_err_code = MEM_ALLOC_ERROR;
+        free(int_offsets);
+        free(float_offsets);
+        free(recPtr);
+        fclose(file);
+        CloseRel(r);
+        return ErrorMsgs(db_err_code, print_flag);
+    }
+
+    // Read file record by record (on-disk size fileRecSize) and reconstruct in-memory record
     int recordsRead = 0;
     int insertResult = OK;
-    
-    while (fread(recPtr, recSize, 1, file) == 1)
+
+    while (fread(fileBuf, fileRecSize, 1, file) == 1)
     {
         recordsRead++;
+
+        // Zero record buffer first to clean any padding bytes
+        memset(recPtr, 0, recSize);
+
+        // Reconstruct the in-memory record from the on-disk buffer
+        int file_pos = 0;
+        ptr = catcache[r].attrList;
+        while (ptr)
+        {
+            int offset = ptr->attr.offset;
+            int length = ptr->attr.length; // for strings this includes NUL
+            char t = ptr->attr.type[0];
+
+            if (t == 's')
+            {
+                // Copy length - 1 bytes from file, then set terminating NUL in recPtr
+                int copy_len = length - 1;
+                if (copy_len > 0)
+                {
+                    memcpy(recPtr + offset, fileBuf + file_pos, copy_len);
+                }
+                // ensure terminating NUL is present in the in-memory record
+                recPtr[offset + copy_len] = '\0';
+                file_pos += copy_len;
+            }
+            else
+            {
+                // Non-string attribute: copy full length bytes from file
+                memcpy(recPtr + offset, fileBuf + file_pos, length);
+                file_pos += length;
+            }
+
+            ptr = ptr->next;
+        }
 
         // Convert integers and floats from big-endian to little-endian if needed
         if (is_little_endian)
@@ -287,7 +342,7 @@ int Load(int argc, char **argv)
                 char *int_ptr = recPtr + int_offsets[i];
                 swap_bytes(int_ptr, sizeof(int));
             }
-            
+
             // Convert floats
             for (int i = 0; i < float_count; i++)
             {
@@ -295,16 +350,17 @@ int Load(int argc, char **argv)
                 swap_bytes(float_ptr, sizeof(float));
             }
         }
-        
+
         // Insert the record into the relation
         insertResult = InsertRec(r, recPtr);
-        
+
         if (insertResult == NOTOK)
         {
             // InsertRec failed, db_err_code should already be set by InsertRec
             free(int_offsets);
             free(float_offsets);
             free(recPtr);
+            free(fileBuf);
             fclose(file);
             CloseRel(r);
             return ErrorMsgs(db_err_code, print_flag);
@@ -318,6 +374,7 @@ int Load(int argc, char **argv)
         free(int_offsets);
         free(float_offsets);
         free(recPtr);
+        free(fileBuf);
         fclose(file);
         CloseRel(r);
         return ErrorMsgs(db_err_code, print_flag);
@@ -328,7 +385,8 @@ int Load(int argc, char **argv)
     free(int_offsets);
     free(float_offsets);
     free(recPtr);
-    
+    free(fileBuf);
+
     // Print success message if all records were loaded successfully
     printf("%s successfully loaded with %d tuples.\n", relName, recordsRead);
     UnPinRel(r);

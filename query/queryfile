@@ -13,9 +13,9 @@ create teachassist (sid = i, fid = i, ptime = i);
 buildindex for students on sname;
 
 ; load the relation
-load students from /home/MINIREL/data/binary/Students;
-load profs from /home/MINIREL/data/binary/Profs;
-load teachassist from /home/MINIREL/data/binary/Teachassist;
+load students from /tmp/data/binary/Students;
+load profs from /tmp/data/binary/Profs;
+load teachassist from /tmp/data/binary/Teachassist;
  
 ; print the relation
 print students;
