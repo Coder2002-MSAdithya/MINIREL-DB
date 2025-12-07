@@ -154,6 +154,13 @@ int Load(int argc, char **argv)
         return ErrorMsgs(db_err_code, print_flag);
     }
 
+    if(strncmp(relName, RELCAT, RELNAME) == OK 
+    || strncmp(relName, ATTRCAT, RELNAME) == OK)
+    {
+        printf("CANNOT load into catalog relation %s.\n", relName);
+        return ErrorMsgs(METADATA_SECURITY, false);
+    }
+
     // Check whether every component of the path is alphanumeric
     if(!isValidPath(fileName))
     {
